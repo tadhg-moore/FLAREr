@@ -10,17 +10,19 @@
 #' @export
 #'
 #' @examples
-generate_initial_conditions <- function(states_config,
+generate_initial_conditions_ler <- function(states_config,
                                         obs_config,
                                         pars_config = NULL,
                                         obs,
-                                        config){
+                                        config,
+                                        model){
 
   init <- list()
 
   nmembers <- config$ensemble_size
 
-  if(!is.null(pars_config)){
+  if(!is.null(pars_config) & any(pars_config$model == model)){
+    pars_config <- pars_config[pars_config$model == model, ]
     npars <- nrow(pars_config)
   }else{
     npars <- 0
