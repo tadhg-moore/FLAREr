@@ -24,7 +24,7 @@ get_ler_nc_var_all <- function(model, working_dir, z_out, vars_depth, vars_no_de
     output <- array(NA, dim=c(tallest_layer,length(vars_depth)))
     for(v in 1:length(vars_depth)){
       var_modeled <- ncdf4::ncvar_get(glm_nc, vars_depth[v])[, final_time_step]
-      output[,v] <- var_modeled[1:tallest_layer]
+      output[,v] <- rev(var_modeled[1:tallest_layer])
     }
 
     output_no_depth <- NA
@@ -97,9 +97,9 @@ get_ler_nc_var_all <- function(model, working_dir, z_out, vars_depth, vars_no_de
   # Simstrat ----
   if( model == "Simstrat") {
 
-    temp <- LakeEnsemblR::get_output(config_file = ler_yaml, model = model, vars = "temp", obs_depths = z_out)$temp
-    salt <- LakeEnsemblR::get_output(config_file = ler_yaml, model = model, vars = "salt", obs_depths = z_out)$salt
-    ice <- LakeEnsemblR::get_output(config_file = ler_yaml, model = model, vars = "ice_height")$ice_height
+    temp <- LakeEnsemblR::get_output(config_yaml = ler_yaml, model = model, vars = "temp", obs_depths = z_out)$temp
+    salt <- LakeEnsemblR::get_output(config_yaml = ler_yaml, model = model, vars = "salt", obs_depths = z_out)$salt
+    ice <- LakeEnsemblR::get_output(config_yaml = ler_yaml, model = model, vars = "ice_height")$ice_height
     deps <- rLakeAnalyzer::get.offsets(temp)
     final_time_step <- nrow(temp)
 

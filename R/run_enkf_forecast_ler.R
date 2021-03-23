@@ -18,7 +18,7 @@
 #' - `initial_conditions`: the default initial condition for the state if an observation is lacking. Used in `generate_initial_conditions()`.  Note:
 #' the `config` list should have a variables called `default_temp_init` and `default_temp_init_depths` that allow for depth variation in the initial
 #' conditions for temperature.
-#' - `model_sd`: the standard deviation of the model error for the state
+#' - `model_sd`: the standard deviation of the model error for the state.  Matrix with dimensions rows = length(states_names), columns = length(config$modeled_depths)
 #' - `initial_model_sd`: the standard deviation of the initial conditions for the state. Used in `generate_initial_conditions()`
 #' - `states_to_obs1`: the name of the observation that matches the model state
 #' - `states_to_obs_mapping_1`: the multipler that converts the state to the observation (1 will be the most common)
@@ -158,24 +158,24 @@
 #'
 
 run_enkf_forecast_ler <- function(states_init,
-                     pars_init = NULL,
-                     aux_states_init,
-                     obs,
-                     obs_sd,
-                     model_sd,
-                     working_directory,
-                     met_file_names,
-                     inflow_file_names,
-                     outflow_file_names,
-                     start_datetime,
-                     end_datetime,
-                     forecast_start_datetime = NA,
-                     config,
-                     pars_config = NULL,
-                     states_config,
-                     obs_config,
-                     management = NULL,
-                     model
+                              pars_init = NULL,
+                              aux_states_init,
+                              obs,
+                              obs_sd,
+                              model_sd,
+                              working_directory,
+                              met_file_names,
+                              inflow_file_names,
+                              outflow_file_names,
+                              start_datetime,
+                              end_datetime,
+                              forecast_start_datetime = NA,
+                              config,
+                              pars_config = NULL,
+                              states_config,
+                              obs_config,
+                              management = NULL,
+                              model
 ){
 
   if(length(states_config$state_names) > 1){
@@ -188,7 +188,7 @@ run_enkf_forecast_ler <- function(states_init,
   ndepths_modeled <- dim(states_init)[2]
   nmembers <- dim(states_init)[3]
   n_met_members <- length(met_file_names)
-  if(!is.null(pars_config) & any(pars_config$model == model)){
+  if(!is.null(pars_config)){
     pars_config <- pars_config[pars_config$model == model, ]
     npars <- nrow(pars_config)
     par_names <- pars_config$par_names
@@ -235,15 +235,15 @@ run_enkf_forecast_ler <- function(states_init,
   states_config$wq_start <- wq_start
   states_config$wq_end <- wq_end
 
-  flare:::check_enkf_inputs(states_init,
-                    pars_init,
-                    obs,
-                    psi,
-                    model_sd,
-                    config,
-                    pars_config,
-                    states_config,
-                    obs_config)
+  flare:::check_enkf_inputs_ler(states_init,
+                            pars_init,
+                            obs,
+                            psi,
+                            model_sd,
+                            config,
+                            pars_config,
+                            states_config,
+                            obs_config)
 
   if(is.na(forecast_start_datetime)){
     forecast_start_datetime <- end_datetime
@@ -254,6 +254,17 @@ run_enkf_forecast_ler <- function(states_init,
   full_time_local <- seq(start_datetime, end_datetime, by = "1 day")
   forecast_days <- as.numeric(end_datetime - forecast_start_datetime)
 
+
+  if(!is.null(pars_config)){
+    npars <- nrow(pars_config)
+    par_names <- pars_config$par_names
+    par_file <- pars_config$par_file
+  }else{
+    npars <- 0
+    par_names <- NA
+    par_file <- NA
+  }
+
   nstates <- dim(x_init)[2] -  npars
   nsteps <- length(full_time_local)
   nmembers <- dim(x_init)[1]
@@ -261,6 +272,8 @@ run_enkf_forecast_ler <- function(states_init,
   ndepths_modeled <- length(config$modeled_depths)
 
   data_assimilation_flag <- rep(NA, nsteps)
+  forecast_flag <- rep(NA, nsteps)
+  da_qc_flag <- rep(NA, nsteps)
 
   x <- array(NA, dim=c(nsteps, nmembers, nstates + npars))
 
@@ -268,8 +281,10 @@ run_enkf_forecast_ler <- function(states_init,
 
   q_v <- rep(NA, ndepths_modeled)
   w <- rep(NA, ndepths_modeled)
+  w_new <- rep(NA, ndepths_modeled)
 
-  alpha_v <- 1 - exp(-config$vert_decorr_length)
+  alpha_v <- 1 - exp(-states_config$vert_decorr_length)
+
 
   output_vars <- states_config$state_names
 
@@ -294,13 +309,19 @@ run_enkf_forecast_ler <- function(states_init,
 
   x_prior <- array(NA, dim = c(nsteps, nmembers, nstates + npars))
 
+  if(!is.null(ncol(inflow_file_names))) {
+    inflow_file_names <- as.matrix(inflow_file_names)
+    outflow_file_names <- as.matrix(outflow_file_names)
+  }
+
+
   flare:::set_up_model_ler(model,
-               executable_location = paste0(find.package("flare"),"/exec/"),
-               config,
-               working_directory,
-               state_names = states_config$state_names,
-               inflow_file_names = inflow_file_names,
-               outflow_file_names = outflow_file_names)
+                           executable_location = paste0(find.package("flare"),"/exec/"),
+                       config,
+                       working_directory,
+                       state_names = states_config$state_names,
+                       inflow_file_names = inflow_file_names,
+                       outflow_file_names = outflow_file_names)
 
   mixing_vars <- array(NA, dim = c(17, nsteps, nmembers))
   model_internal_depths <- array(NA, dim = c(nsteps, 500, nmembers))
@@ -316,8 +337,14 @@ run_enkf_forecast_ler <- function(states_init,
   avg_surf_temp[1, ] <- aux_states_init$avg_surf_temp
   salt[1, , ] <- aux_states_init$salt
 
+  if(config$assimilate_first_step){
+    start_step <- 1
+  }else{
+    start_step <- 2
+  }
+
   ###START EnKF
-  for(i in 2:nsteps){
+  for(i in start_step:nsteps){
 
     curr_start <- strftime(full_time_local[i - 1],
                            format="%Y-%m-%d %H:%M:%S",
@@ -326,9 +353,9 @@ run_enkf_forecast_ler <- function(states_init,
                           format="%Y-%m-%d %H:%M:%S",
                           tz = config$local_tzone)
 
-    print(paste0("Running time step ", i-1, " : ",
-                 curr_start, " - ",
-                 curr_stop))
+    message(paste0("Running time step ", i-1, " : ",
+                   curr_start, " - ",
+                   curr_stop))
 
     setwd(working_directory)
 
@@ -347,106 +374,138 @@ run_enkf_forecast_ler <- function(states_init,
       dit_pars<- array(NA, dim = c(nmembers, npars))
     }
 
-    # Start loop through ensemble members
-    for(m in 1:nmembers){
+    #If i == 1 then assimilate the first time step without running the process
+    #model (i.e., use yesterday's forecast of today as initial conditions and
+    #assimilate new observations)
+    if(i > 1){
 
-      curr_met_file <- met_file_names[met_index]
+      # Start loop through ensemble members
+      for(m in 1:nmembers){
 
-      if(npars > 0){
-        curr_pars <- x[i - 1, m , (nstates+1):(nstates+ npars)]
-      }
+        curr_met_file <- met_file_names[met_index]
 
-      out <- flare:::run_model_ler(model,
-                           i,
-                       m,
-                       mixing_vars_start = mixing_vars[,i-1 , m],
-                       curr_start,
-                       curr_stop,
-                       par_names,
-                       curr_pars,
-                       working_directory,
-                       par_file,
-                       num_phytos,
-                       model_depths_start = model_internal_depths[i-1, ,m ],
-                       lake_depth_start = lake_depth[i-1, m],
-                       x_start = x[i-1, m, ],
-                       full_time_local,
-                       wq_start = states_config$wq_start,
-                       wq_end = states_config$wq_end,
-                       management = management,
-                       hist_days,
-                       modeled_depths = config$modeled_depths,
-                       ndepths_modeled,
-                       curr_met_file,
-                       inflow_file_name = inflow_file_names[inflow_outflow_index, ],
-                       outflow_file_name = outflow_file_names[inflow_outflow_index, ],
-                       output_vars = output_vars,
-                       diagnostics_names = config$diagnostics_names,
-                       npars,
-                       num_wq_vars,
-                       snow_ice_thickness_start = snow_ice_thickness[, i-1,m ],
-                       avg_surf_temp_start = avg_surf_temp[i-1, m],
-                       salt_start = salt[i-1, ,m],
-                       nstates,
-                       state_names = states_config$state_names,
-                       include_wq = config$include_wq)
-
-      x_star[m, ] <- out$x_star_end
-      lake_depth[i ,m ] <- out$lake_depth_end
-      snow_ice_thickness[,i ,m] <- out$snow_ice_thickness_end
-      avg_surf_temp[i , m] <- out$avg_surf_temp_end
-      mixing_vars[, i, m] <- out$mixing_vars_end
-      diagnostics[, i, , m] <- out$diagnostics_end
-      model_internal_depths[i, ,m] <- out$model_internal_depths
-      salt[i, , m]  <- out$salt_end
-      ########################################
-      #END GLM SPECIFIC PART
-      ########################################
-
-      #INCREMENT ThE MET_INDEX TO MOVE TO ThE NEXT NOAA ENSEMBLE
-      met_index <- met_index + 1
-      if(met_index > length(met_file_names)){
-        met_index <- 1
-      }
-
-      inflow_outflow_index <- inflow_outflow_index + 1
-      if(inflow_outflow_index > nrow(as.matrix(inflow_file_names))){
-        inflow_outflow_index <- 1
-      }
-
-
-      #Add process noise
-
-      q_v[] <- NA
-      w[] <- NA
-      for(jj in 1:length(model_sd)){
-        w[] <- rnorm(ndepths_modeled, 0, 1)
-        q_v[1] <- model_sd[jj] * w[1]
-        for(kk in 2:ndepths_modeled){
-          q_v[kk] <- alpha_v * q_v[kk-1] + sqrt(1 - alpha_v^2) * model_sd[jj] * w[kk]
+        if(npars > 0){
+          curr_pars <- x[i - 1, m , (nstates+1):(nstates+ npars)]
         }
 
-        x_corr[m, (((jj-1)*ndepths_modeled)+1):(jj*ndepths_modeled)] <-
-          x_star[m, (((jj-1)*ndepths_modeled)+1):(jj*ndepths_modeled)] + q_v
+        if(!is.null(ncol(inflow_file_names))){
+          inflow_file_name <- inflow_file_names[inflow_outflow_index, ]
+          outflow_file_name <- outflow_file_names[inflow_outflow_index, ]
+        }else{
+          inflow_file_name <- NULL
+          outflow_file_name <- NULL
+        }
+
+        out <- flare:::run_model_ler(model,
+                                     i,
+                                 m,
+                                 mixing_vars_start = mixing_vars[,i-1 , m],
+                                 curr_start,
+                                 curr_stop,
+                                 par_names,
+                                 curr_pars,
+                                 working_directory,
+                                 par_file,
+                                 num_phytos,
+                                 model_depths_start = model_internal_depths[i-1, ,m ],
+                                 lake_depth_start = lake_depth[i-1, m],
+                                 x_start = x[i-1, m, ],
+                                 full_time_local,
+                                 wq_start = states_config$wq_start,
+                                 wq_end = states_config$wq_end,
+                                 management = management,
+                                 hist_days,
+                                 modeled_depths = config$modeled_depths,
+                                 ndepths_modeled,
+                                 curr_met_file,
+                                 inflow_file_name = inflow_file_name,
+                                 outflow_file_name = outflow_file_name,
+                                 output_vars = output_vars,
+                                 diagnostics_names = config$diagnostics_names,
+                                 npars,
+                                 num_wq_vars,
+                                 snow_ice_thickness_start = snow_ice_thickness[, i-1,m ],
+                                 avg_surf_temp_start = avg_surf_temp[i-1, m],
+                                 salt_start = salt[i-1, ,m],
+                                 nstates,
+                                 state_names = states_config$state_names,
+                                 include_wq = config$include_wq)
+
+        x_star[m, ] <- out$x_star_end
+        lake_depth[i ,m ] <- out$lake_depth_end
+        snow_ice_thickness[,i ,m] <- out$snow_ice_thickness_end
+        avg_surf_temp[i , m] <- out$avg_surf_temp_end
+        mixing_vars[, i, m] <- out$mixing_vars_end
+        diagnostics[, i, , m] <- out$diagnostics_end
+        model_internal_depths[i, ,m] <- out$model_internal_depths
+        salt[i, , m]  <- out$salt_end
+        ########################################
+        #END GLM SPECIFIC PART
+        ########################################
+
+        #INCREMENT ThE MET_INDEX TO MOVE TO ThE NEXT NOAA ENSEMBLE
+        met_index <- met_index + 1
+        if(met_index > length(met_file_names)){
+          met_index <- 1
+        }
+
+        if(!is.null(ncol(inflow_file_names))) {
+          inflow_outflow_index <- inflow_outflow_index + 1
+          if(inflow_outflow_index > nrow(as.matrix(inflow_file_names))){
+            inflow_outflow_index <- 1
+          }
+        }
+
+
+
+        #Add process noise
+        q_v[] <- NA
+        w[] <- NA
+        w_new[] <- NA
+        for(jj in 1:nrow(model_sd)){
+          w[] <- rnorm(ndepths_modeled, 0, 1)
+          w_new[1] <- w[1]
+          q_v[1] <- model_sd[jj, 1] * w_new[1]
+          for(kk in 2:ndepths_modeled){
+            #q_v[kk] <- alpha_v * q_v[kk-1] + sqrt(1 - alpha_v^2) * model_sd[jj, kk] * w[kk]
+
+            w_new[kk] <- (alpha_v[jj] * w_new[kk-1] + sqrt(1 - alpha_v[jj]^2) * w[kk])
+            q_v[kk] <- w_new[kk] * model_sd[jj, kk]
+          }
+
+          x_corr[m, (((jj-1)*ndepths_modeled)+1):(jj*ndepths_modeled)] <-
+            x_star[m, (((jj-1)*ndepths_modeled)+1):(jj*ndepths_modeled)] + q_v
+        }
+
+      } # END ENSEMBLE LOOP
+
+
+      #Correct any negative water quality states
+      if(config$include_wq & config$no_negative_states){
+        for(m in 1:nmembers){
+          index <- which(x_corr[m,] < 0.0)
+          x_corr[m, index[which(index <= states_config$wq_end[num_wq_vars + 1] & index >= states_config$wq_start[2])]] <- 0.0
+        }
       }
 
-    } # END ENSEMBLE LOOP
-
-
-    #Correct any negative water quality states
-    if(config$include_wq & config$no_negative_states){
-      for(m in 1:nmembers){
-        index <- which(x_corr[m,] < 0.0)
-        x_corr[m, index[which(index <= states_config$wq_end[num_wq_vars] & index >= states_config$wq_start[2])]] <- 0.0
+      if(npars > 0){
+        pars_corr <- x[i - 1, , (nstates + 1):(nstates+ npars)]
+        if(npars == 1){
+          pars_corr <- matrix(pars_corr,nrow = length(pars_corr),ncol = 1)
+        }
+        pars_star <- pars_corr
       }
-    }
 
-    if(npars > 0){
-      pars_corr <- x[i - 1, , (nstates + 1):(nstates+ npars)]
-      if(npars == 1){
-        pars_corr <- matrix(pars_corr,nrow = length(pars_corr),ncol = 1)
+    }else{
+      x_star <- x[i, ,1:nstates]
+      x_corr <- x_star
+      if(npars > 0){
+        pars_corr <- x[i, , (nstates + 1):(nstates+ npars)]
+        if(npars == 1){
+          pars_corr <- matrix(pars_corr,nrow = length(pars_corr),ncol = 1)
+        }
+        pars_star <- pars_corr
       }
-      pars_star <- pars_corr
     }
 
     if(npars > 0){
@@ -467,10 +526,16 @@ run_enkf_forecast_ler <- function(states_init,
 
       if(i > (hist_days + 1)){
         data_assimilation_flag[i] <- 0
+        forecast_flag[i] <- 1
+        da_qc_flag[i] <- 0
       }else if(i <= (hist_days + 1) & config$use_obs_constraint){
-        data_assimilation_flag[i] <- 3
-      }else{
         data_assimilation_flag[i] <- 1
+        forecast_flag[i] <- 0
+        da_qc_flag[i] <- 1
+      }else{
+        data_assimilation_flag[i] <- 0
+        forecast_flag[i] <- 0
+        da_qc_flag[i] <- 0
       }
 
       if(npars > 0){
@@ -497,9 +562,11 @@ run_enkf_forecast_ler <- function(states_init,
         }
 
       }
-    } else {
+    }else{
 
-      data_assimilation_flag[i] <- 7
+      data_assimilation_flag[i] <- 1
+      forecast_flag[i] <- 0
+      da_qc_flag[i] <- 0
 
       #if observation then calucate Kalman adjustment
       if(dim(obs)[1] > 1){
@@ -643,7 +710,7 @@ run_enkf_forecast_ler <- function(states_init,
     if(config$include_wq & config$no_negative_states){
       for(m in 1:nmembers){
         index <- which(x[i,m,] < 0.0)
-        x[i, m, index[which(index <= states_config$wq_end[num_wq_vars] & index >= states_config$wq_start[2])]] <- 0.0
+        x[i, m, index[which(index <= states_config$wq_end[num_wq_vars + 1] & index >= states_config$wq_start[2])]] <- 0.0
       }
     }
 
@@ -662,9 +729,9 @@ run_enkf_forecast_ler <- function(states_init,
     #Print parameters to screen
     if(npars > 0){
       for(par in 1:npars){
-        print(paste0(pars_config$par_names_save[par],": mean ",
-                     round(mean(pars_corr[,par]),4)," sd ",
-                     round(sd(pars_corr[,par]),4)))
+        message(paste0(pars_config$par_names_save[par],": mean ",
+                       signif(mean(pars_corr[,par]),4)," sd ",
+                       signif(sd(pars_corr[,par]),4)))
       }
     }
 
@@ -740,6 +807,8 @@ run_enkf_forecast_ler <- function(states_init,
               model_internal_depths = model_internal_depths,
               diagnostics = diagnostics,
               data_assimilation_flag = data_assimilation_flag,
+              forecast_flag = forecast_flag,
+              da_qc_flag = da_qc_flag,
               config = config,
               states_config = states_config,
               pars_config = pars_config,

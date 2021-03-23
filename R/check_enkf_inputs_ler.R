@@ -43,7 +43,7 @@ check_enkf_inputs_ler <- function(states_init,
   }
 
   if(nrow(model_sd) != nrow(states_config)){
-    stop("rnow(model_sd) != nrow(states_config)")
+    stop("nrow(model_sd) != nrow(states_config)")
   }
 
   if((dim(obs)[1] * dim(obs)[3]) != length(psi)){

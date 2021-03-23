@@ -75,12 +75,13 @@ run_model_ler <- function(model,
   model_depths_tmp_tmp <- c(model_depths_tmp, lake_depth_start)
   model_depths_mid <- model_depths_tmp_tmp[1:(length(model_depths_tmp_tmp)-1)] + diff(model_depths_tmp_tmp)/2
 
+  the_sals <- approx(modeled_depths, salt_start, model_depths_mid, rule = 2)$y
+
 
   # GLM ----
   if( model == "GLM") {
 
-    input_yaml_multiple(ler_yaml, key1 = "model_parameters", key2 = "GLM", key3 = "restart_variables", value = mixing_vars_start)
-    # yml[["model_parameters"]][[model]][["restart_variables"]] <- mixing_vars_start
+    yml$model_parameters$GLM$restart_variables <- mixing_vars_start
 
     # update_glm_nml_list <- list()
     update_aed_nml_list <- list()
@@ -106,8 +107,7 @@ run_model_ler <- function(model,
         curr_par_set <- which(par_names == unique_pars[par])
         curr_nml <- par_file[curr_par_set[1]]
         if(curr_nml == "glm3.nml"){
-          input_yaml_multiple(ler_yaml, key1 = "model_parameters", key2 = "GLM", key3 = unique_pars[par], value = round(curr_pars[curr_par_set], 4))
-          # yml[["model_parameters"]][[model]][[unique_pars[par]]] <- round(curr_pars[curr_par_set], 4)
+          yml$model_parameters$GLM[[unique_pars[par]]] <- round(curr_pars[curr_par_set], 4)
         }else if(curr_nml == "aed2.nml"){
           update_aed_nml_list[[list_index_aed]] <- round(curr_pars[curr_par_set], 4)
           update_aed_nml_names[list_index_aed] <- unique_pars[par]
@@ -164,23 +164,23 @@ run_model_ler <- function(model,
 
 
     # input_yaml_multiple(ler_yaml, key1 = "model_parameters", key2 = "GLM", key3 = "the_sals", value = round(the_sals_glm, 4))
-    input_yaml_multiple(ler_yaml, key1 = "model_parameters", key2 = "GLM", key3 = "num_depths", value = length(model_depths_tmp))
-    input_yaml_multiple(ler_yaml, key1 = "model_parameters", key2 = "GLM", key3 = "lake_depth", value = round(lake_depth_start, 4))
-    input_yaml_multiple(ler_yaml, key1 = "model_parameters", key2 = "GLM", key3 = "snow_thickness", value = 0)
-    input_yaml_multiple(ler_yaml, key1 = "model_parameters", key2 = "GLM", key3 = "white_ice_thickness", value = round(snow_ice_thickness_start[2], 4))
-    input_yaml_multiple(ler_yaml, key1 = "model_parameters", key2 = "GLM", key3 = "blue_ice_thickness", value = round(snow_ice_thickness_start[3], 4))
-    input_yaml_multiple(ler_yaml, key1 = "model_parameters", key2 = "GLM", key3 = "avg_surf_temp", value = round(avg_surf_temp_start, 4))
-    input_yaml_multiple(ler_yaml, key1 = "model_parameters", key2 = "GLM", key3 = "out_dir", value = "'output'")
+    # input_yaml_multiple(ler_yaml, key1 = "model_parameters", key2 = "GLM", key3 = "num_depths", value = length(model_depths_tmp))
+    # input_yaml_multiple(ler_yaml, key1 = "model_parameters", key2 = "GLM", key3 = "lake_depth", value = round(lake_depth_start, 4))
+    # input_yaml_multiple(ler_yaml, key1 = "model_parameters", key2 = "GLM", key3 = "snow_thickness", value = 0)
+    # input_yaml_multiple(ler_yaml, key1 = "model_parameters", key2 = "GLM", key3 = "white_ice_thickness", value = round(snow_ice_thickness_start[2], 4))
+    # input_yaml_multiple(ler_yaml, key1 = "model_parameters", key2 = "GLM", key3 = "blue_ice_thickness", value = round(snow_ice_thickness_start[3], 4))
+    # input_yaml_multiple(ler_yaml, key1 = "model_parameters", key2 = "GLM", key3 = "avg_surf_temp", value = round(avg_surf_temp_start, 4))
+    # input_yaml_multiple(ler_yaml, key1 = "model_parameters", key2 = "GLM", key3 = "out_dir", value = "'output'")
 
-    # # yml[["model_parameters"]][[model]][["the_temps"]] <- round(the_temps_glm, 4)
-    # yml[["model_parameters"]][[model]][["the_sals"]] <- round(the_sals_glm, 4)
-    # # yml[["model_parameters"]][[model]][["the_depths"]] <- round(model_depths_tmp, 4)
-    # yml[["model_parameters"]][[model]][["num_depths"]] <- length(model_depths_tmp)
-    # yml[["model_parameters"]][[model]][["lake_depth"]] <- round(lake_depth_start, 4)
-    # yml[["model_parameters"]][[model]][["snow_thickness"]] <- 0
-    # yml[["model_parameters"]][[model]][["white_ice_thickness"]] <- round(snow_ice_thickness_start[2], 4)
-    # yml[["model_parameters"]][[model]][["blue_ice_thickness"]] <- round(snow_ice_thickness_start[3], 4)
-    # yml[["model_parameters"]][[model]][["avg_surf_temp"]] <- round(avg_surf_temp_start, 4)
+    # yml[["model_parameters"]][[model]][["the_temps"]] <- round(the_temps_glm, 4)
+    yml[["model_parameters"]][[model]][["the_sals"]] <- round(the_sals, 4)
+    # yml[["model_parameters"]][[model]][["the_depths"]] <- round(model_depths_tmp, 4)
+    yml[["model_parameters"]][[model]][["num_depths"]] <- length(model_depths_tmp)
+    yml[["model_parameters"]][[model]][["lake_depth"]] <- round(lake_depth_start, 4)
+    yml[["model_parameters"]][[model]][["snow_thickness"]] <- 0
+    yml[["model_parameters"]][[model]][["white_ice_thickness"]] <- round(snow_ice_thickness_start[2], 4)
+    yml[["model_parameters"]][[model]][["blue_ice_thickness"]] <- round(snow_ice_thickness_start[3], 4)
+    yml[["model_parameters"]][[model]][["avg_surf_temp"]] <- round(avg_surf_temp_start, 4)
 
 
 
@@ -201,7 +201,7 @@ run_model_ler <- function(model,
 
         curr_par_set <- which(par_names == unique_pars[par])
         curr_nml <- par_file[curr_par_set[1]]
-        input_yaml_multiple(ler_yaml, key1 = "model_parameters", key2 = model, key3 = unique_pars[par], value = signif(curr_pars[curr_par_set], 4))
+        yml[["model_parameters"]][[model]][[unique_pars[par]]] <- signif(curr_pars[curr_par_set], 4)
 
       }
     }
@@ -222,7 +222,7 @@ run_model_ler <- function(model,
 
         curr_par_set <- which(par_names == unique_pars[par])
         curr_nml <- par_file[curr_par_set[1]]
-        input_yaml_multiple(ler_yaml, key1 = "model_parameters", key2 = model, key3 = unique_pars[par], value = signif(curr_pars[curr_par_set], 4))
+        yml$model_parameters$Simstrat[[par_names[par]]] <- signif(curr_pars[curr_par_set], 4)
 
       }
     }
@@ -233,7 +233,7 @@ run_model_ler <- function(model,
   the_temps_enkf_tmp <- x_start[1:ndepths_modeled]
 
   the_temps <- approx(modeled_depths,the_temps_enkf_tmp, model_depths_mid, rule = 2)$y
-  the_sals <- approx(modeled_depths, salt_start, model_depths_mid, rule = 2)$y
+
 
   init_prof <- data.frame(Depth_meter = round(model_depths_tmp, 4),
                           Water_Temperature_celsius = round(the_temps, 4))
@@ -241,12 +241,14 @@ run_model_ler <- function(model,
             row.names = FALSE, quote = FALSE)
 
   #ALLOWS THE LOOPING THROUGH NOAA ENSEMBLES
-  input_yaml_multiple(ler_yaml, key1 = "input", key2 = "init_temp_profile", key3 = "file", value = "initial_profile.csv")
-  input_yaml_multiple(ler_yaml, key1 = "input", key2 = "meteo", key3 = "file", value = basename(curr_met_file))
-  gotmtools::input_yaml(ler_yaml, label = "inflows", key = "file", value = basename(unlist(inflow_file_name)))
-  # input_yaml_multiple(ler_yaml, key1 = "inflows", key2 = "file", value = basename(unlist(inflow_file_name)))
-  input_yaml_multiple(ler_yaml, key1 = "time", key2 = "start", value = curr_start)
-  input_yaml_multiple(ler_yaml, key1 = "time", key2 = "stop", value = curr_stop)
+  yml$input$init_temp_profile$file <- "initial_profile.csv"
+  yml$input$meteo$file <- basename(curr_met_file)
+  yml$inflows$file <- basename(unlist(inflow_file_name))
+
+  yml$time$start <- curr_start
+  yml$time$stop <- curr_stop
+
+  LakeEnsemblR::write_yaml(yml, ler_yaml)
 
 
   LakeEnsemblR::export_config(config_file = ler_yaml, model = model, dirs = FALSE,
@@ -297,8 +299,8 @@ run_model_ler <- function(model,
   }
 
   # From LakeEnsemblR::run_ensemble()
-  time_step <- gotmtools::get_yaml_value(ler_yaml, "output", "time_step")
-  time_unit <- gotmtools::get_yaml_value(ler_yaml, "output", "time_unit")
+  time_step <- yml$output$time_step
+  time_unit <- yml$output$time_unit
   if(time_unit == "second"){
     # Needed to create out_time vector
     time_unit <- "sec"
@@ -307,17 +309,7 @@ run_model_ler <- function(model,
   out_time <- data.frame(datetime = seq.POSIXt(as.POSIXct(curr_start),
                                                as.POSIXct(curr_stop),
                                                by = paste(time_step, time_unit)))
-  out_vars <- gotmtools::get_yaml_value(ler_yaml, "output", "variables")
-  # run_model_args <- list(config_file = ler_yaml,
-  #                        folder = working_directory,
-  #                        return_list = TRUE,
-  #                        create_output = FALSE,
-  #                        start = start,
-  #                        stop = stop,
-  #                        verbose = FALSE,
-  #                        obs_deps = modeled_depths,
-  #                        out_time = out_time,
-  #                        out_vars = out_vars)
+  out_vars <- yml$output$variables
 
   # Create output folder
   dir.create(file.path(working_directory, model, "output"), showWarnings = FALSE)
@@ -351,12 +343,12 @@ run_model_ler <- function(model,
                                                   vars_depth = output_vars_multi_depth,
                                                   vars_no_depth = output_vars_no_depth,
                                                   diagnostic_vars = diagnostics_names,
-                                                  ler_yaml = ler_yaml)
+                                                  ler_yaml = yml)
 
 
         num_model_depths <- length(ler_temp_out$depths_enkf)
-        temps <- rev(ler_temp_out$output[ ,1])
-        # temps <- (ler_temp_out$output[ ,1])
+        # temps <- rev(ler_temp_out$output[ ,1])
+        temps <- (ler_temp_out$output[ ,1])
         model_depths_end[1:num_model_depths] <- ler_temp_out$depths_enkf
 
         model_depths_tmp <- c(ler_temp_out$depths_enkf, ler_temp_out$lake_depth)
