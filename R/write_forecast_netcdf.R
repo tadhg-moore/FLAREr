@@ -136,7 +136,7 @@ write_forecast_netcdf <- function(enkf_output,
     }
   }
 
-  ncout <- ncdf4::nc_create(ncfname,def_list,force_v4=T)
+  ncout <- ncdf4::nc_create(ncfname, def_list, force_v4=T)
 
   # create netCDF file and put arrays
   ncdf4::ncvar_put(ncout,def_list[[1]] ,x_efi[,1:length(depths),])

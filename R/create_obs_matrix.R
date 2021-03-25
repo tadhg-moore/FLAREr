@@ -35,8 +35,8 @@ create_obs_matrix <- function(cleaned_observations_file_long, obs_config, start_
                         (is.na(hour) | hour == lubridate::hour(full_time_local[k])),
                         abs(depth-modeled_depths[j]) < obs_config$distance_threshold[i])
 
-        if(nrow(d1) == 1){
-          obs_tmp[k,j] <- d1$value
+        if(nrow(d1) >= 1){
+          obs_tmp[k,j] <- d1$value[1]
         }
       }
     }

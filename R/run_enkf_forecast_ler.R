@@ -30,7 +30,7 @@
 #' - `par_names_save`: the name of the parameter that will  be written in the output file.  This is different that
 #' `par_names` because a single parameter can have multiple zones.  Therefore, `par_names` will be the same but
 #' `par_names_save` will be different so that you know which zone they are associated with
-#' - `par_nml`: GLM namelist that the `par_name` can be found: `glm.nml`, `aed2.nml`,`aed2_phyto_pars.nml`,`aed2_zoop_pars.nml`
+#' - `par_file`: GLM namelist that the `par_name` can be found: `glm.nml`, `aed2.nml`,`aed2_phyto_pars.nml`,`aed2_zoop_pars.nml`
 #' - `par_init`:  Initial value for the parameter
 #' - `par_init_lowerbound`: Lower bound when initilizing with a uniform distribution
 #' - `par_init_upperbound`: Upper bound when initilizing with a uniform distribution
@@ -157,7 +157,7 @@
 #'               obs_config = obs_config)
 #'
 
-run_enkf_forecast <- function(states_init,
+run_enkf_forecast_ler <- function(states_init,
                               pars_init = NULL,
                               aux_states_init,
                               obs,
@@ -165,8 +165,8 @@ run_enkf_forecast <- function(states_init,
                               model_sd,
                               working_directory,
                               met_file_names,
-                              inflow_file_names = NULL,
-                              outflow_file_names = NULL,
+                              inflow_file_names,
+                              outflow_file_names,
                               start_datetime,
                               end_datetime,
                               forecast_start_datetime = NA,
@@ -174,7 +174,8 @@ run_enkf_forecast <- function(states_init,
                               pars_config = NULL,
                               states_config,
                               obs_config,
-                              management = NULL
+                              management = NULL,
+                              model
 ){
 
   if(length(states_config$state_names) > 1){
@@ -188,13 +189,14 @@ run_enkf_forecast <- function(states_init,
   nmembers <- dim(states_init)[3]
   n_met_members <- length(met_file_names)
   if(!is.null(pars_config)){
+    pars_config <- pars_config[pars_config$model == model, ]
     npars <- nrow(pars_config)
     par_names <- pars_config$par_names
-    par_nml <- pars_config$par_nml
+    par_file <- pars_config$par_file
   }else{
     npars <- 0
     par_names <- NA
-    par_nml <- NA
+    par_file <- NA
   }
 
   x_init <- array(NA, dim = c(nmembers, nstates * ndepths_modeled + npars))
@@ -233,15 +235,15 @@ run_enkf_forecast <- function(states_init,
   states_config$wq_start <- wq_start
   states_config$wq_end <- wq_end
 
-  flare:::check_enkf_inputs(states_init,
-                    pars_init,
-                    obs,
-                    psi,
-                    model_sd,
-                    config,
-                    pars_config,
-                    states_config,
-                    obs_config)
+  flare:::check_enkf_inputs_ler(states_init,
+                            pars_init,
+                            obs,
+                            psi,
+                            model_sd,
+                            config,
+                            pars_config,
+                            states_config,
+                            obs_config)
 
   if(is.na(forecast_start_datetime)){
     forecast_start_datetime <- end_datetime
@@ -256,11 +258,11 @@ run_enkf_forecast <- function(states_init,
   if(!is.null(pars_config)){
     npars <- nrow(pars_config)
     par_names <- pars_config$par_names
-    par_nml <- pars_config$par_nml
+    par_file <- pars_config$par_file
   }else{
     npars <- 0
     par_names <- NA
-    par_nml <- NA
+    par_file <- NA
   }
 
   nstates <- dim(x_init)[2] -  npars
@@ -284,7 +286,7 @@ run_enkf_forecast <- function(states_init,
   alpha_v <- 1 - exp(-states_config$vert_decorr_length)
 
 
-  glm_output_vars <- states_config$state_names
+  output_vars <- states_config$state_names
 
 
   if(config$include_wq){
@@ -296,7 +298,7 @@ run_enkf_forecast <- function(states_init,
   if(length(config$diagnostics_names) > 0){
     diagnostics <- array(NA, dim=c(length(config$diagnostics_names), nsteps, ndepths_modeled, nmembers))
   }else{
-    diagnostics <- NA
+    diagnostics <- array(NA, dim=c(1, nsteps, ndepths_modeled, nmembers))
   }
 
   num_phytos <- length(which(stringr::str_detect(states_config$state_names,"PHY_") & !stringr::str_detect(states_config$state_names,"_IP") & !stringr::str_detect(states_config$state_names,"_IN")))
@@ -307,21 +309,19 @@ run_enkf_forecast <- function(states_init,
 
   x_prior <- array(NA, dim = c(nsteps, nmembers, nstates + npars))
 
-  if(!is.null(inflow_file_names)){
+  if(!is.null(ncol(inflow_file_names))) {
     inflow_file_names <- as.matrix(inflow_file_names)
     outflow_file_names <- as.matrix(outflow_file_names)
-  }else{
-    inflow_file_names <- NULL
-    outflow_file_names <- NULL
   }
 
 
-  flare:::set_up_model(executable_location = paste0(find.package("flare"),"/exec/"),
-               config,
-               working_directory,
-               state_names = states_config$state_names,
-               inflow_file_names = inflow_file_names,
-               outflow_file_names = outflow_file_names)
+  flare:::set_up_model_ler(model,
+                           executable_location = paste0(find.package("flare"),"/exec/"),
+                       config,
+                       working_directory,
+                       state_names = states_config$state_names,
+                       inflow_file_names = inflow_file_names,
+                       outflow_file_names = outflow_file_names)
 
   mixing_vars <- array(NA, dim = c(17, nsteps, nmembers))
   model_internal_depths <- array(NA, dim = c(nsteps, 500, nmembers))
@@ -347,15 +347,15 @@ run_enkf_forecast <- function(states_init,
   for(i in start_step:nsteps){
 
     curr_start <- strftime(full_time_local[i - 1],
-                           format="%Y-%m-%d %H:%M",
+                           format="%Y-%m-%d %H:%M:%S",
                            tz = config$local_tzone)
     curr_stop <- strftime(full_time_local[i],
-                          format="%Y-%m-%d %H:%M",
+                          format="%Y-%m-%d %H:%M:%S",
                           tz = config$local_tzone)
 
     message(paste0("Running time step ", i-1, " : ",
-                 curr_start, " - ",
-                 curr_stop))
+                   curr_start, " - ",
+                   curr_stop))
 
     setwd(working_directory)
 
@@ -396,39 +396,40 @@ run_enkf_forecast <- function(states_init,
           outflow_file_name <- NULL
         }
 
-        out <- flare:::run_model(i,
-                        m,
-                        mixing_vars_start = mixing_vars[,i-1 , m],
-                        curr_start,
-                        curr_stop,
-                        par_names,
-                        curr_pars,
-                        working_directory,
-                        par_nml,
-                        num_phytos,
-                        glm_depths_start = model_internal_depths[i-1, ,m ],
-                        lake_depth_start = lake_depth[i-1, m],
-                        x_start = x[i-1, m, ],
-                        full_time_local,
-                        wq_start = states_config$wq_start,
-                        wq_end = states_config$wq_end,
-                        management = management,
-                        hist_days,
-                        modeled_depths = config$modeled_depths,
-                        ndepths_modeled,
-                        curr_met_file,
-                        inflow_file_name = inflow_file_name,
-                        outflow_file_name = outflow_file_name,
-                        glm_output_vars = glm_output_vars,
-                        diagnostics_names = config$diagnostics_names,
-                        npars,
-                        num_wq_vars,
-                        snow_ice_thickness_start = snow_ice_thickness[, i-1,m ],
-                        avg_surf_temp_start = avg_surf_temp[i-1, m],
-                        salt_start = salt[i-1, ,m],
-                        nstates,
-                        state_names = states_config$state_names,
-                        include_wq = config$include_wq)
+        out <- flare:::run_model_ler(model,
+                                     i,
+                                 m,
+                                 mixing_vars_start = mixing_vars[,i-1 , m],
+                                 curr_start,
+                                 curr_stop,
+                                 par_names,
+                                 curr_pars,
+                                 working_directory,
+                                 par_file,
+                                 num_phytos,
+                                 model_depths_start = model_internal_depths[i-1, ,m ],
+                                 lake_depth_start = lake_depth[i-1, m],
+                                 x_start = x[i-1, m, ],
+                                 full_time_local,
+                                 wq_start = states_config$wq_start,
+                                 wq_end = states_config$wq_end,
+                                 management = management,
+                                 hist_days,
+                                 modeled_depths = config$modeled_depths,
+                                 ndepths_modeled,
+                                 curr_met_file,
+                                 inflow_file_name = inflow_file_name,
+                                 outflow_file_name = outflow_file_name,
+                                 output_vars = output_vars,
+                                 diagnostics_names = config$diagnostics_names,
+                                 npars,
+                                 num_wq_vars,
+                                 snow_ice_thickness_start = snow_ice_thickness[, i-1,m ],
+                                 avg_surf_temp_start = avg_surf_temp[i-1, m],
+                                 salt_start = salt[i-1, ,m],
+                                 nstates,
+                                 state_names = states_config$state_names,
+                                 include_wq = config$include_wq)
 
         x_star[m, ] <- out$x_star_end
         lake_depth[i ,m ] <- out$lake_depth_end
@@ -729,8 +730,8 @@ run_enkf_forecast <- function(states_init,
     if(npars > 0){
       for(par in 1:npars){
         message(paste0(pars_config$par_names_save[par],": mean ",
-                     round(mean(pars_corr[,par]),4)," sd ",
-                     round(sd(pars_corr[,par]),4)))
+                       signif(mean(pars_corr[,par]),4)," sd ",
+                       signif(sd(pars_corr[,par]),4)))
       }
     }
 
