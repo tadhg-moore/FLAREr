@@ -248,7 +248,7 @@ run_model_ler <- function(model,
   yml$time$start <- curr_start
   yml$time$stop <- curr_stop
 
-  LakeEnsemblR::write_yaml(yml, ler_yaml)
+  gotmtools::write_yaml(yml, ler_yaml)
 
 
   LakeEnsemblR::export_config(config_file = ler_yaml, model = model, dirs = FALSE,
