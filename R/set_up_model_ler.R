@@ -37,15 +37,15 @@ set_up_model_ler <- function(model,
 
     inflow_var_names <- c("FLOW","TEMP","SALT", non_temp_names)
 
-    ler_yaml <- set_yaml(ler_yaml, value = as.integer(0), key1 = "model_parameters", key2 = "GLM", key3 = "num_wq_vars")
+    ler_yaml <- set_yaml(ler_yaml, value = as.integer(0), key1 = "model_parameters", key2 = "GLM", key3 = "init_profiles/num_wq_vars")
     # ler_yaml <- set_yaml(ler_yaml, value = "''", key1 = "model_parameters", key2 = "GLM", key3 = "wq_names")
-    ler_yaml <- set_yaml(ler_yaml, value = ncol(inflow_file_names), key1 = "model_parameters", key2 = "GLM", key3 = "num_inflows")
-    ler_yaml <- set_yaml(ler_yaml, value = ncol(outflow_file_names), key1 = "model_parameters", key2 = "GLM", key3 = "num_outlet")
+    ler_yaml <- set_yaml(ler_yaml, value = ncol(inflow_file_names), key1 = "model_parameters", key2 = "GLM", key3 = "inflow/num_inflows")
+    ler_yaml <- set_yaml(ler_yaml, value = ncol(outflow_file_names), key1 = "model_parameters", key2 = "GLM", key3 = "outflow/num_outlet")
     ler_yaml$model_parameters$GLM$the_depths <- config$modeled_depths
-    ler_yaml <- set_yaml(ler_yaml, value = length(config$modeled_depths), key1 = "model_parameters", key2 = "GLM", key3 = "num_depths")
-    ler_yaml <- set_yaml(ler_yaml, value = length(inflow_var_names), key1 = "model_parameters", key2 = "GLM", key3 = "inflow_varnum")
-    ler_yaml <- set_yaml(ler_yaml, value = inflow_var_names, key1 = "model_parameters", key2 = "GLM", key3 = "inflow_vars")
-    ler_yaml <- set_yaml(ler_yaml, value = "'output'", key1 = "model_parameters", key2 = "GLM", key3 = "out_dir")
+    ler_yaml <- set_yaml(ler_yaml, value = length(config$modeled_depths), key1 = "model_parameters", key2 = "GLM", key3 = "init_profiles/num_depths")
+    ler_yaml <- set_yaml(ler_yaml, value = length(inflow_var_names), key1 = "model_parameters", key2 = "GLM", key3 = "inflow/inflow_varnum")
+    ler_yaml <- set_yaml(ler_yaml, value = inflow_var_names, key1 = "model_parameters", key2 = "GLM", key3 = "inflow/inflow_vars")
+    ler_yaml <- set_yaml(ler_yaml, value = "'output'", key1 = "model_parameters", key2 = "GLM", key3 = "output/out_dir")
 
     write_yaml(ler_yaml, yaml_file)
 
