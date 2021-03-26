@@ -13,12 +13,12 @@
 #'
 #' @examples
 generate_ler_met_files <- function(obs_met_file = NULL,
-                                     out_dir,
-                                     forecast_dir = NULL,
-                                     local_tzone,
-                                     start_datetime_local,
-                                     end_datetime_local,
-                                     forecast_start_datetime_local){
+                                   out_dir,
+                                   forecast_dir = NULL,
+                                   local_tzone,
+                                   start_datetime_local,
+                                   end_datetime_local,
+                                   forecast_start_datetime_local){
 
   if(is.null(obs_met_file) & is.null(forecast_dir)){
     stop("missing files to convert")
@@ -42,11 +42,11 @@ generate_ler_met_files <- function(obs_met_file = NULL,
   # met_vars <- met_dic2$cfs_name
 
   met_vars <- c("Air_Temperature_celsius",
-                    "Shortwave_Radiation_Downwelling_wattPerMeterSquared",
-                    "Longwave_Radiation_Downwelling_wattPerMeterSquared",
-                    "Relative_Humidity_percent",
-                    "Ten_Meter_Elevation_Wind_Speed_meterPerSecond",
-                    "Precipitation_millimeterPerHour")
+                "Shortwave_Radiation_Downwelling_wattPerMeterSquared",
+                "Longwave_Radiation_Downwelling_wattPerMeterSquared",
+                "Relative_Humidity_percent",
+                "Ten_Meter_Elevation_Wind_Speed_meterPerSecond",
+                "Precipitation_millimeterPerHour")
 
   if(!is.null(obs_met_file)){
     obs_met_nc <- ncdf4::nc_open(obs_met_file)
