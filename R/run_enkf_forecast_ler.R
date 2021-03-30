@@ -254,17 +254,6 @@ run_enkf_forecast_ler <- function(states_init,
   full_time_local <- seq(start_datetime, end_datetime, by = "1 day")
   forecast_days <- as.numeric(end_datetime - forecast_start_datetime)
 
-
-  if(!is.null(pars_config)){
-    npars <- nrow(pars_config)
-    par_names <- pars_config$par_names
-    par_file <- pars_config$par_file
-  }else{
-    npars <- 0
-    par_names <- NA
-    par_file <- NA
-  }
-
   nstates <- dim(x_init)[2] -  npars
   nsteps <- length(full_time_local)
   nmembers <- dim(x_init)[1]
