@@ -51,26 +51,15 @@ get_ler_nc_var_all <- function(model, working_dir, z_out, vars_depth, vars_no_de
   # GOTM ----
   if( model == "GOTM") {
 
-    nc <- ncdf4::nc_open(file.path(working_dir, model, "output", "output.nc"))
-    heights <- abs(ncdf4::ncvar_get(nc, "z")) # WARNING if positive depths
-    final_time_step <- ncol(heights)
-    heights_surf <- max(heights[, final_time_step])
-    heights <- heights[, final_time_step]
-    heights_out <- heights_surf - z_out
-
-    temps <- ncdf4::ncvar_get(nc, "temp")[, final_time_step]
-
-
-    snow <- 0
-    ice_white <- ncdf4::ncvar_get(nc, "Hice")[final_time_step]
-    ice_blue <- 0
-    avg_surf_temp <- NA
-
-
+    temp <- LakeEnsemblR::get_output(config_yaml = ler_yaml, model = model, vars = "temp", obs_depths = z_out)$temp
+    salt <- LakeEnsemblR::get_output(config_yaml = ler_yaml, model = model, vars = "salt", obs_depths = z_out)$salt
+    ice <- LakeEnsemblR::get_output(config_yaml = ler_yaml, model = model, vars = "ice_height")$ice_height
+    deps <- rLakeAnalyzer::get.offsets(temp)
+    final_time_step <- nrow(temp)
 
     output <- array(NA, dim=c(length(temps), length(vars_depth)))
     for(v in 1:length(vars_depth)){
-      output[,v] <- ncdf4::ncvar_get(nc, vars_depth[v])[, final_time_step]
+      output[,v] <- temps
     }
 
     output_no_depth <- NA
@@ -87,11 +76,19 @@ get_ler_nc_var_all <- function(model, working_dir, z_out, vars_depth, vars_no_de
 
     mixing_vars <- NA # ncdf4::ncvar_get(nc, "restart_variables")
 
-    salt <- ncdf4::ncvar_get(nc, "salt")[, final_time_step]
+    salt <- unlist(salt[final_time_step, -1])
 
-    depths_enkf = heights[1] - heights
+    depths_enkf = heights
 
+    nc <- ncdf4::nc_open(file.path(working_dir, model, "output", "output.nc"))
+    snow <- 0
+    ice_white <- ncdf4::ncvar_get(nc, "Hice")[final_time_step]
+    ice_blue <- 0
+    avg_surf_temp <- NA
     ncdf4::nc_close(nc)
+
+
+
   }
 
   # Simstrat ----
