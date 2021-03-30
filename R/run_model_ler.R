@@ -64,10 +64,6 @@ run_model_ler <- function(model,
 
   ler_yaml <- "test.yaml"
   yml <- yaml::read_yaml(file.path(working_directory, ler_yaml))
-  #
-  #
-  # yml <- configr::read.config(file.path(working_directory, ler_yaml))
-  # configr::write.config(yml, file.path(working_directory, ler_yaml))
 
   model_depths_end <- rep(NA,length(model_depths_start))
 
@@ -81,7 +77,7 @@ run_model_ler <- function(model,
   # GLM ----
   if( model == "GLM") {
 
-    yml$model_parameters$GLM$restart_variables <- mixing_vars_start
+    yml$model_parameters$GLM$`init_profiles/restart_variables` <- mixing_vars_start
 
     # update_glm_nml_list <- list()
     update_aed_nml_list <- list()
@@ -162,25 +158,15 @@ run_model_ler <- function(model,
     }
 
 
-
-    # input_yaml_multiple(ler_yaml, key1 = "model_parameters", key2 = "GLM", key3 = "the_sals", value = round(the_sals_glm, 4))
-    # input_yaml_multiple(ler_yaml, key1 = "model_parameters", key2 = "GLM", key3 = "num_depths", value = length(model_depths_tmp))
-    # input_yaml_multiple(ler_yaml, key1 = "model_parameters", key2 = "GLM", key3 = "lake_depth", value = round(lake_depth_start, 4))
-    # input_yaml_multiple(ler_yaml, key1 = "model_parameters", key2 = "GLM", key3 = "snow_thickness", value = 0)
-    # input_yaml_multiple(ler_yaml, key1 = "model_parameters", key2 = "GLM", key3 = "white_ice_thickness", value = round(snow_ice_thickness_start[2], 4))
-    # input_yaml_multiple(ler_yaml, key1 = "model_parameters", key2 = "GLM", key3 = "blue_ice_thickness", value = round(snow_ice_thickness_start[3], 4))
-    # input_yaml_multiple(ler_yaml, key1 = "model_parameters", key2 = "GLM", key3 = "avg_surf_temp", value = round(avg_surf_temp_start, 4))
-    # input_yaml_multiple(ler_yaml, key1 = "model_parameters", key2 = "GLM", key3 = "out_dir", value = "'output'")
-
     # yml[["model_parameters"]][[model]][["the_temps"]] <- round(the_temps_glm, 4)
-    yml[["model_parameters"]][[model]][["the_sals"]] <- round(the_sals, 4)
+    # yml[["model_parameters"]][[model]][["the_sals"]] <- round(the_sals, 4)
     # yml[["model_parameters"]][[model]][["the_depths"]] <- round(model_depths_tmp, 4)
-    yml[["model_parameters"]][[model]][["num_depths"]] <- length(model_depths_tmp)
-    yml[["model_parameters"]][[model]][["lake_depth"]] <- round(lake_depth_start, 4)
-    yml[["model_parameters"]][[model]][["snow_thickness"]] <- 0
-    yml[["model_parameters"]][[model]][["white_ice_thickness"]] <- round(snow_ice_thickness_start[2], 4)
-    yml[["model_parameters"]][[model]][["blue_ice_thickness"]] <- round(snow_ice_thickness_start[3], 4)
-    yml[["model_parameters"]][[model]][["avg_surf_temp"]] <- round(avg_surf_temp_start, 4)
+    # yml[["model_parameters"]][[model]][["num_depths"]] <- length(model_depths_tmp)
+    yml[["model_parameters"]][[model]][["init_profiles/lake_depth"]] <- round(lake_depth_start, 4)
+    yml[["model_parameters"]][[model]][["init_profiles/snow_thickness"]] <- 0
+    yml[["model_parameters"]][[model]][["init_profiles/white_ice_thickness"]] <- round(snow_ice_thickness_start[2], 4)
+    yml[["model_parameters"]][[model]][["init_profiles/blue_ice_thickness"]] <- round(snow_ice_thickness_start[3], 4)
+    yml[["model_parameters"]][[model]][["init_profiles/avg_surf_temp"]] <- round(avg_surf_temp_start, 4)
 
 
 
