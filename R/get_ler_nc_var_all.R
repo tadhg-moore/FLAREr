@@ -57,6 +57,13 @@ get_ler_nc_var_all <- function(model, working_dir, z_out, vars_depth, vars_no_de
     deps <- rLakeAnalyzer::get.offsets(temp)
     final_time_step <- nrow(temp)
 
+    # No varying water level in Simstrat
+    heights_surf <- max(deps)
+    heights <- deps
+    # heights_out <- rep()
+
+    temps <- unlist(temp[final_time_step, -1])
+
     output <- array(NA, dim=c(length(temps), length(vars_depth)))
     for(v in 1:length(vars_depth)){
       output[,v] <- temps
