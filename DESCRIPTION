@@ -36,6 +36,8 @@ Suggests:
     knitr,
     rmarkdown,
     GLM3r,
+    glmtools,
+    gotmtools,
     testthat (>= 3.0.0),
     covr
 VignetteBuilder: knitr
