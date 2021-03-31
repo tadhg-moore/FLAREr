@@ -68,10 +68,13 @@ jobs:
 
       - name: Install dependencies
         run: |
-          remotes::install_deps(dependencies = TRUE)
-          remotes::install_cran("rcmdcheck")
+          install.packages(c("remotes"))
           remotes::install_github('eco4cast/EFIstandards')
           remotes::install_github("aemon-j/GLM3r", ref = "v3.1.1")
+          remotes::install_github("aemon-j/gotmtools", ref = "yaml")
+          remotes::install_github("USGS-R/glmtools", ref = "ggplot_overhaul")
+          remotes::install_deps(dependencies = TRUE)
+          remotes::install_cran("rcmdcheck")
         shell: Rscript {0}
 
       - name: Check
