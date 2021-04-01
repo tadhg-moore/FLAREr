@@ -1,4 +1,9 @@
+template_folder <- system.file("data", package= "flare")
+temp_dir <- tempdir()
+# dir.create("example")
+file.copy(from = template_folder, to = temp_dir, recursive = TRUE)
 
+test_location <- file.path(temp_dir, "data")
 forecast_location <- test_location
 execute_location <- file.path(test_location, "output")
 data_location <- file.path(test_location, "input_data")

@@ -6,14 +6,8 @@ test_that("met files are generated", {
   # library(tidyverse)
 
   template_folder <- system.file("data", package= "flare")
-  temp_dir <- tempdir()
-  # dir.create("example")
-  file.copy(from = template_folder, to = temp_dir, recursive = TRUE)
 
-  # test_location <- "C:\\Users\\mooret\\Desktop\\FLARE\\flare-1\\inst\\data"
-  test_location <- file.path(temp_dir, "data")
-
-  source(file.path(test_location, "test_met_prep.R"))
+  source(file.path(template_folder, "test_met_prep.R"))
 
   met_out <- flare::generate_glm_met_files(obs_met_file = observed_met_file,
                                            out_dir = config$run_config$execute_location,
@@ -32,17 +26,9 @@ test_that("met files are generated", {
 test_that("inflow & outflow files are generated", {
 
   # library(tidyverse)
-
   template_folder <- system.file("data", package= "flare")
-  temp_dir <- tempdir()
-  # dir.create("example")
-  file.copy(from = template_folder, to = temp_dir, recursive = TRUE)
 
-  # test_location <- "C:\\Users\\mooret\\Desktop\\FLARE\\flare-1\\inst\\data"
-  test_location <- file.path(temp_dir, "data")
-
-  source(file.path(test_location, "test_met_prep.R"))
-  source(file.path(test_location, "test_inflow_prep.R"))
+  source(file.path(template_folder, "test_inflow_prep.R"))
 
 
   inflow_forecast_path <- file.path(config$data_location)
