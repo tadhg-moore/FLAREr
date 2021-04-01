@@ -97,22 +97,20 @@ test_that("generate states to obs mapping", {
   source(file.path(test_location, "test_met_prep.R"))
 
   states_config <- flare::generate_states_to_obs_mapping(states_config, obs_config)
-  testthat::expect_true(is_tibble(states_config))
+  testthat::expect_true(is.data.frame(states_config))
 })
 
 
 
 test_that("initial model error is generated", {
 
-  # library(tidyverse)
-
   template_folder <- system.file("data", package= "flare")
   temp_dir <- tempdir()
   # dir.create("example")
   file.copy(from = template_folder, to = temp_dir, recursive = TRUE)
 
-  test_location <- "C:\\Users\\mooret\\Desktop\\FLARE\\flare-1\\inst\\data"
-  # test_location <- file.path(temp_dir, "data")
+  # test_location <- "C:\\Users\\mooret\\Desktop\\FLARE\\flare-1\\inst\\data"
+  test_location <- file.path(temp_dir, "data")
 
   source(file.path(test_location, "test_met_prep.R"))
 
@@ -126,8 +124,6 @@ test_that("initial model error is generated", {
 
 #Set initial conditions
 test_that("initial conditions are generated", {
-
-  # library(tidyverse)
 
   template_folder <- system.file("data", package= "flare")
   temp_dir <- tempdir()
