@@ -8,6 +8,7 @@
 #' @param forecast_start_datetime
 #' @param local_tzone
 #'
+#' @importFrom zoo na.approx
 #' @return
 #' @export
 #'
@@ -58,7 +59,7 @@ generate_ler_met_files <- function(obs_met_file = NULL,
     names(met) <- c("datetime", met_vars)
     met <- met %>%
       dplyr::filter(datetime %in% full_time_UTC_hist)
-	  
+
 	if(!(dplyr::last(full_time_UTC_hist) %in% met$time)){
       historical_met_error <- TRUE
     }else{
@@ -66,7 +67,7 @@ generate_ler_met_files <- function(obs_met_file = NULL,
     }
   }else{
     met <- NULL
-	historical_met_error <- FALSE							 
+	historical_met_error <- FALSE
   }
 
   if(!is.null(forecast_dir)){
@@ -108,13 +109,14 @@ generate_ler_met_files <- function(obs_met_file = NULL,
       current_filename <- paste0('met.csv')
     }
 
-    #convert units to GLM
+    #convert units to LER
     combined_met$Air_Temperature_celsius <- combined_met$Air_Temperature_celsius - 273.15
     combined_met$Relative_Humidity_percent <- combined_met$Relative_Humidity_percent * 100
+    # Catch RelH = 0
     if( any(combined_met$Relative_Humidity_percent == 0)) {
       idx <- which(combined_met$Relative_Humidity_percent == 0)
       combined_met$Relative_Humidity_percent[idx] <- NA
-      combined_met$Relative_Humidity_percent <- zoo::na.approx(combined_met$Relative_Humidity_percent)
+      combined_met$Relative_Humidity_percent <- zoo::na.approx(combined_met$Relative_Humidity_percent, rule = 2)
     }
 
     combined_met$Precipitation_millimeterPerHour <- combined_met$Precipitation_millimeterPerHour * (60 * 60)
@@ -133,6 +135,6 @@ generate_ler_met_files <- function(obs_met_file = NULL,
     filenames[j] <- paste0(out_dir, "/", current_filename)
   }
 
-  return(filenames = filenames,
-		 historical_met_error = historical_met_error)
+  return(list(filenames = filenames,
+		 historical_met_error = historical_met_error))
 }

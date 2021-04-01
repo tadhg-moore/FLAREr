@@ -11,7 +11,8 @@ generate_ler_met_files(
   local_tzone,
   start_datetime_local,
   end_datetime_local,
-  forecast_start_datetime_local
+  forecast_start_datetime_local,
+  use_forecasted_met
 )
 }
 \arguments{
