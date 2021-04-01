@@ -18,28 +18,25 @@ generate_ler_met_files <- function(obs_met_file = NULL,
                                    local_tzone,
                                    start_datetime_local,
                                    end_datetime_local,
-                                   forecast_start_datetime_local){
+                                   forecast_start_datetime_local,
+                                   use_forecasted_met){
 
   if(is.null(obs_met_file) & is.null(forecast_dir)){
     stop("missing files to convert")
   }
 
   start_datetime_UTC <- lubridate::with_tz(start_datetime_local, tzone = "UTC")
-  end_datetime_UTC <- lubridate::with_tz(end_datetime_local, tzone = "UTC")
+  end_datetime_UTC <- lubridate::with_tz(end_datetime_local, tzone = "UTC") - lubridate::hours(1)
   forecast_start_datetime_UTC <- lubridate::with_tz(forecast_start_datetime_local, tzone = "UTC")
 
   full_time_UTC <- seq(start_datetime_UTC, end_datetime_UTC, by = "1 hour")
-  full_time_UTC_hist <- seq(start_datetime_UTC, forecast_start_datetime_UTC, by = "1 hour")
+  full_time_UTC_hist <- seq(start_datetime_UTC, forecast_start_datetime_UTC - lubridate::hours(1), by = "1 hour")
   cf_met_vars <- c("air_temperature",
                    "surface_downwelling_shortwave_flux_in_air",
                    "surface_downwelling_longwave_flux_in_air",
                    "relative_humidity",
                    "wind_speed",
                    "precipitation_flux")
-  # met_vars <- gotmtools::list_vars(obs_met_file)
-  # met_dic2 <- met_dic[which(met_dic$cfs_name %in% met_vars), ]
-  # ler_names <- met_dic2$standard_name
-  # met_vars <- met_dic2$cfs_name
 
   met_vars <- c("Air_Temperature_celsius",
                 "Shortwave_Radiation_Downwelling_wattPerMeterSquared",
@@ -60,13 +57,22 @@ generate_ler_met_files <- function(obs_met_file = NULL,
     }
     names(met) <- c("datetime", met_vars)
     met <- met %>%
-      dplyr::filter(datetime %in% full_time_UTC_hist[1:(length(full_time_UTC_hist)-1)])
+      dplyr::filter(datetime %in% full_time_UTC_hist)
+	  
+	if(!(dplyr::last(full_time_UTC_hist) %in% met$time)){
+      historical_met_error <- TRUE
+    }else{
+      historical_met_error <- FALSE
+    }
   }else{
     met <- NULL
+	historical_met_error <- FALSE							 
   }
 
   if(!is.null(forecast_dir)){
-    forecast_files <- list.files(forecast_dir, full.names = TRUE)
+    forecast_files <- list.files(forecast_dir, pattern = ".nc", full.names = TRUE)
+
+    forecast_files <- forecast_files[!stringr::str_detect(string = forecast_files, pattern = basename(obs_met_file))]
     nfiles <-   length(forecast_files)
   }else if(!is.null(met)){
     nfiles <-   1
@@ -76,7 +82,7 @@ generate_ler_met_files <- function(obs_met_file = NULL,
 
   for(j in 1:nfiles){
 
-    if(!is.null(forecast_dir)){
+    if(!is.null(forecast_dir) & use_forecasted_met){
 
       ens <- dplyr::last(unlist(stringr::str_split(basename(forecast_files[j]),"_")))
       ens <- stringr::str_sub(ens,1,5)
@@ -127,5 +133,6 @@ generate_ler_met_files <- function(obs_met_file = NULL,
     filenames[j] <- paste0(out_dir, "/", current_filename)
   }
 
-  return(filenames)
+  return(filenames = filenames,
+		 historical_met_error = historical_met_error)
 }
