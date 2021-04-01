@@ -3,7 +3,7 @@
 #### NEED A TEST HERE TO CHECK THAT MET FILES ARE GENERATED AND CORRECT
 test_that("met files are generated", {
 
-  library(tidyverse)
+  # library(tidyverse)
 
   template_folder <- system.file("data", package= "flare")
   temp_dir <- tempdir()
@@ -31,7 +31,7 @@ test_that("met files are generated", {
 #Inflow Drivers (already done)
 test_that("inflow & outflow files are generated", {
 
-  library(tidyverse)
+  # library(tidyverse)
 
   template_folder <- system.file("data", package= "flare")
   temp_dir <- tempdir()
@@ -70,7 +70,7 @@ test_that("inflow & outflow files are generated", {
 #### NEED A TEST HERE TO CHECK THAT OBS MATRIX IS GENERATED AND CORRECT
 test_that("observation matrix is generated and correct", {
 
-  library(tidyverse)
+  # library(tidyverse)
 
   template_folder <- system.file("data", package= "flare")
   temp_dir <- tempdir()
@@ -98,7 +98,7 @@ test_that("observation matrix is generated and correct", {
 
 test_that("generate states to obs mapping", {
 
-  library(tidyverse)
+  # library(tidyverse)
 
   template_folder <- system.file("data", package= "flare")
   temp_dir <- tempdir()
@@ -118,7 +118,7 @@ test_that("generate states to obs mapping", {
 
 test_that("initial model error is generated", {
 
-  library(tidyverse)
+  # library(tidyverse)
 
   template_folder <- system.file("data", package= "flare")
   temp_dir <- tempdir()
@@ -141,7 +141,7 @@ test_that("initial model error is generated", {
 #Set initial conditions
 test_that("initial conditions are generated", {
 
-  library(tidyverse)
+  # library(tidyverse)
 
   template_folder <- system.file("data", package= "flare")
   temp_dir <- tempdir()
@@ -173,7 +173,7 @@ test_that("initial conditions are generated", {
 
 test_that("EnKF can be run", {
 
-  library(tidyverse)
+  # library(tidyverse)
 
   template_folder <- system.file("data", package= "flare")
   temp_dir <- tempdir()
