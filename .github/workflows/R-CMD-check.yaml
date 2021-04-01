@@ -68,7 +68,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          install.packages(c("remotes"))
+          install.packages(c("remotes", "tidyverse"))
           remotes::install_github('eco4cast/EFIstandards')
           remotes::install_github("aemon-j/GLM3r", ref = "v3.1.1")
           remotes::install_github("aemon-j/gotmtools", ref = "yaml")
