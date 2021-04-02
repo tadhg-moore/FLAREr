@@ -23,7 +23,7 @@ create_obs_matrix <- function(cleaned_observations_file_long, obs_config, start_
 
   obs_list <- list()
   for(i in 1:length(obs_config$state_names_obs)){
-    print(paste0("Extracting ",obs_config$target_variable[i]))
+    message("Extracting ",obs_config$target_variable[i])
 
     obs_tmp <- array(NA,dim = c(length(full_time_local),length(modeled_depths)))
 
@@ -39,6 +39,11 @@ create_obs_matrix <- function(cleaned_observations_file_long, obs_config, start_
           obs_tmp[k,j] <- d1$value[1]
         }
       }
+    }
+
+    # Check for NAs
+    if(sum(is.na(obs_tmp)) == (dim(obs_tmp)[1] * dim(obs_tmp)[2]) ) {
+      warning("All values are NA for ", obs_config$target_variable[i])
     }
 
     obs_list[[i]] <- obs_tmp
