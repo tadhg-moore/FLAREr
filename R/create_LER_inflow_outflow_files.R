@@ -8,6 +8,7 @@
 #' @param forecast_start_datetime_local
 #' @param use_future_inflow
 #' @param state_names
+#' @param tz
 #'
 #' @return
 #' @export
@@ -20,11 +21,13 @@ create_ler_inflow_outflow_files <- function(inflow_file_dir,
                                             end_datetime_local,
                                             forecast_start_datetime_local,
                                             use_future_inflow,
-                                            state_names)
+                                            state_names,
+                                            tz)
 
 {
 
   obs_inflow <- readr::read_csv(inflow_obs, col_types = readr::cols())
+  hour_step <- lubridate::hour(start_datetime_local)
 
   if(use_future_inflow){
     obs_inflow <- obs_inflow %>%
@@ -81,12 +84,15 @@ create_ler_inflow_outflow_files <- function(inflow_file_dir,
 
         obs_inflow_tmp <- obs_inflow %>%
           dplyr::filter(inflow_num == j,
-                        time < lubridate::as_date(forecast_start_datetime_local)) %>%
+                        time < forecast_start_datetime_local) %>%
           dplyr::select(c("time", "FLOW", "TEMP", "SALT"))
 
 
         inflow <- rbind(obs_inflow_tmp, d)
         inflow <- as.data.frame(inflow)
+        # inflow[, 1] <- as.POSIXct(inflow[, 1], tz = tz) + lubridate::hours(hour_step)
+        inflow[, 1] <- format(inflow[, 1], format="%Y-%m-%d %H:%M:%S")
+        inflow[, 1] <- lubridate::with_tz(inflow[, 1]) + lubridate::hours(hour_step)
         inflow[, 1] <- format(inflow[, 1], format="%Y-%m-%d %H:%M:%S")
         colnames(inflow) <- c("datetime", "Flow_metersCubedPerSecond", "Water_Temperature_celsius", "Salinity_practicalSalinityUnits")
 
