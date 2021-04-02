@@ -79,6 +79,7 @@ jobs:
           remotes::install_github("aemon-j/SimstratR")
           remotes::install_github("aemon-j/gotmtools")
           remotes::install_github("USGS-R/glmtools", ref = "ggplot_overhaul")
+          remotes::install_github("tadhg-moore/LakeEnsemblR", ref = "flare")
           remotes::install_deps(dependencies = TRUE)
           remotes::install_cran("rcmdcheck")
         shell: Rscript {0}
