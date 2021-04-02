@@ -32,14 +32,14 @@ Imports:
     ggplot2,
     rMR,
     patchwork,
-    zoo
+    zoo,
+    GLM3r,
+    glmtools,
+    gotmtools
 Suggests: 
     knitr,
     rmarkdown,
     testthat (>= 3.0.0),
-    covr,
-    GLM3r,
-    glmtools,
-    gotmtools
+    covr
 VignetteBuilder: knitr
 Config/testthat/edition: 3
