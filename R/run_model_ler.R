@@ -17,6 +17,7 @@
 
 
 run_model_ler <- function(model,
+                          ler_yaml,
                       i,
                       m,
                       mixing_vars_start,
@@ -62,7 +63,6 @@ run_model_ler <- function(model,
     simulate_sss <- management$simulate_sss
   }
 
-  ler_yaml <- "test.yaml"
   yml <- yaml::read_yaml(file.path(working_directory, ler_yaml))
 
   model_depths_end <- rep(NA,length(model_depths_start))
