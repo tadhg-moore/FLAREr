@@ -12,11 +12,12 @@ create_ler_inflow_outflow_files(
   end_datetime_local,
   forecast_start_datetime_local,
   use_future_inflow,
-  state_names
+  state_names,
+  tz
 )
 }
 \arguments{
-\item{state_names}{}
+\item{tz}{}
 }
 \value{
 

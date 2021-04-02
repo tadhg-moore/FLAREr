@@ -68,6 +68,11 @@ test_that("observation matrix is generated and correct", {
 
   source(file.path(test_location, "test_met_prep.R"))
 
+  obs_tmp <- read.csv(cleaned_observations_file_long)
+  obs_tmp$hour[which(obs_tmp$hour == 7)] <- 19
+  write.csv(obs_tmp, cleaned_observations_file_long, row.names = FALSE, quote = FALSE)
+
+
   obs <- flare::create_obs_matrix(cleaned_observations_file_long,
                                   obs_config,
                                   start_datetime_local,
@@ -135,6 +140,10 @@ test_that("LER-GLM initial conditions are generated", {
 
   source(file.path(test_location, "test_met_prep_ler.R"))
 
+  obs_tmp <- read.csv(cleaned_observations_file_long)
+  obs_tmp$hour[which(obs_tmp$hour == 7)] <- 19
+  write.csv(obs_tmp, cleaned_observations_file_long, row.names = FALSE, quote = FALSE)
+
   obs <- flare::create_obs_matrix(cleaned_observations_file_long,
                                   obs_config,
                                   start_datetime_local,
@@ -165,6 +174,10 @@ test_that("LER-GOTM initial conditions are generated", {
   test_location <- file.path(temp_dir, "data")
 
   source(file.path(test_location, "test_met_prep_ler.R"))
+
+  obs_tmp <- read.csv(cleaned_observations_file_long)
+  obs_tmp$hour[which(obs_tmp$hour == 7)] <- 19
+  write.csv(obs_tmp, cleaned_observations_file_long, row.names = FALSE, quote = FALSE)
 
   obs <- flare::create_obs_matrix(cleaned_observations_file_long,
                                   obs_config,
@@ -197,6 +210,10 @@ test_that("LER-Simstrat initial conditions are generated", {
 
   source(file.path(test_location, "test_met_prep_ler.R"))
 
+  obs_tmp <- read.csv(cleaned_observations_file_long)
+  obs_tmp$hour[which(obs_tmp$hour == 7)] <- 19
+  write.csv(obs_tmp, cleaned_observations_file_long, row.names = FALSE, quote = FALSE)
+
   obs <- flare::create_obs_matrix(cleaned_observations_file_long,
                                   obs_config,
                                   start_datetime_local,
@@ -216,6 +233,7 @@ test_that("LER-Simstrat initial conditions are generated", {
 })
 
 # LER-GLM-EnKF Tests ----
+# library(testthat)
 test_that("LER-GLM-EnKF can be run", {
 
   # library(tidyverse)
