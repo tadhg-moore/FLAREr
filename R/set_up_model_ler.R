@@ -14,7 +14,10 @@ set_up_model_ler <- function(model,
          Windows = { machine <- "windows"})
 
 
-  yaml_file <- "test.yaml"
+
+  file.copy(from = file.path(config$run_config$forecast_location, config$ler_yaml),
+            to = file.path(working_directory, "LakeEnsemblR.yaml"), overwrite = TRUE)
+  yaml_file <- file.path(working_directory, "LakeEnsemblR.yaml")
   ler_yaml <- read_yaml(yaml_file)
   # yml <- yaml::read_yaml(file.path(working_directory, ler_yaml))
   ler_directory <- gsub(config$lake_name_code, "", working_directory)
@@ -27,6 +30,7 @@ set_up_model_ler <- function(model,
     # dir.create(model_directory, showWarnings = FALSE)
     # tmp <- file.copy(from = fl, to = model_directory, overwrite = TRUE)
 
+    dir.create(file.path(working_directory, "GLM"), showWarnings = FALSE)
     file.copy(from = file.path(config$run_config$forecast_location, config$base_GLM_nml),
               to = file.path(working_directory, "GLM", "glm3.nml"), overwrite = TRUE)
 
@@ -73,7 +77,7 @@ set_up_model_ler <- function(model,
   # yaml::write_yaml(yml, file.path(working_directory, "test.yaml")) # file.path(working_directory, ler_yaml)
 
 
-  LakeEnsemblR::export_config(config_file = "test.yaml", model = model, dirs = TRUE,
+  LakeEnsemblR::export_config(config_file = basename(yaml_file), model = model, dirs = TRUE,
                               time = FALSE, location = TRUE, output_settings = TRUE,
                               meteo = FALSE, init_cond = FALSE, extinction = TRUE,
                               inflow = FALSE, model_parameters = TRUE,
