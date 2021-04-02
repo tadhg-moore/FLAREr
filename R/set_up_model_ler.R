@@ -18,7 +18,7 @@ set_up_model_ler <- function(model,
   file.copy(from = file.path(config$run_config$forecast_location, config$ler_yaml),
             to = file.path(working_directory, "LakeEnsemblR.yaml"), overwrite = TRUE)
   yaml_file <- file.path(working_directory, "LakeEnsemblR.yaml")
-  ler_yaml <- read_yaml(yaml_file)
+  ler_yaml <- yaml::read_yaml(yaml_file)
   # yml <- yaml::read_yaml(file.path(working_directory, ler_yaml))
   ler_directory <- gsub(config$lake_name_code, "", working_directory)
 
