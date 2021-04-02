@@ -251,7 +251,7 @@ test_that("LER-GLM-EnKF can be run", {
   aux_states_init$salt <- init$salt
 
   #Run EnKF
-  library(LakeEnsemblR); library(gotmtools)
+  # library(LakeEnsemblR); library(gotmtools)
 
   enkf_output <- flare::run_enkf_forecast_ler(states_init = init$states,
                                           pars_init = init$pars,
@@ -340,7 +340,7 @@ test_that("LER-GOTM-EnKF can be run", {
   aux_states_init$salt <- init$salt
 
   #Run EnKF
-  library(LakeEnsemblR); library(gotmtools)
+  # library(LakeEnsemblR); library(gotmtools)
 
   config$diagnostics_names <- NULL
 
@@ -431,7 +431,7 @@ test_that("LER-Simstrat-EnKF can be run", {
   aux_states_init$salt <- init$salt
 
   #Run EnKF
-  library(LakeEnsemblR); library(gotmtools)
+  # library(LakeEnsemblR); library(gotmtools)
 
   config$diagnostics_names <- NULL
 
