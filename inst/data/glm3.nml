@@ -27,6 +27,7 @@
    lake_name = 'FallingCreek'
    latitude = 37.30768
    longitude = -79.83707
+   crest_elev = 510
    bsn_len = 711.699
    bsn_wid = 226.03
    bsn_vals = 31
