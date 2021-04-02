@@ -386,6 +386,7 @@ run_enkf_forecast_ler <- function(states_init,
         }
 
         out <- flare:::run_model_ler(model,
+                                     ler_yaml = config$ler_yaml,
                                      i,
                                  m,
                                  mixing_vars_start = mixing_vars[,i-1 , m],
@@ -800,7 +801,7 @@ run_enkf_forecast_ler <- function(states_init,
               da_qc_flag = da_qc_flag,
               config = config,
               states_config = states_config,
-              pars_config = pars_config,
+              pars_config = tibble::as_tibble(pars_config),
               obs_config = obs_config,
               met_file_names = met_file_names))
 }
