@@ -96,6 +96,7 @@ generate_ler_met_files <- function(obs_met_file = NULL,
       for(i in 1:length(cf_met_vars)){
         noaa_met <- cbind(noaa_met, ncdf4::ncvar_get(noaa_met_nc, cf_met_vars[i]))
       }
+      ncdf4::nc_close(noaa_met_nc)
 
       names(noaa_met) <- c("datetime", met_vars)
       noaa_met <- noaa_met %>%
