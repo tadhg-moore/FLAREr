@@ -123,7 +123,7 @@ test_that("initial model error is generated", {
 
 
 #Set initial conditions
-test_that("initial conditions are generated", {
+test_that("LER-GLM initial conditions are generated", {
 
   template_folder <- system.file("data", package= "flare")
   temp_dir <- tempdir()
@@ -133,7 +133,7 @@ test_that("initial conditions are generated", {
   # test_location <- "C:\\Users\\mooret\\Desktop\\FLARE\\flare-1\\inst\\data"
   test_location <- file.path(temp_dir, "data")
 
-  source(file.path(test_location, "test_met_prep.R"))
+  source(file.path(test_location, "test_met_prep_ler.R"))
 
   obs <- flare::create_obs_matrix(cleaned_observations_file_long,
                                   obs_config,
@@ -142,18 +142,81 @@ test_that("initial conditions are generated", {
                                   local_tzone = config$local_tzone,
                                   modeled_depths = config$modeled_depths)
 
-  init <- flare::generate_initial_conditions(states_config,
+  init <- flare::generate_initial_conditions_ler(states_config,
                                              obs_config,
                                              pars_config,
                                              obs,
-                                             config)
+                                             config,
+                                             model = "GLM")
+  testthat::expect_true(is.list(init))
+  chk <- lapply(init, is.array)
+  testthat::expect_true(any(unlist(chk)))
+})
+
+#Set initial conditions
+test_that("LER-GOTM initial conditions are generated", {
+
+  template_folder <- system.file("data", package= "flare")
+  temp_dir <- tempdir()
+  # dir.create("example")
+  file.copy(from = template_folder, to = temp_dir, recursive = TRUE)
+
+  # test_location <- "C:\\Users\\mooret\\Desktop\\FLARE\\flare-1\\inst\\data"
+  test_location <- file.path(temp_dir, "data")
+
+  source(file.path(test_location, "test_met_prep_ler.R"))
+
+  obs <- flare::create_obs_matrix(cleaned_observations_file_long,
+                                  obs_config,
+                                  start_datetime_local,
+                                  end_datetime_local,
+                                  local_tzone = config$local_tzone,
+                                  modeled_depths = config$modeled_depths)
+
+  init <- flare::generate_initial_conditions_ler(states_config,
+                                                 obs_config,
+                                                 pars_config,
+                                                 obs,
+                                                 config,
+                                                 model = "GOTM")
+  testthat::expect_true(is.list(init))
+  chk <- lapply(init, is.array)
+  testthat::expect_true(any(unlist(chk)))
+})
+
+#Set initial conditions
+test_that("LER-Simstrat initial conditions are generated", {
+
+  template_folder <- system.file("data", package= "flare")
+  temp_dir <- tempdir()
+  # dir.create("example")
+  file.copy(from = template_folder, to = temp_dir, recursive = TRUE)
+
+  # test_location <- "C:\\Users\\mooret\\Desktop\\FLARE\\flare-1\\inst\\data"
+  test_location <- file.path(temp_dir, "data")
+
+  source(file.path(test_location, "test_met_prep_ler.R"))
+
+  obs <- flare::create_obs_matrix(cleaned_observations_file_long,
+                                  obs_config,
+                                  start_datetime_local,
+                                  end_datetime_local,
+                                  local_tzone = config$local_tzone,
+                                  modeled_depths = config$modeled_depths)
+
+  init <- flare::generate_initial_conditions_ler(states_config,
+                                                 obs_config,
+                                                 pars_config,
+                                                 obs,
+                                                 config,
+                                                 model = "Simstrat")
   testthat::expect_true(is.list(init))
   chk <- lapply(init, is.array)
   testthat::expect_true(any(unlist(chk)))
 })
 
 
-test_that("EnKF can be run", {
+test_that("LER-GLM-EnKF can be run", {
 
   # library(tidyverse)
 
@@ -165,25 +228,19 @@ test_that("EnKF can be run", {
   # test_location <- "C:\\Users\\mooret\\Desktop\\FLARE\\flare-1\\inst\\data"
   test_location <- file.path(temp_dir, "data")
 
-  source(file.path(test_location, "test_enkf_prep.R"))
+  source(file.path(test_location, "test_enkf_prep_ler.R"))
 
-  obs <- flare::create_obs_matrix(cleaned_observations_file_long,
-                                  obs_config,
-                                  start_datetime_local,
-                                  end_datetime_local,
-                                  local_tzone = config$local_tzone,
-                                  modeled_depths = config$modeled_depths)
 
   #Set observations in the "future" to NA
   full_time_forecast <- seq(start_datetime_local, end_datetime_local, by = "1 day")
   obs[ , which(full_time_forecast > forecast_start_datetime_local), ] <- NA
 
-  init <- flare::generate_initial_conditions(states_config,
+  init <- flare::generate_initial_conditions_ler(states_config,
                                              obs_config,
                                              pars_config,
                                              obs,
-                                             config)
-
+                                             config,
+                                             model = "GLM")
   aux_states_init <- list()
   aux_states_init$snow_ice_thickness <- init$snow_ice_thickness
   aux_states_init$avg_surf_temp <- init$avg_surf_temp
@@ -194,7 +251,9 @@ test_that("EnKF can be run", {
   aux_states_init$salt <- init$salt
 
   #Run EnKF
-  enkf_output <- flare::run_enkf_forecast(states_init = init$states,
+  library(LakeEnsemblR); library(gotmtools)
+
+  enkf_output <- flare::run_enkf_forecast_ler(states_init = init$states,
                                           pars_init = init$pars,
                                           aux_states_init = aux_states_init,
                                           obs = obs,
@@ -202,7 +261,7 @@ test_that("EnKF can be run", {
                                           model_sd = model_sd,
                                           working_directory = config$run_config$execute_location,
                                           met_file_names = basename(met_file_names),
-                                          inflow_file_names = basename(inflow_file_names),
+                                          inflow_file_names = as.matrix(basename(inflow_file_names)),
                                           outflow_file_names = basename(outflow_file_names),
                                           start_datetime = start_datetime_local,
                                           end_datetime = end_datetime_local,
@@ -210,18 +269,21 @@ test_that("EnKF can be run", {
                                           config = config,
                                           pars_config = pars_config,
                                           states_config = states_config,
-                                          obs_config = obs_config
+                                          obs_config = obs_config,
+                                          management = NULL,
+                                          model = "GLM"
   )
 
   #Load in pre-prepared output
-  samp_enkf_output <- readRDS(file.path(test_location, "enkf_output.RDS"))
+  samp_enkf_output <- readRDS(file.path(test_location, "sampenkf_output_v2.RDS"))
 
   testthat::expect_true(is.list(enkf_output))
   chk <- lapply(1:length(enkf_output), function(x) {
     class(enkf_output[[x]]) == class(samp_enkf_output[[x]])
 
   })
-  testthat::expect_true(any(unlist(chk)))
+
+  testthat::expect_true(all(unlist(chk)))
 
   # Save forecast
   saved_file <- flare::write_forecast_netcdf(enkf_output,
