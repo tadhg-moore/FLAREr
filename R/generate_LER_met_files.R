@@ -30,7 +30,7 @@ generate_ler_met_files <- function(obs_met_file = NULL,
   end_datetime_UTC <- lubridate::with_tz(end_datetime_local, tzone = "UTC") - lubridate::hours(1)
   forecast_start_datetime_UTC <- lubridate::with_tz(forecast_start_datetime_local, tzone = "UTC")
 
-  full_time_UTC <- seq(start_datetime_UTC, end_datetime_UTC + lubridate::hours(1), by = "1 hour")
+  full_time_UTC <- seq(start_datetime_UTC, end_datetime_UTC + lubridate::hours(2), by = "1 hour")
   full_time_UTC_hist <- seq(start_datetime_UTC, forecast_start_datetime_UTC - lubridate::hours(1), by = "1 hour")
   cf_met_vars <- c("air_temperature",
                    "surface_downwelling_shortwave_flux_in_air",
