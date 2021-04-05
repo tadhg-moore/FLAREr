@@ -7,7 +7,7 @@ Authors@R:
            role = c("aut", "cre"),
            email = "rqthomas@vt.edu",
            comment = c(ORCID = "0000-0003-1282-7825"))
-Description: Uses the Ensemble Kalman Filter (EnKF) to assimilate observations and generate forecasts of lake water quality using the General Lake Model - Aquatic Ecosystem Dynamics.  It includes functions to generate the weather and inflow forcing files, organize observations in the form required by the EnKF, and visualize output
+Description: Uses the Ensemble Kalman Filter (EnKF) to assimilate observations and generate forecasts of lake water quality using the General Lake Model - Aquatic Ecosystem Dynamics.  It includes functions to generate the weather and inflow forcing files, organize observations in the form required by the EnKF, and visualize output.
 License: MIT
 Encoding: UTF-8
 LazyData: true
@@ -31,14 +31,15 @@ Imports:
     ggplot2,
     rMR,
     patchwork,
-    zoo
-Remotes:
-    eco4cast/EFIstandards,
-    aemon-j/GLM3r,
-    USGS-R/glmtools,
-    aemon-j/gotmtools,
-    aemon-j/LakeEnsemblR,
-    GLEON/rLakeAnalyzer
+    zoo,
+    EFIstandards,
+    GLM3r,
+    glmtools,
+    gotmtools,
+    LakeEnsemblR,
+    rLakeAnalyzer,
+    SimstratR,
+    GOTMr
 Suggests: 
     knitr,
     rmarkdown,
