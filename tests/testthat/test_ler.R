@@ -237,6 +237,7 @@ test_that("LER-Simstrat initial conditions are generated", {
 test_that("LER-GLM-EnKF can be run", {
 
   # library(tidyverse)
+  install.packages("remotes")
   remotes::install_github("tadhg-moore/LakeEnsemblR", ref = "flare")
 
   template_folder <- system.file("data", package= "flare")
