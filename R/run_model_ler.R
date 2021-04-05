@@ -11,6 +11,9 @@
 #' @param model_name_ds, directory name for the 1-hr forecast, this will be used in directory and file name generation
 #' @param output_directory, directory where the model output will be save
 #' @noRd
+#' @importFrom LakeEnsemblR export_config
+#' @importFrom gotmtools write_yaml
+#' @importFrom yaml read_yaml
 #'
 #' @author Quinn Thomas
 #'

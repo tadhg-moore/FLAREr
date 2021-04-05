@@ -2,7 +2,7 @@
 % Please edit documentation in R/run_models_ler.R
 \name{run_models_ler}
 \alias{run_models_ler}
-\title{Export output settings for each model}
+\title{Run the lake model from LakeEnsemblR}
 \usage{
 run_models_ler(model, folder, verbose)
 }
@@ -12,11 +12,10 @@ Options include c("GOTM", "GLM", "Simstrat", "FLake", "MyLake")}
 
 \item{folder}{folder}
 
-\item{config_file}{name of the master LakeEnsemblR config file}
+\item{verbose}{Boolean; Should model output be shown in the console. Defaults to FALSE}
 }
 \description{
-Exports settings related to output (time step, format),
-for each model
+Run the lake model from LakeEnsemblR
 }
 \examples{
 

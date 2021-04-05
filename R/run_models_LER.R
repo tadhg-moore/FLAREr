@@ -1,19 +1,18 @@
-#'Export output settings for each model
+#' Run the lake model from LakeEnsemblR
 #'
-#'Exports settings related to output (time step, format),
-#'  for each model
 #'
-#'@param config_file name of the master LakeEnsemblR config file
-#'@param model vector; model to export configuration file.
-#'  Options include c("GOTM", "GLM", "Simstrat", "FLake", "MyLake")
-#'@param folder folder
-#'@keywords methods
-#'@examples
+#' @param model vector; model to export configuration file.
+#'   Options include c("GOTM", "GLM", "Simstrat", "FLake", "MyLake")
+#' @param folder folder
+#' @param verbose Boolean; Should model output be shown in the console. Defaults to FALSE
+#' @keywords methods
+#' @examples
 #'
-#'@importFrom gotmtools get_yaml_value input_yaml
-#'@importFrom glmtools read_nml set_nml write_nml
+#' @importFrom GLM3r run_glm
+#' @importFrom GOTMr run_gotm
+#' @importFrom SimstratR run_simstrat
 #'
-#'@export
+#' @export
 run_models_ler <- function(model, folder, verbose) {
 
   if(model == "GLM") {

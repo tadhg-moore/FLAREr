@@ -1,3 +1,7 @@
+#' @importFrom ncdf4 nc_open ncvar_get nc_close
+#' @importFrom LakeEnsemblR get_output
+#' @importFrom rLakeAnalyzer get.offsets
+
 get_ler_nc_var_all <- function(model, working_dir, z_out, vars_depth, vars_no_depth, diagnostic_vars, ler_yaml){
 
   if( model == "GLM") {
