@@ -64,6 +64,8 @@ automatically be set to \code{end_datetime}.}
 \item{obs_config}{list of observation configurations}
 
 \item{management}{list of management inputs and configuration  (Default = NULL)}
+
+\item{model}{model to be used in FLARE. Can be GLM, GOTM or Simstrat}
 }
 \value{
 enkf_output a list is passed to \code{write_forecast_netcdf()} to write the

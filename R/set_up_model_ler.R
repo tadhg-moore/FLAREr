@@ -14,6 +14,12 @@ set_up_model_ler <- function(model,
          Windows = { machine <- "windows"})
 
 
+  oldwd <- getwd()
+  setwd(working_directory)
+  on.exit({
+    setwd(oldwd)
+  })
+
 
   file.copy(from = file.path(config$run_config$forecast_location, config$ler_yaml),
             to = file.path(working_directory, "LakeEnsemblR.yaml"), overwrite = TRUE)

@@ -128,6 +128,7 @@
 #' @param states_config list of state configurations
 #' @param obs_config list of observation configurations
 #' @param management list of management inputs and configuration  (Default = NULL)
+#' @param model model to be used in FLARE. Can be GLM, GOTM or Simstrat
 #' @return enkf_output a list is passed to `write_forecast_netcdf()` to write the
 #' netcdf output and `create_flare_eml()` to generate the EML metadata
 #' @export

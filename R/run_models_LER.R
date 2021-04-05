@@ -8,9 +8,9 @@
 #' @keywords methods
 #' @examples
 #'
-#' @importFrom GLM3r run_glm
-#' @importFrom GOTMr run_gotm
-#' @importFrom SimstratR run_simstrat
+#' @import GLM3r
+#' @import GOTMr
+#' @import SimstratR
 #'
 #' @export
 run_models_ler <- function(model, folder, verbose) {
