@@ -15,7 +15,6 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
 Imports:
     ncdf4,
-    EFIstandards,
     EML,
     magrittr,
     dplyr,
@@ -32,10 +31,14 @@ Imports:
     ggplot2,
     rMR,
     patchwork,
-    zoo,
-    GLM3r,
-    glmtools,
-    gotmtools
+    zoo
+Remotes:
+    eco4cast/EFIstandards,
+    aemon-j/GLM3r,
+    USGS-R/glmtools,
+    aemon-j/gotmtools,
+    aemon-j/LakeEnsemblR,
+    GLEON/rLakeAnalyzer
 Suggests: 
     knitr,
     rmarkdown,
