@@ -119,7 +119,7 @@ create_ler_inflow_outflow_files <- function(inflow_file_dir,
     d <- readr::read_csv(outflow_files[1])
     num_outflows <- max(c(d$outflow_num,obs_outflow$outflow_num))
   }else{
-    num_outflows <- max(obs_inflow$outflow_num)
+    num_outflows <- max(obs_outflow$outflow_num)
   }
 
 
