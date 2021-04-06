@@ -13,7 +13,7 @@
 #' @import SimstratR
 #'
 #' @export
-run_models_ler <- function(model, folder, verbose) {
+run_models_ler <- function(model, folder, verbose, restart, member, the_temps, model_depths) {
 
   if(model == "GLM") {
 
@@ -26,15 +26,39 @@ run_models_ler <- function(model, folder, verbose) {
   # GOTM ----
   if(model == "GOTM") {
 
+    if(restart) {
+      file.copy(from = file.path(folder, "GOTM", paste0("restart_", member, ".nc")),
+                to = file.path(folder, "GOTM", "restart.nc"),
+                overwrite = TRUE)
+      nc <- ncdf4::nc_open(file.path(folder, "GOTM", "restart.nc"), write = TRUE)
+      gotm_depths <- ncdf4::ncvar_get(nc, "z")
+      input_temps <- approx(model_depths, the_temps, xout = abs(gotm_depths), rule = 2)$y
+      ncdf4::ncvar_put(nc, "temp", input_temps)
+      ncdf4::nc_close(nc)
+    }
+
     GOTMr::run_gotm(sim_folder = file.path(folder, "GOTM"), verbose = verbose)
+
+    file.copy(from = file.path(folder, "GOTM", "restart.nc"),
+              to = file.path(folder, "GOTM", paste0("restart_", member, ".nc")),
+              overwrite = TRUE)
 
     message("GOTM run is complete! ", paste0("[", Sys.time(), "]"))
   }
 
   # Simstrat ----
   if(model == "Simstrat") {
+    if(restart) {
+      file.copy(from = file.path(folder, "Simstrat", paste0("simulation-snapshot_", member, ".dat")),
+                to = file.path(folder, "Simstrat", "output", "simulation-snapshot.dat"),
+                overwrite = TRUE)
+    }
 
     SimstratR::run_simstrat(sim_folder = file.path(folder, "Simstrat"), par_file = "simstrat.par", verbose = verbose)
+
+    file.copy(from = file.path(folder, "Simstrat", "output", "simulation-snapshot.dat"),
+              to = file.path(folder, "Simstrat", paste0("simulation-snapshot_", member, ".dat")),
+              overwrite = TRUE)
 
     message("Simstrat run is complete! ", paste0("[", Sys.time(), "]"))
   }

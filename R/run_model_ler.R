@@ -53,7 +53,8 @@ run_model_ler <- function(model,
                       salt_start,
                       nstates,
                       state_names,
-                      include_wq){
+                      include_wq,
+                      restart){
 
   switch(Sys.info() [["sysname"]],
          Linux = { machine <- "unix" },
@@ -75,6 +76,17 @@ run_model_ler <- function(model,
   model_depths_mid <- model_depths_tmp_tmp[1:(length(model_depths_tmp_tmp)-1)] + diff(model_depths_tmp_tmp)/2
 
   the_sals <- approx(modeled_depths, salt_start, model_depths_mid, rule = 2)$y
+
+  # Initial temperature
+  the_temps_enkf_tmp <- x_start[1:ndepths_modeled]
+
+  the_temps <- approx(modeled_depths, the_temps_enkf_tmp, model_depths_mid, rule = 2)$y
+
+
+  init_prof <- data.frame(Depth_meter = round(model_depths_mid, 4),
+                          Water_Temperature_celsius = round(the_temps, 4))
+  write.csv(init_prof, file.path(working_directory, "initial_profile.csv"),
+            row.names = FALSE, quote = FALSE)
 
 
   # GLM ----
@@ -194,6 +206,12 @@ run_model_ler <- function(model,
 
       }
     }
+
+    if(restart) {
+      yml$model_parameters$GOTM$`restart/load` <- TRUE
+    } else {
+      yml$model_parameters$GOTM$`restart/load` <- FALSE
+    }
   }
 
   # Simstrat ----
@@ -214,20 +232,14 @@ run_model_ler <- function(model,
         yml$model_parameters$Simstrat[[par_names[par]]] <- signif(curr_pars[curr_par_set], 4)
 
       }
+
+      if(restart) {
+        yml$model_parameters$Simstrat$`Simulation/Continue from last snapshot` <- TRUE
+      } else {
+        yml$model_parameters$Simstrat$`Simulation/Continue from last snapshot` <- FALSE
+      }
     }
   }
-
-
-  # Initial temperature
-  the_temps_enkf_tmp <- x_start[1:ndepths_modeled]
-
-  the_temps <- approx(modeled_depths,the_temps_enkf_tmp, model_depths_mid, rule = 2)$y
-
-
-  init_prof <- data.frame(Depth_meter = round(model_depths_tmp, 4),
-                          Water_Temperature_celsius = round(the_temps, 4))
-  write.csv(init_prof, file.path(working_directory, "initial_profile.csv"),
-            row.names = FALSE, quote = FALSE)
 
   #ALLOWS THE LOOPING THROUGH NOAA ENSEMBLES
   yml$input$init_temp_profile$file <- "initial_profile.csv"
@@ -311,7 +323,11 @@ run_model_ler <- function(model,
 
     model_states <- flare:::run_models_ler(model = model,
                           folder = working_directory,
-                          verbose = FALSE)
+                          verbose = FALSE,
+                          restart = restart,
+                          member = m,
+                          the_temps = the_temps,
+                          model_depths = model_depths_mid)
 
     fils <- list.files(file.path(working_directory, model, "output"))
 

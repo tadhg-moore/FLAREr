@@ -364,6 +364,12 @@ run_enkf_forecast_ler <- function(states_init,
       dit_pars<- array(NA, dim = c(nmembers, npars))
     }
 
+    if(i == start_step) {
+      restart = FALSE
+    } else {
+      restart = TRUE
+    }
+
     #If i == 1 then assimilate the first time step without running the process
     #model (i.e., use yesterday's forecast of today as initial conditions and
     #assimilate new observations)
@@ -387,7 +393,7 @@ run_enkf_forecast_ler <- function(states_init,
         }
 
         out <- flare:::run_model_ler(model,
-                                     ler_yaml = config$ler_yaml,
+                                     ler_yaml = "LakeEnsemblR.yaml",
                                      i,
                                  m,
                                  mixing_vars_start = mixing_vars[,i-1 , m],
@@ -420,7 +426,8 @@ run_enkf_forecast_ler <- function(states_init,
                                  salt_start = salt[i-1, ,m],
                                  nstates,
                                  state_names = states_config$state_names,
-                                 include_wq = config$include_wq)
+                                 include_wq = config$include_wq,
+                                 restart = restart)
 
         x_star[m, ] <- out$x_star_end
         lake_depth[i ,m ] <- out$lake_depth_end
