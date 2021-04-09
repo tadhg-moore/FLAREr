@@ -313,18 +313,37 @@ run_enkf_forecast_ler <- function(states_init,
                        inflow_file_names = inflow_file_names,
                        outflow_file_names = outflow_file_names)
 
-  mixing_vars <- array(NA, dim = c(17, nsteps, nmembers))
   model_internal_depths <- array(NA, dim = c(nsteps, 500, nmembers))
   lake_depth <- array(NA, dim = c(nsteps, nmembers))
   snow_ice_thickness <- array(NA, dim = c(3, nsteps, nmembers))
-  avg_surf_temp <- array(NA, dim = c(nsteps, nmembers))
   salt <- array(NA, dim = c(nsteps, ndepths_modeled, nmembers))
+  if(model == "GLM") {
+    mixing_vars <- array(NA, dim = c(17, nsteps, nmembers))
+    avg_surf_temp <- array(NA, dim = c(nsteps, nmembers))
+    mixing_vars[,1 ,] <- aux_states_init$mixing_vars
+    avg_surf_temp[1, ] <- aux_states_init$avg_surf_temp
+    restart_list <- list(mixing_vars = mixing_vars,
+                         avg_surf_temp = avg_surf_temp)
+  }
+  if(model == "Simstrat") {
+    U_restart <- array(NA, dim = c(ndepths_modeled, nsteps, nmembers))
+    V_restart <- array(NA, dim = c(ndepths_modeled, nsteps, nmembers))
+    k_restart <- array(NA, dim = c(ndepths_modeled, nsteps, nmembers))
+    eps_restart <- array(NA, dim = c(ndepths_modeled, nsteps, nmembers))
+    U_restart[,1 ,] <- aux_states_init$U
+    V_restart[,1 ,] <- aux_states_init$V
+    k_restart[,1 ,] <- aux_states_init$k
+    eps_restart[,1 ,] <- aux_states_init$eps
+    restart_list <- list(U_restart = U_restart,
+                         V_restart = V_restart,
+                         k_restart = k_restart,
+                         eps_restart = eps_restart)
 
-  mixing_vars[,1 ,] <- aux_states_init$mixing_vars
+  }
+
   model_internal_depths[1, ,] <- aux_states_init$model_internal_depths
   lake_depth[1, ] <- aux_states_init$lake_depth
   snow_ice_thickness[,1 , ] <- aux_states_init$snow_ice_thickness
-  avg_surf_temp[1, ] <- aux_states_init$avg_surf_temp
   salt[1, , ] <- aux_states_init$salt
 
   if(config$assimilate_first_step){
@@ -392,11 +411,46 @@ run_enkf_forecast_ler <- function(states_init,
           outflow_file_name <- NULL
         }
 
-        out <- flare:::run_model_ler(model,
+        # model
+        # ler_yaml = "LakeEnsemblR.yaml"
+        # i
+        # m
+        # curr_start
+        # curr_stop
+        # par_names
+        # curr_pars
+        # working_directory
+        # par_file
+        # num_phytos
+        # model_depths_start = model_internal_depths[i-1, , m]
+        # lake_depth_start = lake_depth[i-1, m]
+        # x_start = x[i-1, m, ]
+        # full_time_local
+        # wq_start = states_config$wq_start
+        # wq_end = states_config$wq_end
+        # management = management
+        # hist_days
+        # modeled_depths = config$modeled_depths
+        # ndepths_modeled
+        # curr_met_file
+        # inflow_file_name = inflow_file_name
+        # outflow_file_name = outflow_file_name
+        # output_vars = output_vars
+        # diagnostics_names = config$diagnostics_names
+        # npars
+        # num_wq_vars
+        # snow_ice_thickness_start = snow_ice_thickness[, i-1,m ]
+        # salt_start = salt[i-1, ,m]
+        # nstates
+        # state_names = states_config$state_names
+        # include_wq = config$include_wq
+        # restart = restart
+        # restart_list = restart_list
+
+        out <- run_model_ler(model,
                                      ler_yaml = "LakeEnsemblR.yaml",
                                      i,
                                  m,
-                                 mixing_vars_start = mixing_vars[,i-1 , m],
                                  curr_start,
                                  curr_stop,
                                  par_names,
@@ -404,7 +458,7 @@ run_enkf_forecast_ler <- function(states_init,
                                  working_directory,
                                  par_file,
                                  num_phytos,
-                                 model_depths_start = model_internal_depths[i-1, ,m ],
+                                 model_depths_start = model_internal_depths[i-1, , m],
                                  lake_depth_start = lake_depth[i-1, m],
                                  x_start = x[i-1, m, ],
                                  full_time_local,
@@ -422,21 +476,29 @@ run_enkf_forecast_ler <- function(states_init,
                                  npars,
                                  num_wq_vars,
                                  snow_ice_thickness_start = snow_ice_thickness[, i-1,m ],
-                                 avg_surf_temp_start = avg_surf_temp[i-1, m],
                                  salt_start = salt[i-1, ,m],
                                  nstates,
                                  state_names = states_config$state_names,
                                  include_wq = config$include_wq,
-                                 restart = restart)
+                                 restart = restart,
+                                 restart_list = restart_list)
 
         x_star[m, ] <- out$x_star_end
         lake_depth[i ,m ] <- out$lake_depth_end
         snow_ice_thickness[,i ,m] <- out$snow_ice_thickness_end
-        avg_surf_temp[i , m] <- out$avg_surf_temp_end
-        mixing_vars[, i, m] <- out$mixing_vars_end
         diagnostics[, i, , m] <- out$diagnostics_end
         model_internal_depths[i, ,m] <- out$model_internal_depths
         salt[i, , m]  <- out$salt_end
+        if(model == "GLM") {
+          restart_list$avg_surf_temp[i , m] <- out$restart_vars$avg_surf_temp
+          restart_list$mixing_vars[, i, m] <- out$restart_vars$mixing_vars
+        }
+        if(model == "Simstrat") {
+          restart_list$U_restart[, i, m] <- out$restart_vars$U
+          restart_list$V_restart[, i, m] <- out$restart_vars$V
+          restart_list$k_restart[, i, m] <- out$restart_vars$k
+          restart_list$eps_restart[, i, m] <- out$restart_vars$eps
+        }
         ########################################
         #END GLM SPECIFIC PART
         ########################################
@@ -797,7 +859,8 @@ run_enkf_forecast_ler <- function(states_init,
               save_file_name = save_file_name,
               forecast_iteration_id = forecast_iteration_id,
               time_of_forecast = time_of_forecast,
-              mixing_vars =  mixing_vars,
+              restart_list = restart_list,
+              # mixing_vars =  mixing_vars,
               snow_ice_thickness = snow_ice_thickness,
               avg_surf_temp = avg_surf_temp,
               lake_depth = lake_depth,
