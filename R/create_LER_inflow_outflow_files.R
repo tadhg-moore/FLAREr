@@ -52,7 +52,7 @@ create_ler_inflow_outflow_files <- function(inflow_file_dir,
   outflow_files <- all_files[stringr::str_detect(all_files,"OUTFLOW")]
 
   if(length(inflow_files) > 0){
-    d <- readr::read_csv(inflow_files[1])
+    d <- readr::read_csv(inflow_files[1], col_types = readr::cols())
     num_inflows <- max(c(d$inflow_num,obs_inflow$inflow_num))
   }else{
     num_inflows <- max(obs_inflow$inflow_num)
@@ -116,7 +116,7 @@ create_ler_inflow_outflow_files <- function(inflow_file_dir,
 
 
   if(length(outflow_files) > 0){
-    d <- readr::read_csv(outflow_files[1])
+    d <- readr::read_csv(outflow_files[1], col_types = readr::cols())
     num_outflows <- max(c(d$outflow_num,obs_outflow$outflow_num))
   }else{
     num_outflows <- max(obs_outflow$outflow_num)
