@@ -12,7 +12,7 @@
 ##'
 
 write_forecast_netcdf <- function(enkf_output,
-                                  forecast_location, model){
+                                  forecast_location, config, model){
 
 
   x <- enkf_output$x
@@ -28,10 +28,10 @@ write_forecast_netcdf <- function(enkf_output,
     mixing_vars <- enkf_output$restart_list$mixing_vars
   }
   if(model == "Simstrat") {
-    U <- enkf_output$restart_list$U_restart
-    V <- enkf_output$restart_list$V_restart
-    k <- enkf_output$restart_list$k_restart
-    eps <- enkf_output$restart_list$eps_restart
+    U <- aperm(enkf_output$restart_list$U_restart, c(2, 3, 1))
+    V <- aperm(enkf_output$restart_list$V_restart, c(2, 3, 1))
+    k <- aperm(enkf_output$restart_list$k_restart, c(2, 3, 1))
+    eps <- aperm(enkf_output$restart_list$eps_restart, c(2, 3, 1))
   }
   restart_list <- enkf_output$restart_list
   model_internal_depths <- enkf_output$model_internal_depths
@@ -171,6 +171,9 @@ write_forecast_netcdf <- function(enkf_output,
   }
 
   ncout <- ncdf4::nc_create(ncfname, def_list, force_v4=T)
+  on.exit({
+    ncdf4::nc_close(ncout)
+  })
 
   # create netCDF file and put arrays
   idx <- 1
@@ -197,7 +200,7 @@ write_forecast_netcdf <- function(enkf_output,
     idx <- idx + 1
     ncdf4::ncvar_put(ncout,def_list[[idx]] ,V)
     idx <- idx + 1
-    ncdf4::ncvar_put(ncout,def_list[[idx]] ,k)
+    ncdf4::ncvar_put(ncout,def_list[[idx]] ,k_restart)
     idx <- idx + 1
     ncdf4::ncvar_put(ncout,def_list[[idx]] ,eps)
     idx <- idx + 1
@@ -243,7 +246,7 @@ write_forecast_netcdf <- function(enkf_output,
   ncdf4::ncatt_put(ncout,0,"forecast_model_id",enkf_output$config$metadata$forecast_project_id, prec =  "text")
   ncdf4::ncatt_put(ncout,0,"local_time_zone_of_simulation",as.character(config$local_tzone), prec =  "text")
 
-  ncdf4::nc_close(ncout)
+  # ncdf4::nc_close(ncout)
 
   invisible(ncfname)
 
