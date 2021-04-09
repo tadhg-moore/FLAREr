@@ -48,17 +48,8 @@ run_models_ler <- function(model, folder, verbose, restart, member, the_temps, m
 
   # Simstrat ----
   if(model == "Simstrat") {
-    if(restart) {
-      file.copy(from = file.path(folder, "Simstrat", paste0("simulation-snapshot_", member, ".dat")),
-                to = file.path(folder, "Simstrat", "output", "simulation-snapshot.dat"),
-                overwrite = TRUE)
-    }
 
     SimstratR::run_simstrat(sim_folder = file.path(folder, "Simstrat"), par_file = "simstrat.par", verbose = verbose)
-
-    file.copy(from = file.path(folder, "Simstrat", "output", "simulation-snapshot.dat"),
-              to = file.path(folder, "Simstrat", paste0("simulation-snapshot_", member, ".dat")),
-              overwrite = TRUE)
 
     message("Simstrat run is complete! ", paste0("[", Sys.time(), "]"))
   }
