@@ -23,7 +23,6 @@ run_model_ler <- function(model,
                           ler_yaml,
                       i,
                       m,
-                      mixing_vars_start,
                       curr_start,
                       curr_stop,
                       par_names,
@@ -49,12 +48,12 @@ run_model_ler <- function(model,
                       npars,
                       num_wq_vars,
                       snow_ice_thickness_start,
-                      avg_surf_temp_start,
                       salt_start,
                       nstates,
                       state_names,
                       include_wq,
-                      restart){
+                      restart,
+                      restart_list){
 
   switch(Sys.info() [["sysname"]],
          Linux = { machine <- "unix" },
@@ -91,6 +90,8 @@ run_model_ler <- function(model,
 
   # GLM ----
   if( model == "GLM") {
+    mixing_vars_start = restart_list$mixing_vars[,i-1 , m]
+    avg_surf_temp_start = restart_list$avg_surf_temp[i-1, m]
 
     yml$model_parameters$GLM$`init_profiles/restart_variables` <- mixing_vars_start
 
@@ -232,12 +233,6 @@ run_model_ler <- function(model,
         yml$model_parameters$Simstrat[[par_names[par]]] <- signif(curr_pars[curr_par_set], 4)
 
       }
-
-      if(restart) {
-        yml$model_parameters$Simstrat$`Simulation/Continue from last snapshot` <- TRUE
-      } else {
-        yml$model_parameters$Simstrat$`Simulation/Continue from last snapshot` <- FALSE
-      }
     }
   }
 
@@ -259,20 +254,30 @@ run_model_ler <- function(model,
                               model_parameters = TRUE,
                               folder = working_directory)
 
+  if(model == "Simstrat") {
+    # Input Simstrat restart values into initial condition file
+    simstrat_init <- read.delim(file.path(working_directory, model, "init_cond.dat"))
+    simstrat_init[, 2] <- signif(restart_list$U_restart[, i-1,m], 5)
+    simstrat_init[, 3] <- signif(restart_list$V_restart[, i-1,m], 5)
+    simstrat_init[, 5] <- signif(restart_list$k_restart[, i-1,m], 5)
+    simstrat_init[, 6] <- signif(restart_list$eps_restart[, i-1,m], 5)
+    colnames(simstrat_init) <- c("Depth [m]",	"U [m/s]",	"V [m/s]",	"T [deg C]",	"k [J/kg]",	"eps [W/kg]")
+    vroom::vroom_write(simstrat_init, file.path(working_directory, "Simstrat", "init_cond.dat"), delim = "\t",
+                       col_names = TRUE, quote = "none")
+  }
+
 
   if(model == "GLM" & include_wq){
     flare:::update_nml(update_aed_nml_list,
                        update_aed_nml_names,
                        working_directory,
                        "aed2.nml")
-  }
-
-  if(model == "GLM" & include_wq){
     flare:::update_nml(update_phyto_nml_list,
                        update_phyto_nml_names,
                        working_directory,
                        "aed2_phyto_pars.nml")
   }
+
 
   #if(ncol(as.matrix(inflow_file_names)) == 2){
   #  tmp <- file.copy(from = inflow_file_names[inflow_outflow_index, 1],
@@ -315,7 +320,7 @@ run_model_ler <- function(model,
   # Create output folder
   dir.create(file.path(working_directory, model, "output"), showWarnings = FALSE)
 
-  while(!pass){
+  while(!pass) {
 
     #Delete previous output
     old_output <- list.files(file.path(working_directory, model, "output"))
@@ -342,7 +347,7 @@ run_model_ler <- function(model,
         output_vars_no_depth <- NA
 
         # LakeEnsemblR Output
-        ler_temp_out <-  flare:::get_ler_nc_var_all(model = model,
+        ler_temp_out <-  get_ler_var_all(model = model,
                                                   working_dir = working_directory,
                                                   z_out = modeled_depths,
                                                   vars_depth = output_vars_multi_depth,
@@ -402,10 +407,11 @@ run_model_ler <- function(model,
     return(list(x_star_end  = x_star_end,
                 lake_depth_end  = ler_temp_out$lake_depth,
                 snow_ice_thickness_end  = ler_temp_out$snow_wice_bice,
+                restart_vars = ler_temp_out$restart_vars,
                 avg_surf_temp_end  = ler_temp_out$avg_surf_temp,
                 mixing_vars_end = ler_temp_out$mixing_vars,
                 salt_end = salt_end,
                 diagnostics_end  = diagnostics,
-                model_internal_depths  = model_depths_end))
+                model_internal_depths = model_depths_end))
   }
 }
