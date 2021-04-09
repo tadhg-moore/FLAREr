@@ -40,6 +40,10 @@ generate_initial_conditions_ler <- function(states_config,
   init$mixing_vars <- array(NA, dim=c(17, nmembers))
   init$model_internal_depths <- array(NA, dim = c(500, nmembers))
   init$salt <- array(NA, dim = c(ndepths_modeled, nmembers))
+  init$U <- array(0, dim = c(ndepths_modeled, nmembers))
+  init$V <- array(0, dim = c(ndepths_modeled, nmembers))
+  init$k <- array(3e-6, dim = c(ndepths_modeled, nmembers))
+  init$eps <- array(5e-10, dim = c(ndepths_modeled, nmembers))
 
   alpha_v <- 1 - exp(-states_config$vert_decorr_length)
 
