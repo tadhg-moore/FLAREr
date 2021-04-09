@@ -4,7 +4,15 @@
 \alias{run_models_ler}
 \title{Run the lake model from LakeEnsemblR}
 \usage{
-run_models_ler(model, folder, verbose)
+run_models_ler(
+  model,
+  folder,
+  verbose,
+  restart,
+  member,
+  the_temps,
+  model_depths
+)
 }
 \arguments{
 \item{model}{vector; model to export configuration file.
