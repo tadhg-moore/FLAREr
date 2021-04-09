@@ -30,7 +30,7 @@ write_forecast_netcdf <- function(enkf_output,
   if(model == "Simstrat") {
     U <- aperm(enkf_output$restart_list$U_restart, c(2, 3, 1))
     V <- aperm(enkf_output$restart_list$V_restart, c(2, 3, 1))
-    k <- aperm(enkf_output$restart_list$k_restart, c(2, 3, 1))
+    k_restart <- aperm(enkf_output$restart_list$k_restart, c(2, 3, 1))
     eps <- aperm(enkf_output$restart_list$eps_restart, c(2, 3, 1))
   }
   restart_list <- enkf_output$restart_list
@@ -171,9 +171,9 @@ write_forecast_netcdf <- function(enkf_output,
   }
 
   ncout <- ncdf4::nc_create(ncfname, def_list, force_v4=T)
-  on.exit({
-    ncdf4::nc_close(ncout)
-  })
+  # on.exit({
+  #   ncdf4::nc_close(ncout)
+  # })
 
   # create netCDF file and put arrays
   idx <- 1
@@ -246,7 +246,7 @@ write_forecast_netcdf <- function(enkf_output,
   ncdf4::ncatt_put(ncout,0,"forecast_model_id",enkf_output$config$metadata$forecast_project_id, prec =  "text")
   ncdf4::ncatt_put(ncout,0,"local_time_zone_of_simulation",as.character(config$local_tzone), prec =  "text")
 
-  # ncdf4::nc_close(ncout)
+  ncdf4::nc_close(ncout)
 
   invisible(ncfname)
 
