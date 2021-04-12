@@ -4,16 +4,29 @@
 
 get_ler_var_all <- function(model, working_dir, z_out, vars_depth, vars_no_depth, diagnostic_vars, ler_yaml){
 
+  temp <- LakeEnsemblR::get_output(config_yaml = ler_yaml, model = model, vars = "temp", obs_depths = z_out)$temp
+  salt <- LakeEnsemblR::get_output(config_yaml = ler_yaml, model = model, vars = "salt", obs_depths = z_out)$salt
+  ice <- LakeEnsemblR::get_output(config_yaml = ler_yaml, model = model, vars = "ice_height")$ice_height
+  deps <- rLakeAnalyzer::get.offsets(temp)
+  final_time_step <- nrow(temp)
+
+  # No varying water level in Simstrat
+  heights_surf <- max(deps)
+  heights <- deps
+  # heights_out <- rep()
+
+  temps <- unlist(temp[final_time_step, -1])
+
   if( model == "GLM") {
 
     glm_nc <- ncdf4::nc_open(file.path(working_dir, model, "output", "output.nc"))
     tallest_layer <- ncdf4::ncvar_get(glm_nc, "NS")
-    final_time_step <- length(tallest_layer)
-    tallest_layer <- tallest_layer[final_time_step] # Edited
-    heights <- ncdf4::ncvar_get(glm_nc, "z")
-    heights_surf <- heights[tallest_layer, final_time_step]
-    heights <- heights[1:tallest_layer, final_time_step]
-    heights_out <- heights_surf - z_out
+    # final_time_step <- length(tallest_layer)
+    # tallest_layer <- tallest_layer[final_time_step] # Edited
+    # heights <- ncdf4::ncvar_get(glm_nc, "z")
+    # heights_surf <- heights[tallest_layer, final_time_step]
+    # heights <- heights[1:tallest_layer, final_time_step]
+    # heights_out <- heights_surf - z_out
 
     snow <- ncdf4::ncvar_get(glm_nc, "hsnow")[final_time_step]
     ice_white <- ncdf4::ncvar_get(glm_nc, "hwice")[final_time_step]
@@ -21,7 +34,7 @@ get_ler_var_all <- function(model, working_dir, z_out, vars_depth, vars_no_depth
     avg_surf_temp <- ncdf4::ncvar_get(glm_nc, "avg_surf_temp")[final_time_step]
 
 
-    glm_temps <- ncdf4::ncvar_get(glm_nc, "temp")[1:tallest_layer, final_time_step]
+    # glm_temps <- ncdf4::ncvar_get(glm_nc, "temp")[1:tallest_layer, final_time_step]
 
 
 
@@ -59,19 +72,6 @@ get_ler_var_all <- function(model, working_dir, z_out, vars_depth, vars_no_depth
   # GOTM ----
   if( model == "GOTM") {
 
-    temp <- LakeEnsemblR::get_output(config_yaml = ler_yaml, model = model, vars = "temp", obs_depths = z_out)$temp
-    salt <- LakeEnsemblR::get_output(config_yaml = ler_yaml, model = model, vars = "salt", obs_depths = z_out)$salt
-    ice <- LakeEnsemblR::get_output(config_yaml = ler_yaml, model = model, vars = "ice_height")$ice_height
-    deps <- rLakeAnalyzer::get.offsets(temp)
-    final_time_step <- nrow(temp)
-
-    # No varying water level in Simstrat
-    heights_surf <- max(deps)
-    heights <- deps
-    # heights_out <- rep()
-
-    temps <- unlist(temp[final_time_step, -1])
-
     output <- array(NA, dim=c(length(temps), length(vars_depth)))
     for(v in 1:length(vars_depth)){
       output[,v] <- temps
@@ -108,25 +108,6 @@ get_ler_var_all <- function(model, working_dir, z_out, vars_depth, vars_no_depth
   # Simstrat ----
   if( model == "Simstrat") {
 
-    temp <- LakeEnsemblR::get_output(config_yaml = ler_yaml, model = model, vars = "temp", obs_depths = z_out)$temp
-    salt <- LakeEnsemblR::get_output(config_yaml = ler_yaml, model = model, vars = "salt", obs_depths = z_out)$salt
-    ice <- LakeEnsemblR::get_output(config_yaml = ler_yaml, model = model, vars = "ice_height")$ice_height
-    deps <- rLakeAnalyzer::get.offsets(temp)
-    deps <- deps[which(deps %in% z_out)]
-    col_idx <- which(deps %in% z_out) + 1
-    temp <- temp[, c(1, col_idx)]
-    salt <- salt[, c(1, col_idx)]
-
-    final_time_step <- nrow(temp)
-
-    # No varying water level in Simstrat
-    heights_surf <- max(deps)
-    heights <- deps
-    # heights_out <- rep()
-
-    temps <- unlist(temp[final_time_step, -1])
-
-
     snow <- read.delim(file.path(model, "output", "SnowH_out.dat"), sep = ",")[final_time_step, 2]
     ice_white <- read.delim(file.path(model, "output", "WhiteIceH_out.dat"), sep = ",")[final_time_step, 2]
 
@@ -137,12 +118,15 @@ get_ler_var_all <- function(model, working_dir, z_out, vars_depth, vars_no_depth
       unlist() %>%
       as.numeric()
     U <- approx(deps2, U, z_out, rule = 2)$y
-    V <- read.delim(file.path(model, "output", "V_out.dat"), sep = ",")[final_time_step, -1]
-    V <- approx(deps2, V, z_out, rule = 2)$y
-    k <- read.delim(file.path(model, "output", "k_out.dat"), sep = ",")[final_time_step, -1]
-    k <- approx(deps2, k, z_out, rule = 2)$y
-    eps <- read.delim(file.path(model, "output", "eps_out.dat"), sep = ",")[final_time_step, -1]
-    eps <- approx(deps2, eps, z_out, rule = 2)$y
+    V <- read.delim(file.path(model, "output", "V_out.dat"), sep = ",")[final_time_step, -1] %>%
+      approx(deps2, ., z_out, rule = 2) %>%
+      .[[2]]
+    k <- read.delim(file.path(model, "output", "k_out.dat"), sep = ",")[final_time_step, -1] %>%
+      approx(deps2, ., z_out, rule = 2) %>%
+      .[[2]]
+    eps <- read.delim(file.path(model, "output", "eps_out.dat"), sep = ",")[final_time_step, -1] %>%
+      approx(deps2, ., z_out, rule = 2) %>%
+      .[[2]]
     # ice_black <- read.delim(file.path(model, "output", "BlackIceH_out.dat"), sep = ",")[final_time_step, 2]
     ice_blue <- 0
     avg_surf_temp <- NA
