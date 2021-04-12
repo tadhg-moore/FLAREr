@@ -246,13 +246,14 @@ run_model_ler <- function(model,
 
   gotmtools::write_yaml(yml, ler_yaml)
 
-
-  LakeEnsemblR::export_config(config_file = ler_yaml, model = model, dirs = FALSE,
-                              time = TRUE, location = TRUE, output_settings = TRUE,
-                              meteo = T, init_cond = TRUE, extinction = FALSE,
-                              inflow = T, # INFLOWS SWITCHED OFF!
-                              model_parameters = TRUE,
-                              folder = working_directory)
+  suppressMessages({
+    LakeEnsemblR::export_config(config_file = ler_yaml, model = model, dirs = FALSE,
+                                time = TRUE, location = TRUE, output_settings = TRUE,
+                                meteo = T, init_cond = TRUE, extinction = FALSE,
+                                inflow = T, # INFLOWS SWITCHED OFF!
+                                model_parameters = TRUE,
+                                folder = working_directory, print = FALSE)
+  })
 
   if(model == "Simstrat") {
     # Input Simstrat restart values into initial condition file
