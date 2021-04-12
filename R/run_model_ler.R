@@ -348,7 +348,7 @@ run_model_ler <- function(model,
         output_vars_no_depth <- NA
 
         # LakeEnsemblR Output
-        ler_temp_out <-  flare:::get_ler_var_all(model = model,
+        ler_temp_out <-  get_ler_var_all(model = model,
                                                   working_dir = working_directory,
                                                   z_out = modeled_depths,
                                                   vars_depth = output_vars_multi_depth,
@@ -372,7 +372,8 @@ run_model_ler <- function(model,
         # x_star_end[1:ndepths_modeled] <- approx(LER_temp_out$depths, LER_temp_out$temp,
         #                                         modeled_depths, rule = 2)$y
 
-        salt_end <- approx(model_depths_mid, ler_temp_out$salt, modeled_depths, rule = 2)$y
+        salt_end <- approx(model_depths_mid, ler_temp_out$salt,
+                           modeled_depths, rule = 2)$y #approx(modeled_depths, ler_temp_out$salt, modeled_depths, rule = 2)$y
 
         if(include_wq){
           for(wq in 1:num_wq_vars){
