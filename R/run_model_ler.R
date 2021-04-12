@@ -74,15 +74,15 @@ run_model_ler <- function(model,
   model_depths_tmp_tmp <- c(model_depths_tmp, lake_depth_start)
   model_depths_mid <- model_depths_tmp_tmp[1:(length(model_depths_tmp_tmp)-1)] + diff(model_depths_tmp_tmp)/2
 
-  the_sals <- approx(modeled_depths, salt_start, model_depths_mid, rule = 2)$y
+  the_sals <- approx(modeled_depths, salt_start, modeled_depths, rule = 2)$y
 
   # Initial temperature
   the_temps_enkf_tmp <- x_start[1:ndepths_modeled]
 
-  the_temps <- approx(modeled_depths, the_temps_enkf_tmp, model_depths_mid, rule = 2)$y
+  the_temps <- approx(modeled_depths, the_temps_enkf_tmp, modeled_depths, rule = 2)$y
 
 
-  init_prof <- data.frame(Depth_meter = round(model_depths_mid, 4),
+  init_prof <- data.frame(Depth_meter = round(modeled_depths, 4),
                           Water_Temperature_celsius = round(the_temps, 4))
   write.csv(init_prof, file.path(working_directory, "initial_profile.csv"),
             row.names = FALSE, quote = FALSE)
@@ -333,7 +333,7 @@ run_model_ler <- function(model,
                           restart = restart,
                           member = m,
                           the_temps = the_temps,
-                          model_depths = model_depths_mid)
+                          model_depths = modeled_depths)
 
     fils <- list.files(file.path(working_directory, model, "output"))
 
