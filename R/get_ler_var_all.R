@@ -16,6 +16,7 @@ get_ler_var_all <- function(model, working_dir, z_out, vars_depth, vars_no_depth
   # heights_out <- rep()
 
   temps <- unlist(temp[final_time_step, -1])
+  salt <- unlist(salt[final_time_step, -1])
 
   if( model == "GLM") {
 
@@ -33,15 +34,16 @@ get_ler_var_all <- function(model, working_dir, z_out, vars_depth, vars_no_depth
     ice_blue <- ncdf4::ncvar_get(glm_nc, "hice")[final_time_step]
     avg_surf_temp <- ncdf4::ncvar_get(glm_nc, "avg_surf_temp")[final_time_step]
 
-
     # glm_temps <- ncdf4::ncvar_get(glm_nc, "temp")[1:tallest_layer, final_time_step]
 
-
-
-    output <- array(NA, dim=c(tallest_layer,length(vars_depth)))
+    # output <- array(NA, dim=c(tallest_layer,length(vars_depth)))
+    # for(v in 1:length(vars_depth)){
+    #   var_modeled <- ncdf4::ncvar_get(glm_nc, vars_depth[v])[, final_time_step]
+    #   output[,v] <- rev(var_modeled[1:tallest_layer])
+    # }
+    output <- array(NA, dim=c(length(temps), length(vars_depth)))
     for(v in 1:length(vars_depth)){
-      var_modeled <- ncdf4::ncvar_get(glm_nc, vars_depth[v])[, final_time_step]
-      output[,v] <- rev(var_modeled[1:tallest_layer])
+      output[,v] <- temps
     }
 
     output_no_depth <- NA
@@ -58,7 +60,7 @@ get_ler_var_all <- function(model, working_dir, z_out, vars_depth, vars_no_depth
 
     mixing_vars <- ncdf4::ncvar_get(glm_nc, "restart_variables")
 
-    salt <- ncdf4::ncvar_get(glm_nc, "salt")[1:tallest_layer]
+    # salt <- ncdf4::ncvar_get(glm_nc, "salt")[1:tallest_layer]
 
     depths_enkf = rev(heights_surf - heights)
 
