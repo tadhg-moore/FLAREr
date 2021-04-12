@@ -317,6 +317,7 @@ run_enkf_forecast_ler <- function(states_init,
   lake_depth <- array(NA, dim = c(nsteps, nmembers))
   snow_ice_thickness <- array(NA, dim = c(3, nsteps, nmembers))
   salt <- array(NA, dim = c(nsteps, ndepths_modeled, nmembers))
+  restart_list = NULL
   if(model == "GLM") {
     mixing_vars <- array(NA, dim = c(17, nsteps, nmembers))
     avg_surf_temp <- array(NA, dim = c(nsteps, nmembers))
