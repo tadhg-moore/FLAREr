@@ -33,7 +33,6 @@ write_forecast_netcdf <- function(enkf_output,
     k_restart <- aperm(enkf_output$restart_list$k_restart, c(2, 3, 1))
     eps <- aperm(enkf_output$restart_list$eps_restart, c(2, 3, 1))
   }
-  restart_list <- enkf_output$restart_list
   model_internal_depths <- enkf_output$model_internal_depths
   salt <- enkf_output$salt
   config <- enkf_output$config
@@ -41,7 +40,6 @@ write_forecast_netcdf <- function(enkf_output,
   obs_config <- enkf_output$obs_config
   pars_config <- enkf_output$pars_config
   obs <- enkf_output$obs
-  restart_list <- enkf_output
 
   diagnostics <- enkf_output$diagnostics
 
