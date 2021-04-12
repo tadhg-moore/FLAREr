@@ -93,8 +93,6 @@ get_ler_var_all <- function(model, working_dir, z_out, vars_depth, vars_no_depth
 
     mixing_vars <- NA # ncdf4::ncvar_get(nc, "restart_variables")
 
-    salt <- unlist(salt[final_time_step, -1])
-
     depths_enkf = heights
 
     nc <- ncdf4::nc_open(file.path(working_dir, model, "output", "output.nc"))
@@ -153,8 +151,6 @@ get_ler_var_all <- function(model, working_dir, z_out, vars_depth, vars_no_depth
     }
 
     mixing_vars <- NA # ncdf4::ncvar_get(nc, "restart_variables")
-
-    salt <- unlist(salt[final_time_step, -1])
 
     depths_enkf = heights
 
