@@ -8,6 +8,11 @@ get_ler_var_all <- function(model, working_dir, z_out, vars_depth, vars_no_depth
   salt <- LakeEnsemblR::get_output(config_yaml = ler_yaml, model = model, vars = "salt", obs_depths = z_out)$salt
   ice <- LakeEnsemblR::get_output(config_yaml = ler_yaml, model = model, vars = "ice_height")$ice_height
   deps <- rLakeAnalyzer::get.offsets(temp)
+  # Subset to z_out
+  idx <- which(z_out %in% deps) + 1
+  temp <- temp[, c(1, idx)]
+  salt <- salt[, c(1, idx)]
+
   final_time_step <- nrow(temp)
 
   # No varying water level in Simstrat
@@ -22,11 +27,11 @@ get_ler_var_all <- function(model, working_dir, z_out, vars_depth, vars_no_depth
 
     glm_nc <- ncdf4::nc_open(file.path(working_dir, model, "output", "output.nc"))
     tallest_layer <- ncdf4::ncvar_get(glm_nc, "NS")
-    # final_time_step <- length(tallest_layer)
-    # tallest_layer <- tallest_layer[final_time_step] # Edited
-    # heights <- ncdf4::ncvar_get(glm_nc, "z")
-    # heights_surf <- heights[tallest_layer, final_time_step]
-    # heights <- heights[1:tallest_layer, final_time_step]
+    final_time_step <- length(tallest_layer)
+    tallest_layer <- tallest_layer[final_time_step] # Edited
+    heights <- ncdf4::ncvar_get(glm_nc, "z")
+    heights_surf <- heights[tallest_layer, final_time_step]
+    heights <- heights[1:tallest_layer, final_time_step]
     # heights_out <- heights_surf - z_out
 
     snow <- ncdf4::ncvar_get(glm_nc, "hsnow")[final_time_step]
@@ -49,10 +54,11 @@ get_ler_var_all <- function(model, working_dir, z_out, vars_depth, vars_no_depth
     output_no_depth <- NA
 
     if(length(diagnostic_vars) > 0){
-      diagnostics_output <- array(NA,dim=c(tallest_layer, length(diagnostic_vars)))
+      diagnostics_output <- array(NA,dim=c(length(z_out), length(diagnostic_vars)))
       for(v in 1:length(diagnostic_vars)){
-        var_modeled <- ncdf4::ncvar_get(glm_nc, diagnostic_vars[v])[, final_time_step]
-        diagnostics_output[,v] <- var_modeled[1:tallest_layer]
+        var_modeled <- ncdf4::ncvar_get(glm_nc, diagnostic_vars[v])[1:tallest_layer, final_time_step]
+        var_modeled <- approx(heights, var_modeled, xout = z_out, rule = 2)$y
+        diagnostics_output[,v] <- var_modeled
       }
     }else{
       diagnostics_output <- NA
@@ -152,7 +158,7 @@ get_ler_var_all <- function(model, working_dir, z_out, vars_depth, vars_no_depth
 
     mixing_vars <- NA # ncdf4::ncvar_get(nc, "restart_variables")
 
-    depths_enkf = heights
+    # depths_enkf = heights
 
     restart_vars <- list(U = U,
                          V = V,
@@ -160,6 +166,7 @@ get_ler_var_all <- function(model, working_dir, z_out, vars_depth, vars_no_depth
                          eps = eps)
   }
 
+  depths_enkf = z_out
 
 
   return(list(output = output,
