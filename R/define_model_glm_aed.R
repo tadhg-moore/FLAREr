@@ -294,7 +294,7 @@ run_model <- function(i,
     if(!is.null(nc)){
       # Catch for if the output has more than one layer
       tallest_layer <- ncdf4::ncvar_get(nc, "NS")
-      if(tallest_layer > 1) {
+      if(tallest_layer[1] > 1) {
         success <- TRUE
       } else {
         success <- FALSE
