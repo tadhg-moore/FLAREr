@@ -1,5 +1,12 @@
 
-forecast_inflows_outflows <- function(inflow_obs, forecast_files, obs_met_file, output_dir, inflow_model, inflow_process_uncertainty, forecast_location, config){
+forecast_inflows_outflows <- function(inflow_obs,
+                                      forecast_files,
+                                      obs_met_file,
+                                      output_dir,
+                                      inflow_model,
+                                      inflow_process_uncertainty,
+                                      forecast_location,
+                                      config){
 
   inflow <- readr::read_csv(inflow_obs, col_types = readr::cols())
 
@@ -40,9 +47,10 @@ forecast_inflows_outflows <- function(inflow_obs, forecast_files, obs_met_file, 
   obs_met <- met %>%
     dplyr::filter(time >= noaa_met_time[1] - lubridate::days(1) & time < noaa_met_time[1])
 
-  init_flow_temp <- inflow %>%
-    filter(time == lubridate::as_date(noaa_met_time[1]) - lubridate::days(1))
-
+  idx <- which(as.character(inflow$time) == as.character(lubridate::as_date(noaa_met_time[1]) - lubridate::days(1)))
+  init_flow_temp <- inflow[idx, ]
+  # init_flow_temp <- inflow %>%
+  #   filter(time == lubridate::as_date(noaa_met_time[1]) - lubridate::days(1))
 
 
   if(length(init_flow_temp$FLOW) == 0){
@@ -131,7 +139,7 @@ forecast_inflows_outflows <- function(inflow_obs, forecast_files, obs_met_file, 
       dplyr::mutate_at(dplyr::vars(c("FLOW", "TEMP", "SALT")), list(~round(., 4))) %>%
       dplyr::mutate(type = "inflow",
                     inflow_num = 1) %>%
-      slice(-1)
+      dplyr::slice(-1)
 
     curr_met_daily_output <- curr_met_daily %>%
       dplyr::select(time, FLOW, TEMP) %>%
