@@ -293,7 +293,8 @@ test_that("LER-GLM-EnKF can be run", {
   )
 
   #Load in pre-prepared output
-  samp_enkf_output <- readRDS(file.path(test_location, "sampenkf_output_v2.RDS"))
+  # saveRDS(enkf_output, file.path(test_location, "sampenkf_output_GLM.RDS"))
+  samp_enkf_output <- readRDS(file.path(test_location, "sampenkf_output_GLM.RDS"))
 
   testthat::expect_true(is.list(enkf_output))
   chk <- lapply(1:length(enkf_output), function(x) {
@@ -304,8 +305,8 @@ test_that("LER-GLM-EnKF can be run", {
   testthat::expect_true(all(unlist(chk)))
 
   # Save forecast
-  saved_file <- flare::write_forecast_netcdf(enkf_output,
-                                             forecast_location = config$run_config$forecast_location)
+  saved_file <- flare::write_forecast_netcdf_ler(enkf_output,
+                                             forecast_location = config$run_config$forecast_location, config = config, model = "GLM")
   testthat::expect_true(file.exists(saved_file))
 
   #Create EML Metadata
@@ -384,8 +385,8 @@ test_that("LER-GOTM-EnKF can be run", {
   )
 
   #Load in pre-prepared output
-  samp_enkf_output <- readRDS(file.path(test_location, "sampenkf_output_v2.RDS"))
-
+  # saveRDS(enkf_output, file.path(test_location, "sampenkf_output_GOTM.RDS"))
+  samp_enkf_output <- readRDS(file.path(test_location, "sampenkf_output_GOTM.RDS"))
   testthat::expect_true(is.list(enkf_output))
   chk <- lapply(1:length(enkf_output), function(x) {
     class(enkf_output[[x]]) == class(samp_enkf_output[[x]])
@@ -395,8 +396,8 @@ test_that("LER-GOTM-EnKF can be run", {
   testthat::expect_true(all(unlist(chk)))
 
   # Save forecast
-  saved_file <- flare::write_forecast_netcdf(enkf_output,
-                                             forecast_location = config$run_config$forecast_location)
+  saved_file <- flare::write_forecast_netcdf_ler(enkf_output,
+                                             forecast_location = config$run_config$forecast_location, config = config, model = "GOTM")
   testthat::expect_true(file.exists(saved_file))
 
   #Create EML Metadata
@@ -447,6 +448,10 @@ test_that("LER-Simstrat-EnKF can be run", {
   aux_states_init$model_internal_depths <- init$model_internal_depths
   aux_states_init$lake_depth <- init$lake_depth
   aux_states_init$salt <- init$salt
+  aux_states_init$U <- init$U
+  aux_states_init$V <- init$V
+  aux_states_init$k <- init$k
+  aux_states_init$eps <- init$eps
 
   #Run EnKF
   # library(LakeEnsemblR); library(gotmtools)
@@ -475,7 +480,8 @@ test_that("LER-Simstrat-EnKF can be run", {
   )
 
   #Load in pre-prepared output
-  samp_enkf_output <- readRDS(file.path(test_location, "sampenkf_output_v2.RDS"))
+  # saveRDS(enkf_output, file.path(test_location, "sampenkf_output_Simstrat.RDS"))
+  samp_enkf_output <- readRDS(file.path(test_location, "sampenkf_output_Simstrat.RDS"))
 
   testthat::expect_true(is.list(enkf_output))
   chk <- lapply(1:length(enkf_output), function(x) {
@@ -486,8 +492,8 @@ test_that("LER-Simstrat-EnKF can be run", {
   testthat::expect_true(all(unlist(chk)))
 
   # Save forecast
-  saved_file <- flare::write_forecast_netcdf(enkf_output,
-                                             forecast_location = config$run_config$forecast_location)
+  saved_file <- flare::write_forecast_netcdf_ler(enkf_output,
+                                             forecast_location = config$run_config$forecast_location, config = config, model = "Simstrat")
   testthat::expect_true(file.exists(saved_file))
 
   #Create EML Metadata
