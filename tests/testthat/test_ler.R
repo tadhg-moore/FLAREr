@@ -293,7 +293,7 @@ test_that("LER-GLM-EnKF can be run", {
   )
 
   #Load in pre-prepared output
-  # saveRDS(enkf_output, file.path("C:/Users/mooret/Desktop/Git/flare-main/inst/data", "sampenkf_output_GLM.RDS"))
+  # saveRDS(enkf_output, file.path("C:\\Users\\mooret\\Desktop\\FLARE\\flare-1\\inst\\data", "sampenkf_output_GLM.RDS"))
   samp_enkf_output <- readRDS(file.path(test_location, "sampenkf_output_GLM.RDS"))
 
   testthat::expect_true(is.list(enkf_output))
@@ -385,7 +385,7 @@ test_that("LER-GOTM-EnKF can be run", {
   )
 
   #Load in pre-prepared output
-  # saveRDS(enkf_output, file.path("C:/Users/mooret/Desktop/Git/flare-main/inst/data", "sampenkf_output_GOTM.RDS"))
+  # saveRDS(enkf_output, file.path("C:\\Users\\mooret\\Desktop\\FLARE\\flare-1\\inst\\data", "sampenkf_output_GOTM.RDS"))
   samp_enkf_output <- readRDS(file.path(test_location, "sampenkf_output_GOTM.RDS"))
   testthat::expect_true(is.list(enkf_output))
   chk <- lapply(1:length(enkf_output), function(x) {
@@ -480,7 +480,7 @@ test_that("LER-Simstrat-EnKF can be run", {
   )
 
   #Load in pre-prepared output
-  # saveRDS(enkf_output, file.path("C:/Users/mooret/Desktop/Git/flare-main/inst/data", "sampenkf_output_Simstrat.RDS"))
+  # saveRDS(enkf_output, file.path("C:\\Users\\mooret\\Desktop\\FLARE\\flare-1\\inst\\data", "sampenkf_output_Simstrat.RDS"))
   samp_enkf_output <- readRDS(file.path(test_location, "sampenkf_output_Simstrat.RDS"))
 
   testthat::expect_true(is.list(enkf_output))
