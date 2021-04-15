@@ -385,7 +385,7 @@ run_model_ler <- function(model,
         if(length(diagnostics_names) > 0){
           for(wq in 1:length(diagnostics_names)){
             glm_wq <-  rev(ler_temp_out$diagnostics_output[ , wq])
-            diagnostics[wq , ] <- approx(model_depths_mid,glm_wq, modeled_depths, rule = 2)$y
+            diagnostics[wq , ] <- approx(model_depths_mid, glm_wq, modeled_depths, rule = 2)$y
           }
         } else {
           diagnostics <- rep(NA, length(modeled_depths))

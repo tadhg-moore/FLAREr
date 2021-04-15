@@ -448,7 +448,7 @@ run_enkf_forecast_ler <- function(states_init,
         # restart = restart
         # restart_list = restart_list
 
-        out <- run_model_ler(model,
+        out <- flare:::run_model_ler(model,
                                      ler_yaml = "LakeEnsemblR.yaml",
                                      i,
                                  m,
