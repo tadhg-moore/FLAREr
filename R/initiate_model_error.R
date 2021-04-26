@@ -25,6 +25,9 @@ initiate_model_error <- function(config, states_config, config_file_location){
       model_sd[s, ] <- states_config$model_sd[s]
     }
   }
+  if(any(is.na(model_sd))) {
+    warning("NA's are present. Check modeled depths in the config file and the states_config file.")
+  }
 
   return(model_sd)
 }
