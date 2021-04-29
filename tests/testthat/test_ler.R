@@ -26,7 +26,7 @@ test_that("LER met files are generated", {
 test_that("LER inflow & outflow files are generated", {
 
   # library(tidyverse)
-  template_folder <- system.file("data", package= "flare")
+  template_folder <- system.file("data", package = "flare")
 
   source(file.path(template_folder, "test_inflow_prep.R"))
 
