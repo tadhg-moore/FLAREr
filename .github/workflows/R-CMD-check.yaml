@@ -86,7 +86,7 @@ jobs:
           install.packages(".", repos = NULL, type = "source")  ## needed by parallel workers
         shell: Rscript {0}
 
-        - name: Session info
+      - name: Session info
         run: |
           options(width = 100)
           message("Number of cores: ", parallel::detectCores())
