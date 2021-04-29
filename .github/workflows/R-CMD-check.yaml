@@ -82,6 +82,15 @@ jobs:
           remotes::install_github("tadhg-moore/LakeEnsemblR", ref = "flare")
           remotes::install_deps(dependencies = TRUE)
           remotes::install_cran("rcmdcheck")
+          install.packages(".", repos = NULL, type = "source")  ## needed by parallel workers
+        shell: Rscript {0}
+
+        - name: Session info
+        run: |
+          options(width = 100)
+          message("Number of cores: ", parallel::detectCores())
+          pkgs <- installed.packages()[, "Package"]
+          sessioninfo::session_info(pkgs, include_base = TRUE)
         shell: Rscript {0}
 
       - name: Check
