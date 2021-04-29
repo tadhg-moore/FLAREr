@@ -198,7 +198,7 @@ test_that("EnKF can be run", {
   aux_states_init$salt <- init$salt
 
   #Run EnKF
-  enkf_output <- flare::run_enkf_forecast(states_init = init$states,
+  enkf_output <- flare::run_da_forecast(states_init = init$states,
                                           pars_init = init$pars,
                                           aux_states_init = aux_states_init,
                                           obs = obs,
