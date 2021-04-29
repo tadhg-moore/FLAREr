@@ -268,28 +268,52 @@ test_that("LER-GLM-EnKF can be run", {
   aux_states_init$lake_depth <- init$lake_depth
   aux_states_init$salt <- init$salt
 
+  # states_init = init$states
+  # pars_init = init$pars
+  # aux_states_init = aux_states_init
+  # obs = obs
+  # obs_sd = obs_config$obs_sd
+  # model_sd = model_sd
+  # working_directory = config$run_config$execute_location
+  # met_file_names = basename(met_file_names)
+  # inflow_file_names = as.matrix(basename(inflow_file_names))
+  # outflow_file_names = basename(outflow_file_names)
+  # start_datetime = start_datetime_local
+  # end_datetime = end_datetime_local
+  # forecast_start_datetime = forecast_start_datetime_local
+  # config = config
+  # pars_config = pars_config
+  # states_config = states_config
+  # obs_config = obs_config
+  # management = NULL
+  # da_method = "enkf"
+  # par_fit_method = "inflate"
+  # model = "GLM"
+
   #Run EnKF
   # library(LakeEnsemblR); library(gotmtools)
 
-  enkf_output <- flare::run_enkf_forecast_ler(states_init = init$states,
-                                          pars_init = init$pars,
-                                          aux_states_init = aux_states_init,
-                                          obs = obs,
-                                          obs_sd = obs_config$obs_sd,
-                                          model_sd = model_sd,
-                                          working_directory = config$run_config$execute_location,
-                                          met_file_names = basename(met_file_names),
-                                          inflow_file_names = as.matrix(basename(inflow_file_names)),
-                                          outflow_file_names = basename(outflow_file_names),
-                                          start_datetime = start_datetime_local,
-                                          end_datetime = end_datetime_local,
-                                          forecast_start_datetime = forecast_start_datetime_local,
-                                          config = config,
-                                          pars_config = pars_config,
-                                          states_config = states_config,
-                                          obs_config = obs_config,
-                                          management = NULL,
-                                          model = "GLM"
+  enkf_output <- flare::run_da_forecast_ler(states_init = init$states,
+                                            pars_init = init$pars,
+                                            aux_states_init = aux_states_init,
+                                            obs = obs,
+                                            obs_sd = obs_config$obs_sd,
+                                            model_sd = model_sd,
+                                            working_directory = config$run_config$execute_location,
+                                            met_file_names = basename(met_file_names),
+                                            inflow_file_names = as.matrix(basename(inflow_file_names)),
+                                            outflow_file_names = basename(outflow_file_names),
+                                            start_datetime = start_datetime_local,
+                                            end_datetime = end_datetime_local,
+                                            forecast_start_datetime = forecast_start_datetime_local,
+                                            config = config,
+                                            pars_config = pars_config,
+                                            states_config = states_config,
+                                            obs_config = obs_config,
+                                            management = NULL,
+                                            da_method = "enkf",
+                                            par_fit_method = "inflate",
+                                            model = "GLM"
   )
 
   #Load in pre-prepared output
@@ -363,25 +387,27 @@ test_that("LER-GOTM-EnKF can be run", {
 
   config$diagnostics_names <- NULL
 
-  enkf_output <- flare::run_enkf_forecast_ler(states_init = init$states,
-                                              pars_init = init$pars,
-                                              aux_states_init = aux_states_init,
-                                              obs = obs,
-                                              obs_sd = obs_config$obs_sd,
-                                              model_sd = model_sd,
-                                              working_directory = config$run_config$execute_location,
-                                              met_file_names = basename(met_file_names),
-                                              inflow_file_names = as.matrix(basename(inflow_file_names)),
-                                              outflow_file_names = basename(outflow_file_names),
-                                              start_datetime = start_datetime_local,
-                                              end_datetime = end_datetime_local,
-                                              forecast_start_datetime = forecast_start_datetime_local,
-                                              config = config,
-                                              pars_config = pars_config,
-                                              states_config = states_config,
-                                              obs_config = obs_config,
-                                              management = NULL,
-                                              model = "GOTM"
+  enkf_output <- flare::run_da_forecast_ler(states_init = init$states,
+                                            pars_init = init$pars,
+                                            aux_states_init = aux_states_init,
+                                            obs = obs,
+                                            obs_sd = obs_config$obs_sd,
+                                            model_sd = model_sd,
+                                            working_directory = config$run_config$execute_location,
+                                            met_file_names = basename(met_file_names),
+                                            inflow_file_names = as.matrix(basename(inflow_file_names)),
+                                            outflow_file_names = basename(outflow_file_names),
+                                            start_datetime = start_datetime_local,
+                                            end_datetime = end_datetime_local,
+                                            forecast_start_datetime = forecast_start_datetime_local,
+                                            config = config,
+                                            pars_config = pars_config,
+                                            states_config = states_config,
+                                            obs_config = obs_config,
+                                            management = NULL,
+                                            da_method = "enkf",
+                                            par_fit_method = "inflate",
+                                            model = "GOTM"
   )
 
   #Load in pre-prepared output
@@ -476,6 +502,8 @@ test_that("LER-Simstrat-EnKF can be run", {
                                               states_config = states_config,
                                               obs_config = obs_config,
                                               management = NULL,
+                                              da_method = "enkf",
+                                              par_fit_method = "inflate",
                                               model = "Simstrat"
   )
 

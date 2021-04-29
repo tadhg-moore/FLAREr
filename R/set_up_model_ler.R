@@ -1,44 +1,37 @@
 
 
 set_up_model_ler <- function(model,
-                         executable_location,
-                         config,
-                         working_directory,
-                         state_names,
-                         inflow_file_names,
-                         outflow_file_names){
-
-  switch(Sys.info() [["sysname"]],
-         Linux = { machine <- "unix" },
-         Darwin = { machine <- "mac" },
-         Windows = { machine <- "windows"})
-
+                             config,
+                             ens_working_directory,
+                             state_names,
+                             inflow_file_names,
+                             outflow_file_names){
 
   oldwd <- getwd()
-  setwd(working_directory)
+  setwd(ens_working_directory)
   on.exit({
     setwd(oldwd)
   })
 
 
   file.copy(from = file.path(config$run_config$forecast_location, config$ler_yaml),
-            to = file.path(working_directory, "LakeEnsemblR.yaml"), overwrite = TRUE)
-  yaml_file <- file.path(working_directory, "LakeEnsemblR.yaml")
+            to = file.path(ens_working_directory, "LakeEnsemblR.yaml"), overwrite = TRUE)
+  yaml_file <- file.path(ens_working_directory, "LakeEnsemblR.yaml")
   ler_yaml <- yaml::read_yaml(yaml_file)
-  # yml <- yaml::read_yaml(file.path(working_directory, ler_yaml))
-  ler_directory <- gsub(config$lake_name_code, "", working_directory)
+  # yml <- yaml::read_yaml(file.path(ens_working_directory, ler_yaml))
+  ler_directory <- gsub(config$lake_name_code, "", ens_working_directory)
 
   if(model == "GLM") {
 
     # GLM_folder <- executable_location
     # fl <- c(list.files(GLM_folder, full.names = TRUE))
-    # model_directory <- file.path(working_directory, model)
+    # model_directory <- file.path(ens_working_directory, model)
     # dir.create(model_directory, showWarnings = FALSE)
     # tmp <- file.copy(from = fl, to = model_directory, overwrite = TRUE)
 
-    dir.create(file.path(working_directory, "GLM"), showWarnings = FALSE)
+    dir.create(file.path(ens_working_directory, "GLM"), showWarnings = FALSE)
     file.copy(from = file.path(config$run_config$forecast_location, config$base_GLM_nml),
-              to = file.path(working_directory, "GLM", "glm3.nml"), overwrite = TRUE)
+              to = file.path(ens_working_directory, "GLM", "glm3.nml"), overwrite = TRUE)
 
     non_temp_names <- state_names[which(!(state_names %in% "temp"))]
     if(length(non_temp_names) == 0) {
@@ -63,31 +56,31 @@ set_up_model_ler <- function(model,
     if(config$include_wq){
 
       file.copy(from =  file.path(config$run_config$forecast_location,config$base_AED_nml),
-                to = paste0(working_directory, "/", "aed2.nml"), overwrite = TRUE)
+                to = paste0(ens_working_directory, "/", "aed2.nml"), overwrite = TRUE)
 
       file.copy(from =  file.path(config$run_config$forecast_location,config$base_AED_phyto_pars_nml),
-                to = paste0(working_directory, "/", "aed2_phyto_pars.nml"), overwrite = TRUE)
+                to = paste0(ens_working_directory, "/", "aed2_phyto_pars.nml"), overwrite = TRUE)
 
       file.copy(from =  file.path(config$run_config$forecast_location,config$base_AED_zoop_pars_nml),
-                to = paste0(working_directory, "/", "aed2_zoop_pars.nml"), overwrite = TRUE)
+                to = paste0(ens_working_directory, "/", "aed2_zoop_pars.nml"), overwrite = TRUE)
 
     }
 
     #Create a copy of the NML to record starting initial conditions
-    # file.copy(from = paste0(working_directory, "/", "glm3.nml"), #GLM SPECIFIC
-    #           to = paste0(working_directory, "/", "glm3_initial.nml"), overwrite = TRUE) #GLM SPECIFIC
+    # file.copy(from = paste0(ens_working_directory, "/", "glm3.nml"), #GLM SPECIFIC
+    #           to = paste0(ens_working_directory, "/", "glm3_initial.nml"), overwrite = TRUE) #GLM SPECIFIC
   }
 
 
 
-  # yaml::write_yaml(yml, file.path(working_directory, "test.yaml")) # file.path(working_directory, ler_yaml)
+  # yaml::write_yaml(yml, file.path(ens_working_directory, "test.yaml")) # file.path(ens_working_directory, ler_yaml)
 
 
   LakeEnsemblR::export_config(config_file = basename(yaml_file), model = model, dirs = TRUE,
                               time = FALSE, location = TRUE, output_settings = TRUE,
                               meteo = FALSE, init_cond = FALSE, extinction = TRUE,
                               inflow = FALSE, model_parameters = TRUE,
-                              folder = working_directory)
+                              folder = ens_working_directory)
 
 
 }

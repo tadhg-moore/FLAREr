@@ -55,11 +55,6 @@ run_model_ler <- function(model,
                       restart,
                       restart_list){
 
-  switch(Sys.info() [["sysname"]],
-         Linux = { machine <- "unix" },
-         Darwin = { machine <- "mac" },
-         Windows = { machine <- "windows"})
-
   if(is.null(management)){
     simulate_sss <- FALSE
   }else{
@@ -238,13 +233,13 @@ run_model_ler <- function(model,
 
   #ALLOWS THE LOOPING THROUGH NOAA ENSEMBLES
   yml$input$init_temp_profile$file <- "initial_profile.csv"
-  yml$input$meteo$file <- basename(curr_met_file)
-  yml$inflows$file <- basename(unlist(inflow_file_name))
+  yml$input$meteo$file <- paste0("../", basename(curr_met_file))
+  yml$inflows$file <- paste0("../", basename(unlist(inflow_file_name)))
 
   yml$time$start <- curr_start
   yml$time$stop <- curr_stop
 
-  gotmtools::write_yaml(yml, ler_yaml)
+  gotmtools::write_yaml(yml, file.path(working_directory, ler_yaml))
 
   suppressMessages({
     LakeEnsemblR::export_config(config_file = ler_yaml, model = model, dirs = FALSE,
@@ -348,7 +343,7 @@ run_model_ler <- function(model,
         output_vars_no_depth <- NA
 
         # LakeEnsemblR Output
-        ler_temp_out <-  get_ler_var_all(model = model,
+        ler_temp_out <-  flare:::get_ler_var_all(model = model,
                                                   working_dir = working_directory,
                                                   z_out = modeled_depths,
                                                   vars_depth = output_vars_multi_depth,
