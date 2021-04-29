@@ -484,7 +484,7 @@ test_that("LER-Simstrat-EnKF can be run", {
 
   config$diagnostics_names <- NULL
 
-  enkf_output <- flare::run_enkf_forecast_ler(states_init = init$states,
+  enkf_output <- flare::run_da_forecast_ler(states_init = init$states,
                                               pars_init = init$pars,
                                               aux_states_init = aux_states_init,
                                               obs = obs,
