@@ -485,7 +485,7 @@ run_da_forecast <- function(states_init,
         }
 
 
-        out <-flare:::run_model(i,
+        out <- flare:::run_model(i,
                                 m,
                                 mixing_vars_start = mixing_vars[,i-1 , m],
                                 curr_start,
