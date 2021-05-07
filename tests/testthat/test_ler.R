@@ -37,7 +37,7 @@ test_that("LER inflow & outflow files are generated", {
   source(file.path(template_folder, "test_inflow_prep.R"))
   config$use_ler <- TRUE
 
-  inflow_forecast_path <- file.path(config$data_location)
+  inflow_forecast_path <- config$data_location
 
   #### NEED A TEST HERE TO CHECK THAT INFLOW FILES ARE GENERATED AND CORRECT
   inflow_outflow_files <- flare::create_inflow_outflow_files(inflow_file_dir = inflow_forecast_path,
