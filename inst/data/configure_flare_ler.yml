@@ -46,6 +46,7 @@ metadata:
 #############################
 
 model_name: glm_aed #other is "null"
+use_ler: TRUE
 model: GLM
 ler_yaml: LakeEnsemblR.yaml
 
