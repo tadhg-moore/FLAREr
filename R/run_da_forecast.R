@@ -180,6 +180,11 @@ run_da_forecast <- function(states_init,
                             da_method = "enkf",
                             par_fit_method = "inflate",
                             use_ler = FALSE){
+  # Reset working directory
+  oldwd <- getwd()
+  on.exit({
+    setwd(oldwd)
+  })
 
   if(use_ler) {
     enkf_output <- run_da_forecast_ler(states_init = states_init,
@@ -219,9 +224,10 @@ run_da_forecast <- function(states_init,
     nmembers <- dim(states_init)[3]
     n_met_members <- length(met_file_names)
     if(!is.null(pars_config)){
+      pars_config <- pars_config[pars_config$model == "GLM", ]
       npars <- nrow(pars_config)
       par_names <- pars_config$par_names
-      par_nml <- pars_config$par_nml
+      par_nml <- pars_config$par_file
     }else{
       npars <- 0
       par_names <- NA
@@ -282,17 +288,6 @@ run_da_forecast <- function(states_init,
     start_forecast_step <- 1 + hist_days
     full_time_local <- seq(start_datetime, end_datetime, by = "1 day")
     forecast_days <- as.numeric(end_datetime - forecast_start_datetime)
-
-
-    if(!is.null(pars_config)){
-      npars <- nrow(pars_config)
-      par_names <- pars_config$par_names
-      par_nml <- pars_config$par_nml
-    }else{
-      npars <- 0
-      par_names <- NA
-      par_nml <- NA
-    }
 
     nstates <- dim(x_init)[2] -  npars
     nsteps <- length(full_time_local)
@@ -499,7 +494,7 @@ run_da_forecast <- function(states_init,
           }
 
 
-          out <-flare:::run_model(i,
+          out <- flare:::run_model(i,
                                   m,
                                   mixing_vars_start = mixing_vars[,i-1 , m],
                                   curr_start,
@@ -507,7 +502,7 @@ run_da_forecast <- function(states_init,
                                   par_names,
                                   curr_pars,
                                   working_directory = file.path(working_directory, ens_dir_index),
-                                  par_nml,
+                                  par_nml = par_nml,
                                   num_phytos,
                                   glm_depths_start = model_internal_depths[i-1, ,m ],
                                   lake_depth_start = lake_depth[i-1, m],
