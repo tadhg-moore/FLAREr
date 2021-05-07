@@ -25,24 +25,24 @@ create_inflow_outflow_files <- function(inflow_file_dir,
                                         tz,
                                         use_ler = FALSE) {
   if(use_ler) {
-    inflow_outflow_files <- create_ler_inflow_outflow_files(inflow_file_dir = inflow_forecast_path,
-                                                                   inflow_obs = cleaned_inflow_file,
-                                                                   working_directory = config$run_config$execute_location,
-                                                                   start_datetime_local = start_datetime_local,
-                                                                   end_datetime_local = end_datetime_local,
-                                                                   forecast_start_datetime_local = forecast_start_datetime_local,
-                                                                   use_future_inflow = TRUE,
-                                                                   state_names = NULL,
-                                                                   tz = config$local_tzone)
+    inflow_outflow_files <- create_ler_inflow_outflow_files(inflow_file_dir = inflow_file_dir,
+                                                           inflow_obs = cleaned_inflow_file,
+                                                           working_directory = config$run_config$execute_location,
+                                                           start_datetime_local = start_datetime_local,
+                                                           end_datetime_local = end_datetime_local,
+                                                           forecast_start_datetime_local = forecast_start_datetime_local,
+                                                           use_future_inflow = TRUE,
+                                                           state_names = NULL,
+                                                           tz = config$local_tzone)
   } else {
-    inflow_outflow_files <- create_glm_inflow_outflow_files(inflow_file_dir = inflow_forecast_path,
-                                                                   inflow_obs = cleaned_inflow_file,
-                                                                   working_directory = config$run_config$execute_location,
-                                                                   start_datetime_local = start_datetime_local,
-                                                                   end_datetime_local = end_datetime_local,
-                                                                   forecast_start_datetime_local = forecast_start_datetime_local,
-                                                                   use_future_inflow = TRUE,
-                                                                   state_names = NULL)
+    inflow_outflow_files <- create_glm_inflow_outflow_files(inflow_file_dir = inflow_file_dir,
+                                                           inflow_obs = cleaned_inflow_file,
+                                                           working_directory = config$run_config$execute_location,
+                                                           start_datetime_local = start_datetime_local,
+                                                           end_datetime_local = end_datetime_local,
+                                                           forecast_start_datetime_local = forecast_start_datetime_local,
+                                                           use_future_inflow = TRUE,
+                                                           state_names = NULL)
   }
   return(inflow_outflow_files)
 }
