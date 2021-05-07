@@ -31,7 +31,7 @@ test_that("inflow & outflow files are generated", {
   source(file.path(template_folder, "test_inflow_prep.R"))
 
 
-  inflow_forecast_path <- outflow_file_names <- gsub("\\\\", "/", config$data_location)
+  inflow_forecast_path <- config$data_location
 
   #### NEED A TEST HERE TO CHECK THAT INFLOW FILES ARE GENERATED AND CORRECT
   inflow_outflow_files <- flare::create_inflow_outflow_files(inflow_file_dir = inflow_forecast_path,
@@ -50,13 +50,9 @@ test_that("inflow & outflow files are generated", {
   testthat::expect_equal(file.exists(inflow_outflow_files[[2]]), expected = rep(TRUE, 21))
 })
 
-
-
 #Create observation matrix
 #### NEED A TEST HERE TO CHECK THAT OBS MATRIX IS GENERATED AND CORRECT
 test_that("observation matrix is generated and correct", {
-
-  # library(tidyverse)
 
   template_folder <- system.file("data", package= "flare")
   temp_dir <- tempdir()
@@ -87,8 +83,6 @@ test_that("observation matrix is generated and correct", {
 
 
 test_that("generate states to obs mapping", {
-
-  # library(tidyverse)
 
   template_folder <- system.file("data", package= "flare")
   temp_dir <- tempdir()
