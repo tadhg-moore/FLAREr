@@ -838,7 +838,6 @@ run_da_forecast_ler <- function(states_init,
         x[i, , ] <- cbind(x_corr, pars_star)[sample, ]
 
         snow_ice_thickness[ ,i, ] <- snow_ice_thickness[ ,i, sample]
-        avg_surf_temp[i, ] <- avg_surf_temp[i, sample]
         lake_depth[i, ] <- lake_depth[i, sample]
         salt[i, , ] <- salt[i, ,sample]
         model_internal_depths[i, , ] <- model_internal_depths[i, , sample]
