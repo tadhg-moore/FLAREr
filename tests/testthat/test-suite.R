@@ -161,7 +161,7 @@ test_that("EnKF can be run", {
 
   # library(tidyverse)
 
-  template_folder <- system.file("data", package= "flare")
+  template_folder <- system.file("data", package = "flare")
   temp_dir <- tempdir()
   # dir.create("example")
   file.copy(from = template_folder, to = temp_dir, recursive = TRUE)
@@ -182,7 +182,7 @@ test_that("EnKF can be run", {
   full_time_forecast <- seq(start_datetime_local, end_datetime_local, by = "1 day")
   obs[ , which(full_time_forecast > forecast_start_datetime_local), ] <- NA
 
-    init <- flare::generate_initial_conditions(states_config,
+  init <- flare::generate_initial_conditions(states_config,
                                              obs_config,
                                              pars_config,
                                              obs,
@@ -221,6 +221,7 @@ test_that("EnKF can be run", {
   # management = NULL
   # da_method = "enkf"
   # par_fit_method = "inflate"
+  # use_ler = FALSE
 
   #Run EnKF
   enkf_output <- flare::run_da_forecast(states_init = init$states,
