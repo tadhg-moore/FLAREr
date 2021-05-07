@@ -3,20 +3,26 @@
 #### NEED A TEST HERE TO CHECK THAT MET FILES ARE GENERATED AND CORRECT
 test_that("LER met files are generated", {
 
-  # library(tidyverse)
-
   template_folder <- system.file("data", package= "flare")
+  temp_dir <- tempdir()
+  # dir.create("example")
+  file.copy(from = template_folder, to = temp_dir, recursive = TRUE)
 
-  source(file.path(template_folder, "test_met_prep.R"))
+  # test_location <- "C:\\Users\\mooret\\Desktop\\FLARE\\flare-1\\inst\\data"
+  test_location <- file.path(temp_dir, "data")
 
-  met_out <- flare::generate_ler_met_files(obs_met_file = observed_met_file,
-                                           out_dir = config$run_config$execute_location,
-                                           forecast_dir = forecast_path,
-                                           local_tzone = config$local_tzone,
-                                           start_datetime_local = start_datetime_local,
-                                           end_datetime_local = end_datetime_local,
-                                           forecast_start_datetime = forecast_start_datetime_local,
-                                           use_forecasted_met = TRUE)
+  source(file.path(test_location, "test_met_prep.R"))
+  config$use_ler <- TRUE
+
+  met_out <- flare::generate_met_files(obs_met_file = observed_met_file,
+                                       out_dir = config$run_config$execute_location,
+                                       forecast_dir = forecast_path,
+                                       local_tzone = config$local_tzone,
+                                       start_datetime_local = start_datetime_local,
+                                       end_datetime_local = end_datetime_local,
+                                       forecast_start_datetime_local = forecast_start_datetime_local,
+                                       use_forecasted_met = TRUE,
+                                       use_ler = config$use_ler)
   met_file_names <- met_out$filenames
   testthat::expect_equal(file.exists(met_file_names), expected = rep(TRUE, 21))
 })
@@ -29,19 +35,20 @@ test_that("LER inflow & outflow files are generated", {
   template_folder <- system.file("data", package = "flare")
 
   source(file.path(template_folder, "test_inflow_prep.R"))
-
+  config$use_ler <- TRUE
 
   inflow_forecast_path <- file.path(config$data_location)
 
   #### NEED A TEST HERE TO CHECK THAT INFLOW FILES ARE GENERATED AND CORRECT
-  inflow_outflow_files <- flare::create_ler_inflow_outflow_files(inflow_file_dir = inflow_forecast_path,
-                                                                 inflow_obs = cleaned_inflow_file,
-                                                                 working_directory = config$run_config$execute_location,
-                                                                 start_datetime_local = start_datetime_local,
-                                                                 end_datetime_local = end_datetime_local,
-                                                                 forecast_start_datetime_local = forecast_start_datetime_local,
-                                                                 use_future_inflow = TRUE,
-                                                                 state_names = NULL)
+  inflow_outflow_files <- flare::create_inflow_outflow_files(inflow_file_dir = inflow_forecast_path,
+                                                             inflow_obs = cleaned_inflow_file,
+                                                             working_directory = config$run_config$execute_location,
+                                                             start_datetime_local = start_datetime_local,
+                                                             end_datetime_local = end_datetime_local,
+                                                             forecast_start_datetime_local = forecast_start_datetime_local,
+                                                             use_future_inflow = TRUE,
+                                                             state_names = NULL,
+                                                             use_ler = config$use_ler)
 
   inflow_file_names <- inflow_outflow_files$inflow_file_name
   outflow_file_names <- inflow_outflow_files$outflow_file_name
@@ -139,6 +146,7 @@ test_that("LER-GLM initial conditions are generated", {
   test_location <- file.path(temp_dir, "data")
 
   source(file.path(test_location, "test_met_prep_ler.R"))
+  config$model <- "GLM"
 
   obs_tmp <- read.csv(cleaned_observations_file_long)
   obs_tmp$hour[which(obs_tmp$hour == 7)] <- 19
@@ -151,12 +159,12 @@ test_that("LER-GLM initial conditions are generated", {
                                   local_tzone = config$local_tzone,
                                   modeled_depths = config$modeled_depths)
 
-  init <- flare::generate_initial_conditions_ler(states_config,
+  init <- flare::generate_initial_conditions(states_config,
                                              obs_config,
                                              pars_config,
                                              obs,
                                              config,
-                                             model = "GLM")
+                                             model = config$model)
   testthat::expect_true(is.list(init))
   chk <- lapply(init, is.array)
   testthat::expect_true(any(unlist(chk)))
@@ -174,6 +182,7 @@ test_that("LER-GOTM initial conditions are generated", {
   test_location <- file.path(temp_dir, "data")
 
   source(file.path(test_location, "test_met_prep_ler.R"))
+  config$model <- "GOTM"
 
   obs_tmp <- read.csv(cleaned_observations_file_long)
   obs_tmp$hour[which(obs_tmp$hour == 7)] <- 19
@@ -186,12 +195,12 @@ test_that("LER-GOTM initial conditions are generated", {
                                   local_tzone = config$local_tzone,
                                   modeled_depths = config$modeled_depths)
 
-  init <- flare::generate_initial_conditions_ler(states_config,
-                                                 obs_config,
-                                                 pars_config,
-                                                 obs,
-                                                 config,
-                                                 model = "GOTM")
+  init <- flare::generate_initial_conditions(states_config,
+                                             obs_config,
+                                             pars_config,
+                                             obs,
+                                             config,
+                                             model = config$model)
   testthat::expect_true(is.list(init))
   chk <- lapply(init, is.array)
   testthat::expect_true(any(unlist(chk)))
@@ -209,6 +218,7 @@ test_that("LER-Simstrat initial conditions are generated", {
   test_location <- file.path(temp_dir, "data")
 
   source(file.path(test_location, "test_met_prep_ler.R"))
+  config$model <- "Simstrat"
 
   obs_tmp <- read.csv(cleaned_observations_file_long)
   obs_tmp$hour[which(obs_tmp$hour == 7)] <- 19
@@ -221,7 +231,7 @@ test_that("LER-Simstrat initial conditions are generated", {
                                   local_tzone = config$local_tzone,
                                   modeled_depths = config$modeled_depths)
 
-  init <- flare::generate_initial_conditions_ler(states_config,
+  init <- flare::generate_initial_conditions(states_config,
                                                  obs_config,
                                                  pars_config,
                                                  obs,
@@ -247,18 +257,19 @@ test_that("LER-GLM-EnKF can be run", {
   test_location <- file.path(temp_dir, "data")
 
   source(file.path(test_location, "test_enkf_prep_ler.R"))
+  config$model <- "GLM"
 
 
   #Set observations in the "future" to NA
   full_time_forecast <- seq(start_datetime_local, end_datetime_local, by = "1 day")
   obs[ , which(full_time_forecast > forecast_start_datetime_local), ] <- NA
 
-  init <- flare::generate_initial_conditions_ler(states_config,
+  init <- flare::generate_initial_conditions(states_config,
                                              obs_config,
                                              pars_config,
                                              obs,
                                              config,
-                                             model = "GLM")
+                                             model = config$model)
   aux_states_init <- list()
   aux_states_init$snow_ice_thickness <- init$snow_ice_thickness
   aux_states_init$avg_surf_temp <- init$avg_surf_temp
@@ -293,27 +304,27 @@ test_that("LER-GLM-EnKF can be run", {
   #Run EnKF
   # library(LakeEnsemblR); library(gotmtools)
 
-  enkf_output <- flare::run_da_forecast_ler(states_init = init$states,
-                                            pars_init = init$pars,
-                                            aux_states_init = aux_states_init,
-                                            obs = obs,
-                                            obs_sd = obs_config$obs_sd,
-                                            model_sd = model_sd,
-                                            working_directory = config$run_config$execute_location,
-                                            met_file_names = basename(met_file_names),
-                                            inflow_file_names = as.matrix(basename(inflow_file_names)),
-                                            outflow_file_names = basename(outflow_file_names),
-                                            start_datetime = start_datetime_local,
-                                            end_datetime = end_datetime_local,
-                                            forecast_start_datetime = forecast_start_datetime_local,
-                                            config = config,
-                                            pars_config = pars_config,
-                                            states_config = states_config,
-                                            obs_config = obs_config,
-                                            management = NULL,
-                                            da_method = "enkf",
-                                            par_fit_method = "inflate",
-                                            model = "GLM"
+  enkf_output <- flare::run_da_forecast(states_init = init$states,
+                                        pars_init = init$pars,
+                                        aux_states_init = aux_states_init,
+                                        obs = obs,
+                                        obs_sd = obs_config$obs_sd,
+                                        model_sd = model_sd,
+                                        working_directory = config$run_config$execute_location,
+                                        met_file_names = basename(met_file_names),
+                                        inflow_file_names = as.matrix(basename(inflow_file_names)),
+                                        outflow_file_names = basename(outflow_file_names),
+                                        start_datetime = start_datetime_local,
+                                        end_datetime = end_datetime_local,
+                                        forecast_start_datetime = forecast_start_datetime_local,
+                                        config = config,
+                                        pars_config = pars_config,
+                                        states_config = states_config,
+                                        obs_config = obs_config,
+                                        management = NULL,
+                                        da_method = "enkf",
+                                        par_fit_method = "inflate",
+                                        use_ler = config$use_ler
   )
 
   #Load in pre-prepared output
@@ -361,18 +372,19 @@ test_that("LER-GOTM-EnKF can be run", {
   test_location <- file.path(temp_dir, "data")
 
   source(file.path(test_location, "test_enkf_prep_ler.R"))
+  config$model <- "GOTM"
 
 
   #Set observations in the "future" to NA
   full_time_forecast <- seq(start_datetime_local, end_datetime_local, by = "1 day")
   obs[ , which(full_time_forecast > forecast_start_datetime_local), ] <- NA
 
-  init <- flare::generate_initial_conditions_ler(states_config,
+  init <- flare::generate_initial_conditions(states_config,
                                                  obs_config,
                                                  pars_config,
                                                  obs,
                                                  config,
-                                                 model = "GOTM")
+                                                 config$model)
   aux_states_init <- list()
   aux_states_init$snow_ice_thickness <- init$snow_ice_thickness
   aux_states_init$avg_surf_temp <- init$avg_surf_temp
@@ -387,27 +399,27 @@ test_that("LER-GOTM-EnKF can be run", {
 
   config$diagnostics_names <- NULL
 
-  enkf_output <- flare::run_da_forecast_ler(states_init = init$states,
-                                            pars_init = init$pars,
-                                            aux_states_init = aux_states_init,
-                                            obs = obs,
-                                            obs_sd = obs_config$obs_sd,
-                                            model_sd = model_sd,
-                                            working_directory = config$run_config$execute_location,
-                                            met_file_names = basename(met_file_names),
-                                            inflow_file_names = as.matrix(basename(inflow_file_names)),
-                                            outflow_file_names = basename(outflow_file_names),
-                                            start_datetime = start_datetime_local,
-                                            end_datetime = end_datetime_local,
-                                            forecast_start_datetime = forecast_start_datetime_local,
-                                            config = config,
-                                            pars_config = pars_config,
-                                            states_config = states_config,
-                                            obs_config = obs_config,
-                                            management = NULL,
-                                            da_method = "enkf",
-                                            par_fit_method = "inflate",
-                                            model = "GOTM"
+  enkf_output <- flare::run_da_forecast(states_init = init$states,
+                                        pars_init = init$pars,
+                                        aux_states_init = aux_states_init,
+                                        obs = obs,
+                                        obs_sd = obs_config$obs_sd,
+                                        model_sd = model_sd,
+                                        working_directory = config$run_config$execute_location,
+                                        met_file_names = basename(met_file_names),
+                                        inflow_file_names = as.matrix(basename(inflow_file_names)),
+                                        outflow_file_names = basename(outflow_file_names),
+                                        start_datetime = start_datetime_local,
+                                        end_datetime = end_datetime_local,
+                                        forecast_start_datetime = forecast_start_datetime_local,
+                                        config = config,
+                                        pars_config = pars_config,
+                                        states_config = states_config,
+                                        obs_config = obs_config,
+                                        management = NULL,
+                                        da_method = "enkf",
+                                        par_fit_method = "inflate",
+                                        use_ler = config$use_ler
   )
 
   #Load in pre-prepared output
