@@ -466,18 +466,19 @@ test_that("LER-Simstrat-EnKF can be run", {
   test_location <- file.path(temp_dir, "data")
 
   # source(file.path(test_location, "test_enkf_prep_ler.R"))
+  config$model <- "Simstrat"
 
 
   #Set observations in the "future" to NA
   full_time_forecast <- seq(start_datetime_local, end_datetime_local, by = "1 day")
   obs[ , which(full_time_forecast > forecast_start_datetime_local), ] <- NA
 
-  init <- flare::generate_initial_conditions_ler(states_config,
+  init <- flare::generate_initial_conditions(states_config,
                                                  obs_config,
                                                  pars_config,
                                                  obs,
                                                  config,
-                                                 model = "Simstrat")
+                                                 model = config$model)
   aux_states_init <- list()
   aux_states_init$snow_ice_thickness <- init$snow_ice_thickness
   aux_states_init$avg_surf_temp <- init$avg_surf_temp
@@ -496,7 +497,7 @@ test_that("LER-Simstrat-EnKF can be run", {
 
   config$diagnostics_names <- NULL
 
-  enkf_output <- flare::run_da_forecast_ler(states_init = init$states,
+  enkf_output <- flare::run_da_forecast(states_init = init$states,
                                               pars_init = init$pars,
                                               aux_states_init = aux_states_init,
                                               obs = obs,
@@ -516,7 +517,7 @@ test_that("LER-Simstrat-EnKF can be run", {
                                               management = NULL,
                                               da_method = "enkf",
                                               par_fit_method = "inflate",
-                                              model = "Simstrat"
+                                              use_ler = config$use_ler
   )
 
   #Load in pre-prepared output
