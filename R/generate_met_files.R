@@ -25,7 +25,7 @@ generate_met_files <- function(obs_met_file = NULL,
                                use_forecasted_met,
                                use_ler = FALSE){
   if(use_ler) {
-    met_out <- flare::generate_ler_met_files(obs_met_file = observed_met_file,
+    met_out <- generate_ler_met_files(obs_met_file = observed_met_file,
                                              out_dir = config$run_config$execute_location,
                                              forecast_dir = forecast_path,
                                              local_tzone = config$local_tzone,
@@ -34,7 +34,7 @@ generate_met_files <- function(obs_met_file = NULL,
                                              forecast_start_datetime = forecast_start_datetime_local,
                                              use_forecasted_met = TRUE)
   } else {
-    met_out <- flare::generate_glm_met_files(obs_met_file = observed_met_file,
+    met_out <- generate_glm_met_files(obs_met_file = observed_met_file,
                                              out_dir = config$run_config$execute_location,
                                              forecast_dir = forecast_path,
                                              local_tzone = config$local_tzone,
