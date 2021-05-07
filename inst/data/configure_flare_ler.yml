@@ -133,7 +133,7 @@ ncore: 2
 # Parameter calibration information
 #################################
 
-par_file: parameter_calibration_config_ler.csv
+par_file: parameter_calibration_config.csv
 
 #####################################
 ###  Observation information
