@@ -11,16 +11,18 @@
 #'
 #' @examples
 generate_initial_conditions <- function(states_config,
-                                        obs_config,
-                                        pars_config = NULL,
-                                        obs,
-                                        config){
+                                            obs_config,
+                                            pars_config = NULL,
+                                            obs,
+                                            config,
+                                            model = "GLM"){
 
   init <- list()
 
   nmembers <- config$ensemble_size
 
-  if(!is.null(pars_config)){
+  if(!is.null(pars_config) & any(pars_config$model == model)){
+    pars_config <- pars_config[pars_config$model == model, ]
     npars <- nrow(pars_config)
   }else{
     npars <- 0
@@ -34,8 +36,15 @@ generate_initial_conditions <- function(states_config,
   init$pars <- array(NA, dim=c(npars, nmembers))
   init$lake_depth <- array(NA, dim=c(nmembers))
   init$snow_ice_thickness <- array(NA, dim=c(3, nmembers))
-  init$avg_surf_temp <- array(NA, dim=c(nmembers))
-  init$mixing_vars <- array(NA, dim=c(17, nmembers))
+  if(model == "GLM") {
+    init$avg_surf_temp <- array(NA, dim=c(nmembers))
+    init$mixing_vars <- array(NA, dim=c(17, nmembers))
+  } else if( model == "Simstrat") {
+    init$U <- array(0, dim = c(ndepths_modeled, nmembers))
+    init$V <- array(0, dim = c(ndepths_modeled, nmembers))
+    init$k <- array(3e-6, dim = c(ndepths_modeled, nmembers))
+    init$eps <- array(5e-10, dim = c(ndepths_modeled, nmembers))
+  }
   init$model_internal_depths <- array(NA, dim = c(500, nmembers))
   init$salt <- array(NA, dim = c(ndepths_modeled, nmembers))
 
