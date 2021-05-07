@@ -9,14 +9,14 @@ test_that("met files are generated", {
 
   source(file.path(template_folder, "test_met_prep.R"))
 
-  met_out <- flare::generate_glm_met_files(obs_met_file = observed_met_file,
-                                           out_dir = config$run_config$execute_location,
-                                           forecast_dir = forecast_path,
-                                           local_tzone = config$local_tzone,
-                                           start_datetime_local = start_datetime_local,
-                                           end_datetime_local = end_datetime_local,
-                                           forecast_start_datetime = forecast_start_datetime_local,
-                                           use_forecasted_met = TRUE)
+  met_out <- flare::generate_met_files(obs_met_file = observed_met_file,
+                                       out_dir = config$run_config$execute_location,
+                                       forecast_dir = forecast_path,
+                                       local_tzone = config$local_tzone,
+                                       start_datetime_local = start_datetime_local,
+                                       end_datetime_local = end_datetime_local,
+                                       forecast_start_datetime_local = forecast_start_datetime_local,
+                                       use_forecasted_met = TRUE)
   met_file_names <- met_out$filenames
   testthat::expect_equal(file.exists(met_file_names), expected = rep(TRUE, 21))
 })
@@ -31,10 +31,10 @@ test_that("inflow & outflow files are generated", {
   source(file.path(template_folder, "test_inflow_prep.R"))
 
 
-  inflow_forecast_path <- file.path(config$data_location)
+  inflow_forecast_path <- outflow_file_names <- gsub("\\\\", "/", config$data_location)
 
   #### NEED A TEST HERE TO CHECK THAT INFLOW FILES ARE GENERATED AND CORRECT
-  inflow_outflow_files <- flare::create_glm_inflow_outflow_files(inflow_file_dir = inflow_forecast_path,
+  inflow_outflow_files <- flare::create_inflow_outflow_files(inflow_file_dir = inflow_forecast_path,
                                                                  inflow_obs = cleaned_inflow_file,
                                                                  working_directory = config$run_config$execute_location,
                                                                  start_datetime_local = start_datetime_local,
@@ -182,7 +182,7 @@ test_that("EnKF can be run", {
   full_time_forecast <- seq(start_datetime_local, end_datetime_local, by = "1 day")
   obs[ , which(full_time_forecast > forecast_start_datetime_local), ] <- NA
 
-  init <- flare::generate_initial_conditions(states_config,
+    init <- flare::generate_initial_conditions(states_config,
                                              obs_config,
                                              pars_config,
                                              obs,
