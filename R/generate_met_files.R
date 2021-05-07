@@ -3,10 +3,12 @@
 #' @param obs_met_file
 #' @param out_dir
 #' @param forecast_dir
-#' @param start_datetime
-#' @param end_datetime
-#' @param forecast_start_datetime
 #' @param local_tzone
+#' @param start_datetime_local
+#' @param end_datetime_local
+#' @param forecast_start_datetime_local
+#' @param use_forecasted_met
+#' @param use_ler
 #'
 #' @importFrom zoo na.approx
 #' @return
