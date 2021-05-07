@@ -83,9 +83,11 @@ update_nml <- function(var_list,var_name_list,working_directory, nml){
 
   for(k in 1:length(var_list)){
     index1 = NA; index2 = NA
+    nam <- strsplit(var_name_list[k], "/")[[1]]
+    nam <- nam[length(nam)]
     for (g in 1:length(orig_nml)) {
       for (q in 1:length(orig_nml[[g]])) {
-        if (names(orig_nml[[g]][q]) == var_name_list[k]) {
+        if (names(orig_nml[[g]][q]) == nam) {
           index1 = g; index2 = q;
         }
       }
