@@ -236,7 +236,7 @@ run_da_forecast_ler <- function(states_init,
   states_config$wq_start <- wq_start
   states_config$wq_end <- wq_end
 
-  flare:::check_enkf_inputs_ler(states_init,
+  flare:::check_enkf_inputs(states_init,
                             pars_init,
                             obs,
                             psi,
