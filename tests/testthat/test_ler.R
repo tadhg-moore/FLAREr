@@ -457,7 +457,7 @@ test_that("LER-Simstrat-EnKF can be run", {
 
   # library(tidyverse)
 
-  template_folder <- system.file("data", package= "flare")
+  template_folder <- system.file("data", package = "flare")
   temp_dir <- tempdir()
   # dir.create("example")
   file.copy(from = template_folder, to = temp_dir, recursive = TRUE)
@@ -465,7 +465,7 @@ test_that("LER-Simstrat-EnKF can be run", {
   # test_location <- "C:\\Users\\mooret\\Desktop\\FLARE\\flare-1\\inst\\data"
   test_location <- file.path(temp_dir, "data")
 
-  # source(file.path(test_location, "test_enkf_prep_ler.R"))
+  source(file.path(test_location, "test_enkf_prep_ler.R"))
   config$model <- "Simstrat"
 
 
@@ -498,26 +498,26 @@ test_that("LER-Simstrat-EnKF can be run", {
   config$diagnostics_names <- NULL
 
   enkf_output <- flare::run_da_forecast(states_init = init$states,
-                                              pars_init = init$pars,
-                                              aux_states_init = aux_states_init,
-                                              obs = obs,
-                                              obs_sd = obs_config$obs_sd,
-                                              model_sd = model_sd,
-                                              working_directory = config$run_config$execute_location,
-                                              met_file_names = basename(met_file_names),
-                                              inflow_file_names = as.matrix(basename(inflow_file_names)),
-                                              outflow_file_names = basename(outflow_file_names),
-                                              start_datetime = start_datetime_local,
-                                              end_datetime = end_datetime_local,
-                                              forecast_start_datetime = forecast_start_datetime_local,
-                                              config = config,
-                                              pars_config = pars_config,
-                                              states_config = states_config,
-                                              obs_config = obs_config,
-                                              management = NULL,
-                                              da_method = "enkf",
-                                              par_fit_method = "inflate",
-                                              use_ler = config$use_ler
+                                        pars_init = init$pars,
+                                        aux_states_init = aux_states_init,
+                                        obs = obs,
+                                        obs_sd = obs_config$obs_sd,
+                                        model_sd = model_sd,
+                                        working_directory = config$run_config$execute_location,
+                                        met_file_names = basename(met_file_names),
+                                        inflow_file_names = as.matrix(basename(inflow_file_names)),
+                                        outflow_file_names = basename(outflow_file_names),
+                                        start_datetime = start_datetime_local,
+                                        end_datetime = end_datetime_local,
+                                        forecast_start_datetime = forecast_start_datetime_local,
+                                        config = config,
+                                        pars_config = pars_config,
+                                        states_config = states_config,
+                                        obs_config = obs_config,
+                                        management = NULL,
+                                        da_method = "enkf",
+                                        par_fit_method = "inflate",
+                                        use_ler = config$use_ler
   )
 
   #Load in pre-prepared output
