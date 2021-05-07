@@ -485,7 +485,7 @@ run_da_forecast_ler <- function(states_init,
         # curr_stop
         # par_names
         # curr_pars
-        # working_directory
+        # working_directory = file.path(working_directory, m)
         # par_file
         # num_phytos
         # model_depths_start = model_internal_depths[i-1, , m]
