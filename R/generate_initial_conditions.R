@@ -11,11 +11,11 @@
 #'
 #' @examples
 generate_initial_conditions <- function(states_config,
-                                            obs_config,
-                                            pars_config = NULL,
-                                            obs,
-                                            config,
-                                            model = "GLM"){
+                                        obs_config,
+                                        pars_config = NULL,
+                                        obs,
+                                        config,
+                                        model = "GLM"){
 
   init <- list()
 
@@ -110,8 +110,10 @@ generate_initial_conditions <- function(states_config,
   init$snow_ice_thickness[1, ] <- config$default_snow_thickness_init
   init$snow_ice_thickness[2, ] <- config$default_white_ice_thickness_init
   init$snow_ice_thickness[3, ] <- config$default_blue_ice_thickness_init
-  init$avg_surf_temp[] <- init$states[1 , 1, ]
-  init$mixing_vars[, ] <- 0.0
+  if(model == "GLM") {
+    init$avg_surf_temp[] <- init$states[1 , 1, ]
+    init$mixing_vars[, ] <- 0.0
+  }
   init$salt[, ] <- config$the_sals_init
 
   for(m in 1:nmembers){
