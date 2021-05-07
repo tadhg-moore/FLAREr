@@ -388,7 +388,7 @@ run_da_forecast_ler <- function(states_init,
                           format="%Y-%m-%d %H:%M:%S",
                           tz = config$local_tzone)
 
-    message(paste0("Running time step ", i-1, " : ",
+    message(paste0("Running time step ", i-1, "/", nsteps, " : ",
                    curr_start, " - ",
                    curr_stop, " [", Sys.time(), "]"))
 
@@ -955,7 +955,8 @@ run_da_forecast_ler <- function(states_init,
                            file_name_F_month,"_",
                            file_name_F_day,"_F_",
                            forecast_days,"_",
-                           forecast_iteration_id)
+                           forecast_iteration_id, "_",
+                           model)
 
   for(m in 1:nmembers){
     unlink(file.path(working_directory, m), recursive = TRUE)

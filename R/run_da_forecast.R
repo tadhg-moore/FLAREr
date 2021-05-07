@@ -406,7 +406,7 @@ run_da_forecast <- function(states_init,
                             format="%Y-%m-%d %H:%M",
                             tz = config$local_tzone)
 
-      message(paste0("Running time step ", i-1, " : ",
+      message(paste0("Running time step ", i-1, "/", nsteps, " : ",
                      curr_start, " - ",
                      curr_stop, " [", Sys.time(), "]"))
 
