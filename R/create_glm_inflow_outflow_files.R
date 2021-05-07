@@ -10,7 +10,7 @@
 #' @param state_names
 #'
 #' @return
-#' @export
+#' @noRd
 #'
 #' @examples
 create_glm_inflow_outflow_files <- function(inflow_file_dir,

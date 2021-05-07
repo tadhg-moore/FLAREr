@@ -12,7 +12,7 @@
 #' @param spatial_downscale_coeff
 #'
 #' @return
-#' @export
+#' @noRd
 #'
 #' @examples
 generate_glm_met_files <- function(obs_met_file = NULL,

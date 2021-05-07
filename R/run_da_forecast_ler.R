@@ -155,7 +155,7 @@
 #'               pars_config = pars_config,
 #'               states_config = states_config,
 #'               obs_config = obs_config)
-#' @export
+#' @noRd
 run_da_forecast_ler <- function(states_init,
                               pars_init = NULL,
                               aux_states_init,

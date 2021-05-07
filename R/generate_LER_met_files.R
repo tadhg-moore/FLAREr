@@ -10,7 +10,7 @@
 #'
 #' @importFrom zoo na.approx
 #' @return
-#' @export
+#' @noRd
 #'
 #' @examples
 generate_ler_met_files <- function(obs_met_file = NULL,
