@@ -46,6 +46,9 @@ metadata:
 #############################
 
 model_name: glm_aed #other is "null"
+use_ler: FALSE
+model: GLM
+ler_yaml: LakeEnsemblR.yaml
 
 # Relative to forecast_location
 
