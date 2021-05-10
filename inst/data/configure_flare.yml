@@ -97,7 +97,7 @@ modeled_depths: [0.10, 0.33, 0.67,
 default_temp_init: [25.667, 24.9101, 23.067, 21.8815, 19.6658, 16.5739, 12.9292, 12.8456, 12.8127, 12.8079, 12.778]
 default_temp_init_depths: [0.127, 1.004, 2.005, 3.021, 4.002, 5.004, 6.004, 7.01, 8.001, 9.015, 9.518]
 the_sals_init: 0.0
-
+include_wq: FALSE
 default_snow_thickness_init: 0.0
 default_white_ice_thickness_init: 0.0
 default_blue_ice_thickness_init: 0.0
