@@ -128,6 +128,8 @@
 #' @param states_config list of state configurations
 #' @param obs_config list of observation configurations
 #' @param management list of management inputs and configuration  (Default = NULL)
+#' @param da_method data assimilation method (enkf or pf; Default = enkf)
+#' @param par_fit_method parameter fit (perturb or inflate)
 #' @param model model to be used in FLARE. Can be GLM, GOTM or Simstrat
 #' @return enkf_output a list is passed to `write_forecast_netcdf()` to write the
 #' netcdf output and `create_flare_eml()` to generate the EML metadata
@@ -157,33 +159,27 @@
 #'               obs_config = obs_config)
 #' @noRd
 run_da_forecast_ler <- function(states_init,
-                              pars_init = NULL,
-                              aux_states_init,
-                              obs,
-                              obs_sd,
-                              model_sd,
-                              working_directory,
-                              met_file_names,
-                              inflow_file_names = NULL,
-                              outflow_file_names = NULL,
-                              start_datetime,
-                              end_datetime,
-                              forecast_start_datetime = NA,
-                              config,
-                              pars_config = NULL,
-                              states_config,
-                              obs_config,
-                              management = NULL,
-                              da_method = "enkf",
-                              par_fit_method = "inflate",
-                              model
-){
-
-  if(length(states_config$state_names) > 1){
-    config$include_wq <- TRUE
-  }else{
-    config$include_wq <- FALSE
-  }
+                                pars_init = NULL,
+                                aux_states_init,
+                                obs,
+                                obs_sd,
+                                model_sd,
+                                working_directory,
+                                met_file_names,
+                                inflow_file_names = NULL,
+                                outflow_file_names = NULL,
+                                start_datetime,
+                                end_datetime,
+                                forecast_start_datetime = NA,
+                                config,
+                                pars_config = NULL,
+                                states_config,
+                                obs_config,
+                                management = NULL,
+                                da_method = "enkf",
+                                par_fit_method = "inflate",
+                                model
+                                ){
 
   nstates <- dim(states_init)[1]
   ndepths_modeled <- dim(states_init)[2]
@@ -514,40 +510,40 @@ run_da_forecast_ler <- function(states_init,
         # restart_list = restart_list
 
         out <- run_model_ler(model,
-                                     ler_yaml = "LakeEnsemblR.yaml",
-                                     i,
-                                 m,
-                                 curr_start,
-                                 curr_stop,
-                                 par_names,
-                                 curr_pars,
-                                 working_directory = file.path(working_directory, m),
-                                 par_file,
-                                 num_phytos,
-                                 model_depths_start = model_internal_depths[i-1, , m],
-                                 lake_depth_start = lake_depth[i-1, m],
-                                 x_start = x[i-1, m, ],
-                                 full_time_local,
-                                 wq_start = states_config$wq_start,
-                                 wq_end = states_config$wq_end,
-                                 management = management,
-                                 hist_days,
-                                 modeled_depths = config$modeled_depths,
-                                 ndepths_modeled,
-                                 curr_met_file,
-                                 inflow_file_name = inflow_file_name,
-                                 outflow_file_name = outflow_file_name,
-                                 output_vars = output_vars,
-                                 diagnostics_names = config$diagnostics_names,
-                                 npars,
-                                 num_wq_vars,
-                                 snow_ice_thickness_start = snow_ice_thickness[, i-1,m ],
-                                 salt_start = salt[i-1, ,m],
-                                 nstates,
-                                 state_names = states_config$state_names,
-                                 include_wq = config$include_wq,
-                                 restart = restart,
-                                 restart_list = restart_list)
+                             ler_yaml = "LakeEnsemblR.yaml",
+                             i,
+                             m,
+                             curr_start,
+                             curr_stop,
+                             par_names,
+                             curr_pars,
+                             working_directory = file.path(working_directory, m),
+                             par_file,
+                             num_phytos,
+                             model_depths_start = model_internal_depths[i-1, , m],
+                             lake_depth_start = lake_depth[i-1, m],
+                             x_start = x[i-1, m, ],
+                             full_time_local,
+                             wq_start = states_config$wq_start,
+                             wq_end = states_config$wq_end,
+                             management = management,
+                             hist_days,
+                             modeled_depths = config$modeled_depths,
+                             ndepths_modeled,
+                             curr_met_file,
+                             inflow_file_name = inflow_file_name,
+                             outflow_file_name = outflow_file_name,
+                             output_vars = output_vars,
+                             diagnostics_names = config$diagnostics_names,
+                             npars,
+                             num_wq_vars,
+                             snow_ice_thickness_start = snow_ice_thickness[, i-1,m ],
+                             salt_start = salt[i-1, ,m],
+                             nstates,
+                             state_names = states_config$state_names,
+                             include_wq = config$include_wq,
+                             restart = restart,
+                             restart_list = restart_list)
 	  })
 
 	  # Loop through output and assign to matrix
@@ -961,8 +957,6 @@ run_da_forecast_ler <- function(states_init,
   for(m in 1:nmembers){
     unlink(file.path(working_directory, m), recursive = TRUE)
   }
-
-
   return(list(full_time_local = full_time_local,
               forecast_start_datetime = forecast_start_datetime,
               x = x,

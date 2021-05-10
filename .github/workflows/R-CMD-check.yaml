@@ -5,12 +5,12 @@ on:
     branches:
       - main
       - master
-      - ler
+      - particle_filter
   pull_request:
     branches:
       - main
       - master
-      - ler
+      - particle_filter
 
 name: R-CMD-check
 
@@ -24,8 +24,14 @@ jobs:
       fail-fast: false
       matrix:
         config:
+<<<<<<< HEAD
           - {os: windows-latest, r: 'release', usexdr: 'TRUE'}
           - {os: macOS-latest, r: 'release'}
+=======
+          # - {os: windows-latest, r: 'release'}
+          - {os: windows-latest, r: 'release', usexdr: 'TRUE' }
+          - {os: macOS-latest, r: '4.0.4'}
+>>>>>>> master
           # - {os: ubuntu-16.04,   r: '4.0.4',     rspm: "https://packagemanager.rstudio.com/cran/__linux__/xenial/latest"}
           - {os: ubuntu-20.04, r: 'release', rspm: "https://packagemanager.rstudio.com/cran/__linux__/focal/latest"}
           # - {os: ubuntu-20.04, r: 'devel', rspm: "https://packagemanager.rstudio.com/cran/__linux__/focal/latest"}
@@ -90,6 +96,8 @@ jobs:
         run: |
           options(width = 100)
           message("Number of cores: ", parallel::detectCores())
+          glm_v <- GLM3r::glm_version()
+          message("Using GLM ", substr(glm_v[3], 35, 58))
           pkgs <- installed.packages()[, "Package"]
           sessioninfo::session_info(pkgs, include_base = TRUE)
         shell: Rscript {0}

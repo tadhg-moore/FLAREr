@@ -57,12 +57,12 @@ if(forecast_hour < 10){forecast_hour <- paste0("0",forecast_hour)}
 forecast_path <- file.path(config$data_location, "NOAAGEFS")
 
 met_out <- flare::generate_met_files(obs_met_file = observed_met_file,
-                                         out_dir = config$run_config$execute_location,
-                                         forecast_dir = forecast_path,
-                                         local_tzone = config$local_tzone,
-                                         start_datetime_local = start_datetime_local,
-                                         end_datetime_local = end_datetime_local,
-                                         forecast_start_datetime = forecast_start_datetime_local,
-                                         use_forecasted_met = TRUE)
+                                     out_dir = config$run_config$execute_location,
+                                     forecast_dir = forecast_path,
+                                     local_tzone = config$local_tzone,
+                                     start_datetime_local = start_datetime_local,
+                                     end_datetime_local = end_datetime_local,
+                                     forecast_start_datetime = forecast_start_datetime_local,
+                                     use_forecasted_met = TRUE)
 
 historical_met_error <- met_out$historical_met_error

@@ -12,6 +12,9 @@
 #' @param output_directory, directory where the model output will be save
 #' @noRd
 #'
+#' @importFrom GLM3r run_glm
+#' @noRd
+#'
 #' @author Quinn Thomas
 #'
 
@@ -217,7 +220,6 @@ run_model <- function(i,
     list_index <- list_index + 1
   }
 
-
   flare:::update_nml(var_list = update_glm_nml_list,
                      var_name_list = update_glm_nml_names,
                      working_directory,
@@ -398,6 +400,12 @@ set_up_model <- function(config,
   if(!is.null(ncol(inflow_file_names))) {
     flare:::update_var(ncol(inflow_file_names), "num_inflows", ens_working_directory, "glm3.nml")
     flare:::update_var(ncol(outflow_file_names), "num_outlet", ens_working_directory, "glm3.nml")
+    inflow_var_names <- c("FLOW","TEMP","SALT", non_temp_names)
+    flare:::update_var(inflow_var_names, "inflow_vars", ens_working_directory, "glm3.nml")
+    flare:::update_var(length(inflow_var_names), "inflow_varnum", ens_working_directory, "glm3.nml")
+  } else {
+    flare:::update_var(0, "num_inflows", ens_working_directory, "glm3.nml")
+    flare:::update_var(0, "num_outlet", ens_working_directory, "glm3.nml")
     inflow_var_names <- c("FLOW","TEMP","SALT", non_temp_names)
     flare:::update_var(inflow_var_names, "inflow_vars", ens_working_directory, "glm3.nml")
     flare:::update_var(length(inflow_var_names), "inflow_varnum", ens_working_directory, "glm3.nml")

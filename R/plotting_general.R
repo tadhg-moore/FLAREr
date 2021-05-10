@@ -121,7 +121,6 @@ plotting_general <- function(file_name,
       ggplot2::theme_light() +
       ggplot2::labs(y = "Depth(m)", x = state_names[i], title = state_names[i])
     print(p)
-
   }
 
   if(length(par_names) > 0){
