@@ -227,9 +227,10 @@ run_da_forecast <- function(states_init,
     nmembers <- dim(states_init)[3]
     n_met_members <- length(met_file_names)
     if(!is.null(pars_config)){
+      pars_config <- pars_config[pars_config$model == "GLM", ]
       npars <- nrow(pars_config)
       par_names <- pars_config$par_names
-      par_nml <- pars_config$par_nml
+      par_nml <- pars_config$par_file
     }else{
       npars <- 0
       par_names <- NA
@@ -290,17 +291,6 @@ run_da_forecast <- function(states_init,
     start_forecast_step <- 1 + hist_days
     full_time_local <- seq(start_datetime, end_datetime, by = "1 day")
     forecast_days <- as.numeric(end_datetime - forecast_start_datetime)
-
-
-    if(!is.null(pars_config)){
-      npars <- nrow(pars_config)
-      par_names <- pars_config$par_names
-      par_nml <- pars_config$par_nml
-    }else{
-      npars <- 0
-      par_names <- NA
-      par_nml <- NA
-    }
 
     nstates <- dim(x_init)[2] -  npars
     nsteps <- length(full_time_local)
