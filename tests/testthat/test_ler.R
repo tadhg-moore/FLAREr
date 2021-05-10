@@ -3,7 +3,7 @@
 #### NEED A TEST HERE TO CHECK THAT MET FILES ARE GENERATED AND CORRECT
 test_that("LER met files are generated", {
 
-  template_folder <- system.file("data", package= "flare")
+  template_folder <- system.file("data", package = "flare")
   temp_dir <- tempdir()
   # dir.create("example")
   file.copy(from = template_folder, to = temp_dir, recursive = TRUE)
@@ -248,7 +248,7 @@ test_that("LER-GLM-EnKF can be run", {
 
   # library(tidyverse)
 
-  template_folder <- system.file("data", package= "flare")
+  template_folder <- system.file("data", package = "flare")
   temp_dir <- tempdir()
   # dir.create("example")
   file.copy(from = template_folder, to = temp_dir, recursive = TRUE)
