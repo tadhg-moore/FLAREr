@@ -128,7 +128,7 @@ plotting_general <- function(file_name,
 
     for(i in 1:length(par_names)){
 
-      print(par_names[i])
+      message(par_names[i])
 
 
       curr_var <- par_list[[i]]
@@ -174,7 +174,7 @@ plotting_general <- function(file_name,
 
   if(length(diagnostics_names) > 0 )
     for(i in 1:length(diagnostics_names)){
-      print(diagnostics_names[i])
+      message(diagnostics_names[i])
       curr_var <- diagnostic_list[[i]]
 
 
@@ -227,7 +227,7 @@ plotting_general <- function(file_name,
 
   if("extc_coef" %in% diagnostics_names){
 
-    print("secchi")
+    message("secchi")
 
     obs_date <- tibble::tibble(date = lubridate::as_date(full_time_local))
 
