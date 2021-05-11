@@ -155,7 +155,7 @@ generate_glm_met_files <- function(obs_met_file = NULL,
     combined_met$time <- lubridate::with_tz(combined_met$time, tzone = local_tzone)
     combined_met$time <- strftime(combined_met$time, format="%Y-%m-%d %H:%M", tz = local_tzone)
 
-    readr::write_csv(combined_met,file = paste0(out_dir, "/", current_filename), quote_escape = "none")
+    readr::write_csv(combined_met, paste0(out_dir, "/", current_filename), quote_escape = "none")
 
     filenames[j] <- paste0(out_dir, "/", current_filename)
   }

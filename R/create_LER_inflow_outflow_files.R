@@ -71,7 +71,7 @@ create_ler_inflow_outflow_files <- function(inflow_file_dir,
       inflow_file_name <- file.path(working_directory, paste0("inflow",j,".csv"))
 
       readr::write_csv(x = obs_inflow_tmp,
-                       file = inflow_file_name,
+                       inflow_file_name,
                        quote_escape = "none")
       inflow_file_names[, j] <- inflow_file_name
     }else{
@@ -102,11 +102,11 @@ create_ler_inflow_outflow_files <- function(inflow_file_dir,
 
         if(use_future_inflow){
           readr::write_csv(x = inflow,
-                           file = inflow_file_name,
+                           inflow_file_name,
                            quote_escape = "none")
         }else{
           readr::write_csv(x = obs_inflow_tmp,
-                           file = inflow_file_name,
+                           inflow_file_name,
                            quote_escape = "none")
 
         }
@@ -137,7 +137,7 @@ create_ler_inflow_outflow_files <- function(inflow_file_dir,
       outflow_file_name <- file.path(working_directory, paste0("outflow",j,".csv"))
 
       readr::write_csv(x = obs_outflow_tmp,
-                       file = outflow_file_name,
+                       outflow_file_name,
                        quote_escape = "none")
       outflow_file_names[, j] <- outflow_file_name
     }else{
@@ -164,11 +164,11 @@ create_ler_inflow_outflow_files <- function(inflow_file_dir,
 
         if(use_future_inflow){
           readr::write_csv(x = outflow,
-                           file = outflow_file_name,
+                           outflow_file_name,
                            quote_escape = "none")
         }else{
           readr::write_csv(x = obs_outflow_tmp,
-                           file = outflow_file_name,
+                           outflow_file_name,
                            quote_escape = "none")
         }
       }
