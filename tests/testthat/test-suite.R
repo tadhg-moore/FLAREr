@@ -1,5 +1,6 @@
 
 
+#### NEED A TEST HERE TO CHECK THAT MET FILES ARE GENERATED AND CORRECT
 # Met files ----
 test_that("met files are generated", {
 
@@ -9,17 +10,18 @@ test_that("met files are generated", {
 
   source(file.path(template_folder, "test_met_prep.R"))
 
-  met_out <- flare::generate_glm_met_files(obs_met_file = observed_met_file,
-                                           out_dir = config$run_config$execute_location,
-                                           forecast_dir = forecast_path,
-                                           local_tzone = config$local_tzone,
-                                           start_datetime_local = start_datetime_local,
-                                           end_datetime_local = end_datetime_local,
-                                           forecast_start_datetime = forecast_start_datetime_local,
-                                           use_forecasted_met = TRUE)
+  met_out <- flare::generate_met_files(obs_met_file = observed_met_file,
+                                       out_dir = config$run_config$execute_location,
+                                       forecast_dir = forecast_path,
+                                       local_tzone = config$local_tzone,
+                                       start_datetime_local = start_datetime_local,
+                                       end_datetime_local = end_datetime_local,
+                                       forecast_start_datetime_local = forecast_start_datetime_local,
+                                       use_forecasted_met = TRUE)
   met_file_names <- met_out$filenames
   testthat::expect_equal(file.exists(met_file_names), expected = rep(TRUE, 21))
 })
+
 
 
 # Inflow Drivers (already done) ----
@@ -31,10 +33,10 @@ test_that("inflow & outflow files are generated", {
   source(file.path(template_folder, "test_inflow_prep.R"))
 
 
-  inflow_forecast_path <- file.path(config$data_location)
+  inflow_forecast_path <- config$data_location
 
   #### NEED A TEST HERE TO CHECK THAT INFLOW FILES ARE GENERATED AND CORRECT
-  inflow_outflow_files <- flare::create_glm_inflow_outflow_files(inflow_file_dir = inflow_forecast_path,
+  inflow_outflow_files <- flare::create_inflow_outflow_files(inflow_file_dir = inflow_forecast_path,
                                                                  inflow_obs = cleaned_inflow_file,
                                                                  working_directory = config$run_config$execute_location,
                                                                  start_datetime_local = start_datetime_local,
@@ -49,8 +51,6 @@ test_that("inflow & outflow files are generated", {
   testthat::expect_equal(file.exists(inflow_outflow_files[[1]]), expected = rep(TRUE, 21))
   testthat::expect_equal(file.exists(inflow_outflow_files[[2]]), expected = rep(TRUE, 21))
 })
-
-
 
 # Create observation matrix ----
 test_that("observation matrix is generated and correct", {
@@ -83,7 +83,6 @@ test_that("observation matrix is generated and correct", {
 
 })
 
-
 # State to obs mapping ----
 test_that("generate states to obs mapping", {
 
@@ -102,7 +101,6 @@ test_that("generate states to obs mapping", {
   states_config <- flare::generate_states_to_obs_mapping(states_config, obs_config)
   testthat::expect_true(is.data.frame(states_config))
 })
-
 
 # Initial model error ----
 test_that("initial model error is generated", {
@@ -123,7 +121,6 @@ test_that("initial model error is generated", {
   testthat::expect_true(is.array(model_sd))
   testthat::expect_true(any(!is.na(model_sd)))
 })
-
 
 # Set initial conditions ----
 test_that("initial conditions are generated", {
@@ -164,7 +161,7 @@ test_that("EnKF can be run", {
 
   # library(tidyverse)
 
-  template_folder <- system.file("data", package= "flare")
+  template_folder <- system.file("data", package = "flare")
   temp_dir <- tempdir()
   # dir.create("example")
   file.copy(from = template_folder, to = temp_dir, recursive = TRUE)
@@ -200,9 +197,9 @@ test_that("EnKF can be run", {
   aux_states_init$lake_depth <- init$lake_depth
   aux_states_init$salt <- init$salt
 
-  met_file_names = gsub("\\\\", "/", met_file_names)
-  inflow_file_names = gsub("\\\\", "/", inflow_file_names)
-  outflow_file_names = gsub("\\\\", "/", outflow_file_names)
+  met_file_names <- gsub("\\\\", "/", met_file_names)
+  inflow_file_names <- gsub("\\\\", "/", inflow_file_names)
+  outflow_file_names <- gsub("\\\\", "/", outflow_file_names)
 
   # states_init = init$states
   # pars_init = init$pars
@@ -224,6 +221,7 @@ test_that("EnKF can be run", {
   # management = NULL
   # da_method = "enkf"
   # par_fit_method = "inflate"
+  # use_ler = FALSE
 
   #Run EnKF
   enkf_output <- flare::run_da_forecast(states_init = init$states,
@@ -348,9 +346,9 @@ test_that("particle filter can be run", {
                                         obs_sd = obs_config$obs_sd,
                                         model_sd = model_sd,
                                         working_directory = config$run_config$execute_location,
-                                        met_file_names = (met_file_names),
-                                        inflow_file_names = (inflow_file_names),
-                                        outflow_file_names = (outflow_file_names),
+                                        met_file_names = met_file_names,
+                                        inflow_file_names = inflow_file_names,
+                                        outflow_file_names = outflow_file_names,
                                         start_datetime = start_datetime_local,
                                         end_datetime = end_datetime_local,
                                         forecast_start_datetime = forecast_start_datetime_local,

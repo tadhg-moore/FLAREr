@@ -10,6 +10,7 @@ on:
     branches:
       - main
       - master
+      - particle_filter
 
 name: R-CMD-check
 
@@ -23,9 +24,8 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          # - {os: windows-latest, r: 'release'}
-          - {os: windows-latest, r: 'release', usexdr: 'TRUE' }
-          - {os: macOS-latest, r: '4.0.4'}
+          - {os: windows-latest, r: 'release', usexdr: 'TRUE'}
+          - {os: macOS-latest, r: 'release'}
           # - {os: ubuntu-16.04,   r: '4.0.4',     rspm: "https://packagemanager.rstudio.com/cran/__linux__/xenial/latest"}
           - {os: ubuntu-20.04, r: 'release', rspm: "https://packagemanager.rstudio.com/cran/__linux__/focal/latest"}
           # - {os: ubuntu-20.04, r: 'devel', rspm: "https://packagemanager.rstudio.com/cran/__linux__/focal/latest"}
@@ -71,10 +71,16 @@ jobs:
 
       - name: Install dependencies
         run: |
-          install.packages(c("remotes", "tidyverse", "parallelly"))
+          install.packages(c("remotes", "tidyverse"))
           remotes::install_github('eco4cast/EFIstandards')
           remotes::install_cran("xtable")
+          remotes::install_github("GLEON/rLakeAnalyzer")
           remotes::install_github("FLARE-forecast/GLM3r")
+          remotes::install_github("aemon-j/GOTMr")
+          remotes::install_github("aemon-j/SimstratR")
+          remotes::install_github("aemon-j/gotmtools", ref = "yaml")
+          remotes::install_github("USGS-R/glmtools", ref = "ggplot_overhaul")
+          remotes::install_github("tadhg-moore/LakeEnsemblR", ref = "flare")
           remotes::install_deps(dependencies = TRUE)
           remotes::install_cran("rcmdcheck")
           install.packages(".", repos = NULL, type = "source")  ## needed by parallel workers

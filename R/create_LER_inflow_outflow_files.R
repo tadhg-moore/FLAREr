@@ -8,23 +8,26 @@
 #' @param forecast_start_datetime_local
 #' @param use_future_inflow
 #' @param state_names
+#' @param tz
 #'
 #' @return
 #' @noRd
 #'
 #' @examples
-create_glm_inflow_outflow_files <- function(inflow_file_dir,
+create_ler_inflow_outflow_files <- function(inflow_file_dir,
                                             inflow_obs,
                                             working_directory,
                                             start_datetime_local,
                                             end_datetime_local,
                                             forecast_start_datetime_local,
                                             use_future_inflow,
-                                            state_names)
+                                            state_names,
+                                            tz)
 
 {
 
   obs_inflow <- readr::read_csv(inflow_obs, col_types = readr::cols())
+  hour_step <- lubridate::hour(start_datetime_local)
 
   if(use_future_inflow){
     obs_inflow <- obs_inflow %>%
@@ -68,7 +71,7 @@ create_glm_inflow_outflow_files <- function(inflow_file_dir,
       inflow_file_name <- file.path(working_directory, paste0("inflow",j,".csv"))
 
       readr::write_csv(x = obs_inflow_tmp,
-                       file = inflow_file_name,
+                       inflow_file_name,
                        quote_escape = "none")
       inflow_file_names[, j] <- inflow_file_name
     }else{
@@ -81,11 +84,17 @@ create_glm_inflow_outflow_files <- function(inflow_file_dir,
 
         obs_inflow_tmp <- obs_inflow %>%
           dplyr::filter(inflow_num == j,
-                        time < lubridate::as_date(forecast_start_datetime_local)) %>%
+                        time < forecast_start_datetime_local) %>%
           dplyr::select(c("time", "FLOW", "TEMP", "SALT"))
 
 
         inflow <- rbind(obs_inflow_tmp, d)
+        inflow <- as.data.frame(inflow)
+        # inflow[, 1] <- as.POSIXct(inflow[, 1], tz = tz) + lubridate::hours(hour_step)
+        inflow[, 1] <- format(inflow[, 1], format="%Y-%m-%d %H:%M:%S")
+        inflow[, 1] <- lubridate::with_tz(inflow[, 1]) + lubridate::hours(hour_step)
+        inflow[, 1] <- format(inflow[, 1], format="%Y-%m-%d %H:%M:%S")
+        colnames(inflow) <- c("datetime", "Flow_metersCubedPerSecond", "Water_Temperature_celsius", "Salinity_practicalSalinityUnits")
 
         inflow_file_name <- file.path(working_directory, paste0("inflow",j,"_ens",i,".csv"))
 
@@ -93,11 +102,11 @@ create_glm_inflow_outflow_files <- function(inflow_file_dir,
 
         if(use_future_inflow){
           readr::write_csv(x = inflow,
-                           file = inflow_file_name,
+                           inflow_file_name,
                            quote_escape = "none")
         }else{
           readr::write_csv(x = obs_inflow_tmp,
-                           file = inflow_file_name,
+                           inflow_file_name,
                            quote_escape = "none")
 
         }
@@ -110,7 +119,7 @@ create_glm_inflow_outflow_files <- function(inflow_file_dir,
     d <- readr::read_csv(outflow_files[1], col_types = readr::cols())
     num_outflows <- max(c(d$outflow_num,obs_outflow$outflow_num))
   }else{
-    num_outflows <- max(obs_inflow$outflow_num)
+    num_outflows <- max(obs_outflow$outflow_num)
   }
 
 
@@ -128,7 +137,7 @@ create_glm_inflow_outflow_files <- function(inflow_file_dir,
       outflow_file_name <- file.path(working_directory, paste0("outflow",j,".csv"))
 
       readr::write_csv(x = obs_outflow_tmp,
-                       file = outflow_file_name,
+                       outflow_file_name,
                        quote_escape = "none")
       outflow_file_names[, j] <- outflow_file_name
     }else{
@@ -145,6 +154,9 @@ create_glm_inflow_outflow_files <- function(inflow_file_dir,
           dplyr::select(-outflow_num)
 
         outflow <- rbind(obs_outflow_tmp, d)
+        outflow <- as.data.frame(outflow)
+        outflow[, 1] <- format(outflow[, 1], format="%Y-%m-%d %H:%M:%S")
+        colnames(outflow) <- c("datetime", "Flow_metersCubedPerSecond")
 
         outflow_file_name <- file.path(working_directory, paste0("outflow",j,"_ens",i,".csv"))
 
@@ -152,11 +164,11 @@ create_glm_inflow_outflow_files <- function(inflow_file_dir,
 
         if(use_future_inflow){
           readr::write_csv(x = outflow,
-                           file = outflow_file_name,
+                           outflow_file_name,
                            quote_escape = "none")
         }else{
           readr::write_csv(x = obs_outflow_tmp,
-                           file = outflow_file_name,
+                           outflow_file_name,
                            quote_escape = "none")
         }
       }

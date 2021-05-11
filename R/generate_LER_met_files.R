@@ -7,15 +7,13 @@
 #' @param end_datetime
 #' @param forecast_start_datetime
 #' @param local_tzone
-#' @param use_forecasted_met
-#' @param spatial_downscale
-#' @param spatial_downscale_coeff
 #'
+#' @importFrom zoo na.approx
 #' @return
 #' @noRd
 #'
 #' @examples
-generate_glm_met_files <- function(obs_met_file = NULL,
+generate_ler_met_files <- function(obs_met_file = NULL,
                                    out_dir,
                                    forecast_dir = NULL,
                                    local_tzone,
@@ -32,78 +30,52 @@ generate_glm_met_files <- function(obs_met_file = NULL,
   end_datetime_UTC <- lubridate::with_tz(end_datetime_local, tzone = "UTC") - lubridate::hours(1)
   forecast_start_datetime_UTC <- lubridate::with_tz(forecast_start_datetime_local, tzone = "UTC")
 
-  full_time_UTC <- seq(start_datetime_UTC, end_datetime_UTC, by = "1 hour")
-  if(use_forecasted_met){
-    if(forecast_start_datetime_UTC > start_datetime_UTC){
-      full_time_UTC_hist <- seq(start_datetime_UTC, forecast_start_datetime_UTC - lubridate::hours(1), by = "1 hour")
-    }else{
-      full_time_UTC_hist <- NULL
-    }
-  }else{
-    full_time_UTC_hist <- seq(start_datetime_UTC, end_datetime_UTC, by = "1 hour")
-  }
+  full_time_UTC <- seq(start_datetime_UTC, end_datetime_UTC + lubridate::hours(2), by = "1 hour")
+  full_time_UTC_hist <- seq(start_datetime_UTC, forecast_start_datetime_UTC - lubridate::hours(1), by = "1 hour")
   cf_met_vars <- c("air_temperature",
                    "surface_downwelling_shortwave_flux_in_air",
                    "surface_downwelling_longwave_flux_in_air",
                    "relative_humidity",
                    "wind_speed",
                    "precipitation_flux")
-  glm_met_vars <- c("AirTemp",
-                    "ShortWave",
-                    "LongWave",
-                    "RelHum",
-                    "WindSpeed",
-                    "Rain")
 
-  if(!is.null(obs_met_file) & !is.null(full_time_UTC_hist)){
+  met_vars <- c("Air_Temperature_celsius",
+                "Shortwave_Radiation_Downwelling_wattPerMeterSquared",
+                "Longwave_Radiation_Downwelling_wattPerMeterSquared",
+                "Relative_Humidity_percent",
+                "Ten_Meter_Elevation_Wind_Speed_meterPerSecond",
+                "Precipitation_millimeterPerHour")
 
+  if(!is.null(obs_met_file)){
     obs_met_nc <- ncdf4::nc_open(obs_met_file)
-
     obs_met_time <- ncdf4::ncvar_get(obs_met_nc, "time")
-
     origin <- stringr::str_sub(ncdf4::ncatt_get(obs_met_nc, "time")$units, 13, 28)
-
     origin <- lubridate::ymd_hm(origin)
-
     obs_met_time <- origin + lubridate::hours(obs_met_time)
-
     met <- tibble::tibble(time = obs_met_time)
-
     for(i in 1:length(cf_met_vars)){
-
       met <- cbind(met, ncdf4::ncvar_get(obs_met_nc, cf_met_vars[i]))
     }
-
-    ncdf4::nc_close(obs_met_nc)
-
-    names(met) <- c("time", glm_met_vars)
-
+    names(met) <- c("datetime", met_vars)
     met <- met %>%
-      dplyr::filter(time %in% full_time_UTC_hist)
+      dplyr::filter(datetime %in% full_time_UTC_hist)
 
-    if(!(dplyr::last(full_time_UTC_hist) %in% met$time)){
+	if(!(dplyr::last(full_time_UTC_hist) %in% met$time)){
       historical_met_error <- TRUE
     }else{
       historical_met_error <- FALSE
     }
-
   }else{
     met <- NULL
-    historical_met_error <- FALSE
-
+	historical_met_error <- FALSE
   }
 
-
   if(!is.null(forecast_dir)){
-
     forecast_files <- list.files(forecast_dir, pattern = ".nc", full.names = TRUE)
 
     forecast_files <- forecast_files[!stringr::str_detect(string = forecast_files, pattern = basename(obs_met_file))]
-
     nfiles <-   length(forecast_files)
-
   }else if(!is.null(met)){
-
     nfiles <-   1
   }
 
@@ -113,7 +85,6 @@ generate_glm_met_files <- function(obs_met_file = NULL,
 
     if(!is.null(forecast_dir) & use_forecasted_met){
 
-
       ens <- dplyr::last(unlist(stringr::str_split(basename(forecast_files[j]),"_")))
       ens <- stringr::str_sub(ens,1,5)
       noaa_met_nc <- ncdf4::nc_open(forecast_files[j])
@@ -121,39 +92,44 @@ generate_glm_met_files <- function(obs_met_file = NULL,
       origin <- stringr::str_sub(ncdf4::ncatt_get(noaa_met_nc, "time")$units, 13, 28)
       origin <- lubridate::ymd_hm(origin)
       noaa_met_time <- origin + lubridate::hours(noaa_met_time)
-      noaa_met <- tibble::tibble(time = noaa_met_time)
-
+      noaa_met <- tibble::tibble(datetime = noaa_met_time)
       for(i in 1:length(cf_met_vars)){
         noaa_met <- cbind(noaa_met, ncdf4::ncvar_get(noaa_met_nc, cf_met_vars[i]))
       }
-
       ncdf4::nc_close(noaa_met_nc)
-      names(noaa_met) <- c("time", glm_met_vars)
 
+      names(noaa_met) <- c("datetime", met_vars)
       noaa_met <- noaa_met %>%
-        dplyr::filter(time %in% full_time_UTC)
+        dplyr::filter(datetime %in% full_time_UTC)
 
       combined_met <- rbind(met, noaa_met)
+
       current_filename <- paste0('met_',ens,'.csv')
     }else{
       combined_met <- met
       current_filename <- paste0('met.csv')
     }
 
-    #convert units to GLM
+    #convert units to LER
+    combined_met$Air_Temperature_celsius <- combined_met$Air_Temperature_celsius - 273.15
+    combined_met$Relative_Humidity_percent <- combined_met$Relative_Humidity_percent * 100
+    # Catch RelH = 0
+    if( any(combined_met$Relative_Humidity_percent == 0)) {
+      idx <- which(combined_met$Relative_Humidity_percent == 0)
+      combined_met$Relative_Humidity_percent[idx] <- NA
+      combined_met$Relative_Humidity_percent <- zoo::na.approx(combined_met$Relative_Humidity_percent, rule = 2)
+    }
 
-    combined_met$AirTemp <- combined_met$AirTemp - 273.15
-    combined_met$RelHum <- combined_met$RelHum * 100
-    combined_met$Rain <- combined_met$Rain * (60 * 60 * 24)/1000
+    combined_met$Precipitation_millimeterPerHour <- combined_met$Precipitation_millimeterPerHour * (60 * 60)
 
     combined_met <- combined_met %>%
-      dplyr::mutate(Snow = 0.0)
+      dplyr::mutate(Snowfall_millimeterPerHour = 0.0)
 
     combined_met <- combined_met %>%
-      dplyr::mutate_at(dplyr::vars(all_of(glm_met_vars)), list(~round(., 4)))
+      dplyr::mutate_at(dplyr::vars(all_of(met_vars)), list(~round(., 4)))
 
-    combined_met$time <- lubridate::with_tz(combined_met$time, tzone = local_tzone)
-    combined_met$time <- strftime(combined_met$time, format="%Y-%m-%d %H:%M", tz = local_tzone)
+    combined_met$datetime <- lubridate::with_tz(combined_met$datetime, tzone = local_tzone)
+    combined_met$datetime <- strftime(combined_met$datetime, format="%Y-%m-%d %H:%M:%S", tz = local_tzone)
 
     readr::write_csv(combined_met, paste0(out_dir, "/", current_filename), quote_escape = "none")
 
@@ -161,5 +137,5 @@ generate_glm_met_files <- function(obs_met_file = NULL,
   }
 
   return(list(filenames = filenames,
-              historical_met_error = historical_met_error))
+		 historical_met_error = historical_met_error))
 }

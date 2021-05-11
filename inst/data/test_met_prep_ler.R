@@ -1,17 +1,24 @@
+
 template_folder <- system.file("data", package= "flare")
 temp_dir <- tempdir()
 # dir.create("example")
 file.copy(from = template_folder, to = temp_dir, recursive = TRUE)
 
 test_location <- file.path(temp_dir, "data")
+# print(list.files(test_location))
+# print(readLines(file.path(test_location, "test_met_prep.R")))
+
 forecast_location <- test_location
 execute_location <- file.path(test_location, "output")
 data_location <- file.path(test_location, "input_data")
 qaqc_data_location <- file.path(test_location, "input_data")
 
 ##### Read configuration files
-config <- yaml::read_yaml(file.path(forecast_location,"configure_flare.yml"))
+config <- yaml::read_yaml(file.path(forecast_location,"configure_flare_ler.yml"))
 run_config <- yaml::read_yaml(file.path(forecast_location,"run_configuration.yml"))
+
+# Set model
+model <- config$model
 
 config$run_config <- run_config
 config$run_config$forecast_location <- forecast_location
@@ -21,7 +28,7 @@ if(!dir.exists(config$run_config$execute_location)){
   dir.create(config$run_config$execute_location)
 }
 
-file.copy(file.path(forecast_location, "glm3.nml"), execute_location)
+# file.copy(file.path(forecast_location, "glm3.nml"), execute_location)
 
 config$data_location <- data_location
 config$qaqc_data_location <- qaqc_data_location
@@ -55,14 +62,3 @@ forecast_start_datetime_UTC <- lubridate::with_tz(forecast_start_datetime_local,
 forecast_hour <- lubridate::hour(forecast_start_datetime_UTC)
 if(forecast_hour < 10){forecast_hour <- paste0("0",forecast_hour)}
 forecast_path <- file.path(config$data_location, "NOAAGEFS")
-
-met_out <- flare::generate_met_files(obs_met_file = observed_met_file,
-                                     out_dir = config$run_config$execute_location,
-                                     forecast_dir = forecast_path,
-                                     local_tzone = config$local_tzone,
-                                     start_datetime_local = start_datetime_local,
-                                     end_datetime_local = end_datetime_local,
-                                     forecast_start_datetime = forecast_start_datetime_local,
-                                     use_forecasted_met = TRUE)
-
-historical_met_error <- met_out$historical_met_error

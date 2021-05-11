@@ -25,7 +25,8 @@ run_da_forecast(
   obs_config,
   management = NULL,
   da_method = "enkf",
-  par_fit_method = "inflate"
+  par_fit_method = "inflate",
+  use_ler = FALSE
 )
 }
 \arguments{
@@ -67,6 +68,10 @@ automatically be set to \code{end_datetime}.}
 \item{management}{list of management inputs and configuration  (Default = NULL)}
 
 \item{da_method}{data assimilation method (enkf or pf; Default = enkf)}
+
+\item{par_fit_method}{parameter fit method. Either perturb or inflare}
+
+\item{use_ler}{Use LakeEnsemblR}
 }
 \value{
 enkf_output a list is passed to \code{write_forecast_netcdf()} to write the

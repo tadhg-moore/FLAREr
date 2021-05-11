@@ -426,7 +426,7 @@ set_up_model <- function(config,
   }
 
 
-    flare:::update_var(length(config$modeled_depths), "num_depths", ens_working_directory, "glm3.nml") #GLM SPECIFIC
+  flare:::update_var(length(config$modeled_depths), "num_depths", ens_working_directory, "glm3.nml") #GLM SPECIFIC
 
 
   inflow_var_names <- c("FLOW","TEMP","SALT", non_temp_names)
@@ -544,4 +544,3 @@ create_sss_input_output <- function(x,
   write.csv(sss_inflow, paste0(working_directory, "/sss_inflow.csv"), row.names = FALSE, quote = FALSE)
   write.csv(sss_outflow, paste0(working_directory, "/sss_outflow.csv"), row.names = FALSE, quote = FALSE)
 }
-
