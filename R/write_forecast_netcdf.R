@@ -23,15 +23,20 @@ write_forecast_netcdf <- function(enkf_output,
   da_qc_flag = enkf_output$da_qc_flag
   full_time_local <- enkf_output$full_time_local
   forecast_start_datetime <- enkf_output$forecast_start_datetime
-  if(config$model == "GLM") {
-    avg_surf_temp <- enkf_output$restart_list$avg_surf_temp
-    mixing_vars <- enkf_output$restart_list$mixing_vars
-  }
-  if(config$model == "Simstrat") {
-    U <- aperm(enkf_output$restart_list$U_restart, c(2, 3, 1))
-    V <- aperm(enkf_output$restart_list$V_restart, c(2, 3, 1))
-    k_restart <- aperm(enkf_output$restart_list$k_restart, c(2, 3, 1))
-    eps <- aperm(enkf_output$restart_list$eps_restart, c(2, 3, 1))
+  if(config$use_ler) {
+    if(config$model == "GLM") {
+      avg_surf_temp <- enkf_output$restart_list$avg_surf_temp
+      mixing_vars <- enkf_output$restart_list$mixing_vars
+    }
+    if(config$model == "Simstrat") {
+      U <- aperm(enkf_output$restart_list$U_restart, c(2, 3, 1))
+      V <- aperm(enkf_output$restart_list$V_restart, c(2, 3, 1))
+      k_restart <- aperm(enkf_output$restart_list$k_restart, c(2, 3, 1))
+      eps <- aperm(enkf_output$restart_list$eps_restart, c(2, 3, 1))
+    }
+  } else {
+    avg_surf_temp <- enkf_output$avg_surf_temp
+    mixing_vars <- enkf_output$mixing_vars
   }
   model_internal_depths <- enkf_output$model_internal_depths
   salt <- enkf_output$salt
