@@ -259,7 +259,6 @@ test_that("LER-GLM-EnKF can be run", {
   source(file.path(test_location, "test_enkf_prep_ler.R"))
   config$model <- "GLM"
 
-
   #Set observations in the "future" to NA
   full_time_forecast <- seq(start_datetime_local, end_datetime_local, by = "1 day")
   obs[ , which(full_time_forecast > forecast_start_datetime_local), ] <- NA
@@ -374,7 +373,6 @@ test_that("LER-GOTM-EnKF can be run", {
   source(file.path(test_location, "test_enkf_prep_ler.R"))
   config$model <- "GOTM"
 
-
   #Set observations in the "future" to NA
   full_time_forecast <- seq(start_datetime_local, end_datetime_local, by = "1 day")
   obs[ , which(full_time_forecast > forecast_start_datetime_local), ] <- NA
@@ -467,7 +465,6 @@ test_that("LER-Simstrat-EnKF can be run", {
 
   source(file.path(test_location, "test_enkf_prep_ler.R"))
   config$model <- "Simstrat"
-
 
   #Set observations in the "future" to NA
   full_time_forecast <- seq(start_datetime_local, end_datetime_local, by = "1 day")
