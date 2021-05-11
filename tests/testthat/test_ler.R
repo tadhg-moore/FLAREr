@@ -341,7 +341,7 @@ test_that("LER-GLM-EnKF can be run", {
 
   # Save forecast
   saved_file <- flare::write_forecast_netcdf(enkf_output,
-                                             forecast_location = config$run_config$forecast_location, config = config, model = "GLM")
+                                             forecast_location = config$run_config$forecast_location, config = config)
   testthat::expect_true(file.exists(saved_file))
 
   #Create EML Metadata
@@ -435,7 +435,7 @@ test_that("LER-GOTM-EnKF can be run", {
 
   # Save forecast
   saved_file <- flare::write_forecast_netcdf(enkf_output,
-                                             forecast_location = config$run_config$forecast_location, config = config, model = "GOTM")
+                                             forecast_location = config$run_config$forecast_location, config = config)
   testthat::expect_true(file.exists(saved_file))
 
   #Create EML Metadata
@@ -534,7 +534,7 @@ test_that("LER-Simstrat-EnKF can be run", {
 
   # Save forecast
   saved_file <- flare::write_forecast_netcdf(enkf_output,
-                                             forecast_location = config$run_config$forecast_location, config = config, model = "Simstrat")
+                                             forecast_location = config$run_config$forecast_location, config = config)
   testthat::expect_true(file.exists(saved_file))
 
   #Create EML Metadata
