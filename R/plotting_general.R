@@ -54,7 +54,7 @@ plotting_general <- function(file_name,
   for(i in 1:length(state_names)){
 
     curr_var <- state_list[[i]]
-    print(state_names[i])
+    message(state_names[i])
 
 
     mean_var <- array(NA, dim = c(length(depths), length(full_time_local)))
