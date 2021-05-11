@@ -340,7 +340,7 @@ test_that("LER-GLM-EnKF can be run", {
   testthat::expect_true(all(unlist(chk)))
 
   # Save forecast
-  saved_file <- flare::write_forecast_netcdf_ler(enkf_output,
+  saved_file <- flare::write_forecast_netcdf(enkf_output,
                                              forecast_location = config$run_config$forecast_location, config = config, model = "GLM")
   testthat::expect_true(file.exists(saved_file))
 
@@ -434,7 +434,7 @@ test_that("LER-GOTM-EnKF can be run", {
   testthat::expect_true(all(unlist(chk)))
 
   # Save forecast
-  saved_file <- flare::write_forecast_netcdf_ler(enkf_output,
+  saved_file <- flare::write_forecast_netcdf(enkf_output,
                                              forecast_location = config$run_config$forecast_location, config = config, model = "GOTM")
   testthat::expect_true(file.exists(saved_file))
 
@@ -533,7 +533,7 @@ test_that("LER-Simstrat-EnKF can be run", {
   testthat::expect_true(all(unlist(chk)))
 
   # Save forecast
-  saved_file <- flare::write_forecast_netcdf_ler(enkf_output,
+  saved_file <- flare::write_forecast_netcdf(enkf_output,
                                              forecast_location = config$run_config$forecast_location, config = config, model = "Simstrat")
   testthat::expect_true(file.exists(saved_file))
 
