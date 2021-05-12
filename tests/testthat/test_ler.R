@@ -259,7 +259,6 @@ test_that("LER-GLM-EnKF can be run", {
   source(file.path(test_location, "test_enkf_prep_ler.R"))
   config$model <- "GLM"
 
-
   #Set observations in the "future" to NA
   full_time_forecast <- seq(start_datetime_local, end_datetime_local, by = "1 day")
   obs[ , which(full_time_forecast > forecast_start_datetime_local), ] <- NA
@@ -340,8 +339,8 @@ test_that("LER-GLM-EnKF can be run", {
   testthat::expect_true(all(unlist(chk)))
 
   # Save forecast
-  saved_file <- flare::write_forecast_netcdf_ler(enkf_output,
-                                             forecast_location = config$run_config$forecast_location, config = config, model = "GLM")
+  saved_file <- flare::write_forecast_netcdf(enkf_output,
+                                             forecast_location = config$run_config$forecast_location, config = config)
   testthat::expect_true(file.exists(saved_file))
 
   #Create EML Metadata
@@ -373,7 +372,6 @@ test_that("LER-GOTM-EnKF can be run", {
 
   source(file.path(test_location, "test_enkf_prep_ler.R"))
   config$model <- "GOTM"
-
 
   #Set observations in the "future" to NA
   full_time_forecast <- seq(start_datetime_local, end_datetime_local, by = "1 day")
@@ -434,8 +432,8 @@ test_that("LER-GOTM-EnKF can be run", {
   testthat::expect_true(all(unlist(chk)))
 
   # Save forecast
-  saved_file <- flare::write_forecast_netcdf_ler(enkf_output,
-                                             forecast_location = config$run_config$forecast_location, config = config, model = "GOTM")
+  saved_file <- flare::write_forecast_netcdf(enkf_output,
+                                             forecast_location = config$run_config$forecast_location, config = config)
   testthat::expect_true(file.exists(saved_file))
 
   #Create EML Metadata
@@ -467,7 +465,6 @@ test_that("LER-Simstrat-EnKF can be run", {
 
   source(file.path(test_location, "test_enkf_prep_ler.R"))
   config$model <- "Simstrat"
-
 
   #Set observations in the "future" to NA
   full_time_forecast <- seq(start_datetime_local, end_datetime_local, by = "1 day")
@@ -533,8 +530,8 @@ test_that("LER-Simstrat-EnKF can be run", {
   testthat::expect_true(all(unlist(chk)))
 
   # Save forecast
-  saved_file <- flare::write_forecast_netcdf_ler(enkf_output,
-                                             forecast_location = config$run_config$forecast_location, config = config, model = "Simstrat")
+  saved_file <- flare::write_forecast_netcdf(enkf_output,
+                                             forecast_location = config$run_config$forecast_location, config = config)
   testthat::expect_true(file.exists(saved_file))
 
   #Create EML Metadata
