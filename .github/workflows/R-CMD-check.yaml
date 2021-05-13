@@ -86,12 +86,6 @@ jobs:
           install.packages(".", repos = NULL, type = "source")  ## needed by parallel workers
         shell: Rscript {0}
 
-      - name: Install Linux GLM3r
-        if: runner.os == 'Linux'
-        run: |
-          remotes::install_github("robertladwig/GLM3r", ref = "v3.1.2_nogd")
-        shell: Rscript {0}
-
       - name: Session info
         run: |
           options(width = 100)
@@ -100,6 +94,14 @@ jobs:
           message("Using GLM ", substr(glm_v[3], 35, 58))
           pkgs <- installed.packages()[, "Package"]
           sessioninfo::session_info(pkgs, include_base = TRUE)
+        shell: Rscript {0}
+
+      - name: Check
+        env:
+          _R_CHECK_CRAN_INCOMING_REMOTE_: false
+        run: |
+          options(crayon.enabled = TRUE)
+          rcmdcheck::rcmdcheck(args = c("--no-manual", "--as-cran"), error_on = "error", check_dir = "check")
         shell: Rscript {0}
 
       - name: Upload check results
