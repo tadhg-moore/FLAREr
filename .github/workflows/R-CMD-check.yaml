@@ -5,12 +5,12 @@ on:
     branches:
       - main
       - master
-      - particle_filter
+      - ler
   pull_request:
     branches:
       - main
       - master
-      - particle_filter
+      - ler
 
 name: R-CMD-check
 
