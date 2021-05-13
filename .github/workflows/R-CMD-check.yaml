@@ -86,7 +86,7 @@ jobs:
           install.packages(".", repos = NULL, type = "source")  ## needed by parallel workers
         shell: Rscript {0}
 
-        - name: Install Linux GLM3r
+      - name: Install Linux GLM3r
         if: runner.os == 'Linux'
         run: |
           remotes::install_github("robertladwig/GLM3r", ref = "v3.1.2_nogd")
