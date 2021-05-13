@@ -248,6 +248,8 @@ write_forecast_netcdf <- function(enkf_output,
   ncdf4::ncatt_put(ncout,0,"forecast_project_id",enkf_output$config$metadata$forecast_project_id, prec =  "text")
   ncdf4::ncatt_put(ncout,0,"forecast_model_id",enkf_output$config$metadata$forecast_project_id, prec =  "text")
   ncdf4::ncatt_put(ncout,0,"local_time_zone_of_simulation",as.character(config$local_tzone), prec =  "text")
+  ncdf4::ncatt_put(ncout,0,"forecast_issue_time", as.character(Sys.time()),
+                   prec =  "text")
 
   ncdf4::nc_close(ncout)
 
