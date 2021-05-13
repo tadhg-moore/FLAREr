@@ -405,6 +405,12 @@ run_da_forecast_ler <- function(states_init,
       dit_pars<- array(NA, dim = c(nmembers, npars))
     }
 
+    if(i == start_step) {
+      restart = FALSE
+    } else {
+      restart = TRUE
+    }
+
 	# if i = start_step set up cluster for parallelization
     # Switch for
     switch(Sys.info() [["sysname"]],
@@ -426,7 +432,7 @@ run_da_forecast_ler <- function(states_init,
                                                  "curr_stop", "par_names", "par_file",
                                                  "num_phytos", "full_time_local", "management",
                                                  "hist_days", "config", "states_config",
-                                                 "ndepths_modeled", "output_vars", "num_wq_vars"),
+                                                 "ndepths_modeled", "output_vars", "num_wq_vars", "model", "restart"),
                               envir = environment())
     }
 
@@ -434,11 +440,6 @@ run_da_forecast_ler <- function(states_init,
     parallel::clusterExport(cl, varlist = list("x", "restart_list", "model_internal_depths", "lake_depth",
                                                "snow_ice_thickness", "salt"),
                             envir = environment())
-    if(i == start_step) {
-      restart = FALSE
-    } else {
-      restart = TRUE
-    }
 
     #If i == 1 then assimilate the first time step without running the process
     #model (i.e., use yesterday's forecast of today as initial conditions and
@@ -509,7 +510,7 @@ run_da_forecast_ler <- function(states_init,
         # restart = restart
         # restart_list = restart_list
 
-        out <- run_model_ler(model,
+        out <- flare:::run_model_ler(model,
                              ler_yaml = "LakeEnsemblR.yaml",
                              i,
                              m,
