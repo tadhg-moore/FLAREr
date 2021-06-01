@@ -8,7 +8,7 @@
 #' @export
 #'
 #' @examples
-combine_forecast_observations <- function(file_name, qaqc_location,  extra_historical_days){
+combine_forecast_observations <- function(file_name, qaqc_location,  extra_historical_days, ncore = 1){
 
   nc <- ncdf4::nc_open(file_name)
   t <- ncdf4::ncvar_get(nc,'time')
@@ -16,9 +16,8 @@ combine_forecast_observations <- function(file_name, qaqc_location,  extra_histo
   full_time <- as.POSIXct(t,
                           origin = '1970-01-01 00:00.00 UTC',
                           tz = "UTC")
-  full_time_local <- lubridate::with_tz(full_time, local_tzone)
-  full_time_day_local <- lubridate::as_date(full_time_local)
-  nsteps <- length(full_time_day_local)
+  full_time_day <- lubridate::as_date(full_time)
+  nsteps <- length(full_time_day)
   forecast <- ncdf4::ncvar_get(nc, 'forecast')
   depths <- round(ncdf4::ncvar_get(nc, 'depth'),2)
 
@@ -129,12 +128,9 @@ combine_forecast_observations <- function(file_name, qaqc_location,  extra_histo
   names(state_list) <- state_names
 
   diagnostic_list <- list()
-  if(length(diagnostics_names) > 0) {
-    for(s in 1:length(diagnostics_names)){
-      diagnostic_list[[s]] <- ncdf4::ncvar_get(nc, diagnostics_names[s])
-    }
+  for(s in 1:length(diagnostics_names)){
+    diagnostic_list[[s]] <- ncdf4::ncvar_get(nc, diagnostics_names[s])
   }
-
 
   names(diagnostic_list) <- diagnostics_names
 
@@ -149,43 +145,78 @@ combine_forecast_observations <- function(file_name, qaqc_location,  extra_histo
 
   #####
 
-  obs_list <- list()
+  full_time_extended <- seq(full_time[1] - lubridate::days(extra_historical_days), max(full_time), by = "1 day")
 
-  full_time_local_extended <- seq(full_time_local[1] - lubridate::days(extra_historical_days), max(full_time_local), by = "1 day")
-  for(i in 1:length(obs_names)){
+
+  switch(Sys.info() [["sysname"]],
+         Linux = { machine <- "unix" },
+         Darwin = { machine <- "mac" },
+         Windows = { machine <- "windows"})
+  if(machine == "windows") {
+    cl <- parallel::makeCluster(ncore, setup_strategy = "sequential")
+    parallel::clusterEvalQ(cl,library(magrittr))
+  } else {
+    cl <- parallel::makeCluster(ncore, setup_strategy = "sequential")
+    parallel::clusterEvalQ(cl,library(magrittr))
+  }
+  # Close parallel sockets on exit even if function is crashed or cancelled
+  on.exit({
+    tryCatch({parallel::stopCluster(cl)},
+             error = function(e) {
+               return(NA)
+             })
+  })
+
+  parallel::clusterExport(cl, varlist = list("obs_names", "full_time", "target_variable", "depths", "full_time_extended", "d", "distance_threshold"),
+                          envir = environment())
+
+  obs_list <- parallel::parLapply(cl, 1:length(obs_names), function(i) {
+
+    #obs_list <- lapply(1:length(obs_names), function(i) {
+
     print(paste0("Extracting ",target_variable[i]))
 
-    obs_tmp <- array(NA,dim = c(length(full_time_local_extended),length(depths)))
+    obs_tmp <- array(NA,dim = c(length(full_time_extended),length(depths)))
 
-    for(k in 1:length(full_time_local_extended)){
+    for(k in 1:length(full_time_extended)){
+      #print(k)
       for(j in 1:length(depths)){
+
+        #print(j)
         d1 <- d %>%
           dplyr::filter(variable == target_variable[i],
-                        date == lubridate::as_date(full_time_local_extended[k]),
-                        (is.na(hour) | hour == lubridate::hour(full_time_local_extended[k])),
+                        date == lubridate::as_date(full_time_extended[k]),
+                        (is.na(hour) | hour == lubridate::hour(full_time_extended[k])),
                         abs(depth-depths[j]) < distance_threshold[i])
+
+
 
         if(nrow(d1) == 1){
           obs_tmp[k,j] <- d1$value
+        }else if(nrow(d1) > 1){
+          obs_tmp[k,j] <- mean(d1$value, na.rm = TRUE)
+        }else{
+          obs_tmp[k,j] <- NA
         }
+        #print(nrow(d1))
+        #print(obs_tmp[k,j])
       }
     }
-
-    obs_list[[i]] <- obs_tmp
-  }
+    return(obs_tmp)
+  })
 
 
   ####################################################
   #### STEP 7: CREATE THE Z ARRAY (OBSERVATIONS x TIME)
   ####################################################
 
-  obs <- array(NA, dim = c(length(full_time_local_extended), length(depths), length(obs_names)))
+  obs <- array(NA, dim = c(length(full_time_extended), length(depths), length(obs_names)))
   for(i in 1:length(obs_names)){
     obs[ , , i] <-  obs_list[[i]]
   }
 
   return(list(obs = obs,
-              full_time_local_extended = full_time_local_extended,
+              full_time_extended = full_time_extended,
               diagnostic_list = diagnostic_list,
               state_list = state_list,
               forecast = forecast,
@@ -194,7 +225,7 @@ combine_forecast_observations <- function(file_name, qaqc_location,  extra_histo
               state_names = state_names,
               par_names = par_names,
               diagnostics_names = diagnostics_names,
-              full_time_local = full_time_local,
+              full_time = full_time,
               obs_long = d,
               depths = depths,
               obs_names = obs_names))

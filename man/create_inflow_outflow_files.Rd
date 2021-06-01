@@ -8,13 +8,8 @@ create_inflow_outflow_files(
   inflow_file_dir,
   inflow_obs,
   working_directory,
-  start_datetime_local,
-  end_datetime_local,
-  forecast_start_datetime_local,
-  use_future_inflow,
-  state_names,
-  tz,
-  use_ler = FALSE
+  config,
+  state_names
 )
 }
 \arguments{

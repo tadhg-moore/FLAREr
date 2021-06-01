@@ -10,11 +10,12 @@ generate_initial_conditions(
   pars_config = NULL,
   obs,
   config,
-  model = "GLM"
+  restart_file = NA,
+  historical_met_error = FALSE
 )
 }
 \arguments{
-\item{config}{}
+\item{historical_met_error}{}
 }
 \value{
 

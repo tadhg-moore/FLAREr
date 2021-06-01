@@ -39,8 +39,6 @@ metadata:
         electronicMailAddress:  "INSERT"
         id: INSERT ORCID
 
-
-
 ############################
 # Run information
 #############################
@@ -52,7 +50,7 @@ ler_yaml: LakeEnsemblR.yaml
 
 # Relative to forecast_location
 
-base_GLM_nml: configuration_files/glm3.nml
+base_GLM_nml: glm3.nml
 
 #All sources of uncertainty and data used to constrain
 use_obs_constraint: TRUE
@@ -64,17 +62,17 @@ parameter_uncertainty: TRUE
 met_downscale_uncertainty: TRUE
 inflow_process_uncertainty: TRUE
 
-specified_inflow1: FCR_weir_inflow_2013_2019_20200624_allfractions_2poolsDOC.csv
-specified_outflow1: FCR_spillway_outflow_SUMMED_WeirWetland_2013_2019_20200615.csv
+use_forecasted_met: TRUE
+forecast_met_model: NOAAGEFS_1hr-debias
 
-use_future_inflow: FALSE
+forecast_inflow_model: FLOWS-NOAAGEFS-AR1
+
+use_future_inflow: TRUE
 future_inflow_flow_coeff: [0.0010803, 0.9478724, 0.3478991]
 future_inflow_flow_error: 0.00965
 future_inflow_temp_coeff: [0.20291, 0.94214, 0.04278]
 future_inflow_temp_error: 0.943
 
-forecast_met_model: NOAAGEFS_1hr-debias
-forecast_inflow_model: FLOWS-NOAAGEFS-AR1
 #########################
 ### Depth information
 #########################
@@ -117,12 +115,12 @@ forecast_sss_oxy: 500
 sss_fname: manual-data/FCR_SSS_inflow_2013_2020.csv
 sss_inflow_factor: 0.25
 
-
-
 ##############################
 ##  EnKF setup
 ##############################
-ensemble_size:  100 #221 #441
+da_method: "enkf"
+par_fit_method: "inflate"
+ensemble_size:  100
 localization_distance: .na #distance in meters were covariances in the model error are used
 vert_decorr_length: 5.0
 no_negative_states: TRUE

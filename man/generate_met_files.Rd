@@ -8,16 +8,12 @@ generate_met_files(
   obs_met_file = NULL,
   out_dir,
   forecast_dir = NULL,
-  local_tzone,
-  start_datetime_local,
-  end_datetime_local,
-  forecast_start_datetime_local,
-  use_forecasted_met,
-  use_ler = FALSE
+  config,
+  use_forecasted_met
 )
 }
 \arguments{
-\item{use_ler}{}
+\item{config}{}
 }
 \value{
 
