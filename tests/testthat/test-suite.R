@@ -11,9 +11,9 @@ test_that("met files are generated", {
   source(file.path(template_folder, "test_met_prep.R"))
 
   met_out <- FLAREr::generate_glm_met_files(obs_met_file = observed_met_file,
-                                           out_dir = config$run_config$execute_location,
-                                           forecast_dir = file.path(config$data_location, config$forecast_met_model),
-                                           config)
+                                            out_dir = config$run_config$execute_location,
+                                            forecast_dir = file.path(config$data_location, config$forecast_met_model),
+                                            config)
   met_file_names <- met_out$filenames
   testthat::expect_equal(file.exists(met_file_names), expected = rep(TRUE, 21))
 })
@@ -168,7 +168,7 @@ test_that("EnKF can be run", {
 
   # states_init = init$states
   # pars_init = init$pars
-  # aux_states_init = aux_states_init
+  # aux_states_init = init$aux_states_init
   # obs = obs
   # obs_sd = obs_config$obs_sd
   # model_sd = model_sd
@@ -190,19 +190,19 @@ test_that("EnKF can be run", {
 
   #Run EnKF
   enkf_output <- FLAREr::run_da_forecast(states_init = init$states,
-                                          pars_init = init$pars,
-                                          aux_states_init = init$aux_states_init,
-                                          obs = obs,
-                                          obs_sd = obs_config$obs_sd,
-                                          model_sd = model_sd,
-                                          working_directory = config$run_config$execute_location,
-                                          met_file_names = (met_file_names),
-                                          inflow_file_names = (inflow_file_names),
-                                          outflow_file_names = (outflow_file_names),
-                                          config = config,
-                                          pars_config = pars_config,
-                                          states_config = states_config,
-                                          obs_config = obs_config
+                                         pars_init = init$pars,
+                                         aux_states_init = init$aux_states_init,
+                                         obs = obs,
+                                         obs_sd = obs_config$obs_sd,
+                                         model_sd = model_sd,
+                                         working_directory = config$run_config$execute_location,
+                                         met_file_names = (met_file_names),
+                                         inflow_file_names = (inflow_file_names),
+                                         outflow_file_names = (outflow_file_names),
+                                         config = config,
+                                         pars_config = pars_config,
+                                         states_config = states_config,
+                                         obs_config = obs_config
   )
 
   #Load in pre-prepared output
@@ -217,7 +217,8 @@ test_that("EnKF can be run", {
 
   # Save forecast
   saved_file <- FLAREr::write_forecast_netcdf(enkf_output,
-                                             forecast_location = config$run_config$forecast_location)
+                                             forecast_location = config$run_config$forecast_location,
+                                             config)
   testthat::expect_true(file.exists(saved_file))
 
   #Create EML Metadata
@@ -311,7 +312,8 @@ test_that("particle filter can be run", {
 
   # Save forecast
   saved_file <- FLAREr::write_forecast_netcdf(enkf_output,
-                                             forecast_location = config$run_config$forecast_location)
+                                             forecast_location = config$run_config$forecast_location,
+                                             config)
   testthat::expect_true(file.exists(saved_file))
 
   #Create EML Metadata
@@ -325,7 +327,6 @@ test_that("particle filter can be run", {
   file_chk <- list.files(forecast_location, pattern = ".pdf")
   testthat::expect_true(length(file_chk) > 0)
 
-
 })
 
 # EnKF ----
@@ -333,7 +334,7 @@ test_that("EnKF can be run with NO inflows/outflows", {
 
   # library(tidyverse)
 
-  template_folder <- system.file("data", package= "FLAREr")
+  template_folder <- system.file("data", package = "FLAREr")
   temp_dir <- tempdir()
   # dir.create("example")
   file.copy(from = template_folder, to = temp_dir, recursive = TRUE)
@@ -399,7 +400,6 @@ test_that("EnKF can be run with NO inflows/outflows", {
                            qaqc_location = qaqc_data_location)
   file_chk <- list.files(forecast_location, pattern = ".pdf")
   testthat::expect_true(length(file_chk) > 0)
-
 
 })
 
