@@ -5,8 +5,8 @@
 #' @param working_directory
 #' @param state_names
 #'
+#' @export
 #' @return
-#' @noRd
 #'
 #' @examples
 create_glm_inflow_outflow_files <- function(inflow_file_dir,

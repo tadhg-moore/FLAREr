@@ -3,39 +3,40 @@
 #' @param inflow_file_dir
 #' @param inflow_obs
 #' @param working_directory
-#' @param start_datetime_local
-#' @param end_datetime_local
-#' @param forecast_start_datetime_local
-#' @param use_future_inflow
+#' @param config
 #' @param state_names
-#' @param tz
 #'
 #' @return
-#' @noRd
+#' @export
 #'
 #' @examples
 create_ler_inflow_outflow_files <- function(inflow_file_dir,
                                             inflow_obs,
                                             working_directory,
-                                            start_datetime_local,
-                                            end_datetime_local,
-                                            forecast_start_datetime_local,
-                                            use_future_inflow,
-                                            state_names,
-                                            tz)
+                                            config,
+                                            state_names)
 
 {
 
-  obs_inflow <- readr::read_csv(inflow_obs, col_types = readr::cols())
-  hour_step <- lubridate::hour(start_datetime_local)
-
-  if(use_future_inflow){
-    obs_inflow <- obs_inflow %>%
-      dplyr::filter(time >= lubridate::as_date(start_datetime_local) & time <= lubridate::as_date(forecast_start_datetime_local)) %>%
-      dplyr::mutate(inflow_num = 1)
+  start_datetime <- lubridate::as_datetime(config$run_config$start_datetime)
+  if(is.na(config$run_config$forecast_start_datetime)){
+    end_datetime <- lubridate::as_datetime(config$run_config$end_datetime)
+    forecast_start_datetime <- end_datetime
   }else{
+    forecast_start_datetime <- lubridate::as_datetime(config$run_config$forecast_start_datetime)
+    end_datetime <- forecast_start_datetime + lubridate::days(config$run_config$forecast_horizon)
+  }
+
+  obs_inflow <- readr::read_csv(inflow_obs, col_types = readr::cols())
+  hour_step <- lubridate::hour(config$run_config$start_datetime)
+
+  if(config$use_future_inflow) {
     obs_inflow <- obs_inflow %>%
-      dplyr::filter(time >= lubridate::as_date(start_datetime_local) & time <= lubridate::as_date(end_datetime_local)) %>%
+      dplyr::filter(time >= lubridate::as_date(start_datetime) & time <= lubridate::as_date(forecast_start_datetime)) %>%
+      dplyr::mutate(inflow_num = 1)
+  } else {
+    obs_inflow <- obs_inflow %>%
+      dplyr::filter(time >= lubridate::as_date(start_datetime) & time <= lubridate::as_date(end_datetime)) %>%
       dplyr::mutate(inflow_num = 1)
 
 
@@ -62,7 +63,7 @@ create_ler_inflow_outflow_files <- function(inflow_file_dir,
 
   for(j in 1:num_inflows){
 
-    if(length(inflow_files) == 0 | end_datetime_local == forecast_start_datetime_local){
+    if(length(inflow_files) == 0 | end_datetime == forecast_start_datetime){
 
       obs_inflow_tmp <- obs_inflow %>%
         dplyr::filter(inflow_num == j) %>%
@@ -84,7 +85,7 @@ create_ler_inflow_outflow_files <- function(inflow_file_dir,
 
         obs_inflow_tmp <- obs_inflow %>%
           dplyr::filter(inflow_num == j,
-                        time < forecast_start_datetime_local) %>%
+                        time < forecast_start_datetime) %>%
           dplyr::select(c("time", "FLOW", "TEMP", "SALT"))
 
 
@@ -100,11 +101,14 @@ create_ler_inflow_outflow_files <- function(inflow_file_dir,
 
         inflow_file_names[i, j] <- inflow_file_name
 
-        if(use_future_inflow){
+        if(config$use_future_inflow){
           readr::write_csv(x = inflow,
                            inflow_file_name,
                            quote_escape = "none")
         }else{
+          obs_inflow_tmp <- as.data.frame(obs_inflow_tmp)
+          obs_inflow_tmp[, 1] <- format(obs_inflow_tmp[, 1], format="%Y-%m-%d %H:%M:%S")
+          colnames(obs_inflow_tmp) <- c("datetime", "Flow_metersCubedPerSecond", "Water_Temperature_celsius", "Salinity_practicalSalinityUnits")
           readr::write_csv(x = obs_inflow_tmp,
                            inflow_file_name,
                            quote_escape = "none")
@@ -128,7 +132,7 @@ create_ler_inflow_outflow_files <- function(inflow_file_dir,
 
   for(j in 1:num_outflows){
 
-    if(length(inflow_files) == 0 | end_datetime_local == forecast_start_datetime_local){
+    if(length(inflow_files) == 0 | end_datetime == forecast_start_datetime){
 
       obs_outflow_tmp <- obs_outflow %>%
         dplyr::filter(outflow_num == j) %>%
@@ -150,7 +154,7 @@ create_ler_inflow_outflow_files <- function(inflow_file_dir,
 
         obs_outflow_tmp <- obs_outflow %>%
           dplyr::filter(outflow_num == j,
-                        time < lubridate::as_date(forecast_start_datetime_local)) %>%
+                        time < lubridate::as_date(forecast_start_datetime)) %>%
           dplyr::select(-outflow_num)
 
         outflow <- rbind(obs_outflow_tmp, d)
@@ -162,7 +166,7 @@ create_ler_inflow_outflow_files <- function(inflow_file_dir,
 
         outflow_file_names[i, j]  <- outflow_file_name
 
-        if(use_future_inflow){
+        if(config$use_future_inflow){
           readr::write_csv(x = outflow,
                            outflow_file_name,
                            quote_escape = "none")
@@ -175,6 +179,6 @@ create_ler_inflow_outflow_files <- function(inflow_file_dir,
     }
   }
 
-  return(list(inflow_file_names = as.character(inflow_file_names),
-              outflow_file_names = as.character(outflow_file_names)))
+  return(list(inflow_file_names = as.character(gsub("\\\\", "/", inflow_file_names)),
+              outflow_file_names = as.character(gsub("\\\\", "/", outflow_file_names))))
 }
