@@ -4,16 +4,10 @@
 \alias{generate_met_files}
 \title{Convert NOAA forecasts to GLM format}
 \usage{
-generate_met_files(
-  obs_met_file = NULL,
-  out_dir,
-  forecast_dir = NULL,
-  config,
-  use_forecasted_met
-)
+generate_met_files(obs_met_file = NULL, out_dir, forecast_dir = NULL, config)
 }
 \arguments{
-\item{config}{}
+\item{use_ler}{}
 }
 \value{
 
