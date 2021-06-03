@@ -1,7 +1,6 @@
 
 
-set_up_model_ler <- function(model,
-                             config,
+set_up_model_ler <- function(config,
                              ens_working_directory,
                              state_names,
                              inflow_file_names,
@@ -21,11 +20,11 @@ set_up_model_ler <- function(model,
   # yml <- yaml::read_yaml(file.path(ens_working_directory, ler_yaml))
   ler_directory <- gsub(config$lake_name_code, "", ens_working_directory)
 
-  if(model == "GLM") {
+  if(config$model == "GLM") {
 
     # GLM_folder <- executable_location
     # fl <- c(list.files(GLM_folder, full.names = TRUE))
-    # model_directory <- file.path(ens_working_directory, model)
+    # model_directory <- file.path(ens_working_directory, config$model)
     # dir.create(model_directory, showWarnings = FALSE)
     # tmp <- file.copy(from = fl, to = model_directory, overwrite = TRUE)
 
@@ -76,7 +75,7 @@ set_up_model_ler <- function(model,
   # yaml::write_yaml(yml, file.path(ens_working_directory, "test.yaml")) # file.path(ens_working_directory, ler_yaml)
 
 
-  LakeEnsemblR::export_config(config_file = basename(yaml_file), model = model, dirs = TRUE,
+  LakeEnsemblR::export_config(config_file = basename(yaml_file), model = config$model, dirs = TRUE,
                               time = FALSE, location = TRUE, output_settings = TRUE,
                               meteo = FALSE, init_cond = FALSE, extinction = TRUE,
                               inflow = FALSE, model_parameters = TRUE,

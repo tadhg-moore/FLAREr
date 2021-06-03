@@ -26,6 +26,7 @@ generate_initial_conditions <- function(states_config,
     nmembers <- config$ensemble_size
 
     if(!is.null(pars_config)){
+      pars_config <- pars_config[pars_config$model == config$model, ]
       npars <- nrow(pars_config)
     }else{
       npars <- 0
@@ -106,7 +107,7 @@ generate_initial_conditions <- function(states_config,
     init$snow_ice_thickness[1, ] <- config$default_snow_thickness_init
     init$snow_ice_thickness[2, ] <- config$default_white_ice_thickness_init
     init$snow_ice_thickness[3, ] <- config$default_blue_ice_thickness_init
-    if(model == "GLM") {
+    if(config$model == "GLM") {
       init$avg_surf_temp[] <- init$states[1 , 1, ]
       init$mixing_vars[, ] <- 0.0
     }

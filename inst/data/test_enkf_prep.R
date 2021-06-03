@@ -1,5 +1,5 @@
 
-template_folder <- system.file("data", package= "FLAREr")
+template_folder <- system.file("data", package = "FLAREr")
 temp_dir <- tempdir()
 # dir.create("example")
 file.copy(from = template_folder, to = temp_dir, recursive = TRUE)
@@ -39,10 +39,10 @@ cleaned_inflow_file <- file.path(config$qaqc_data_location, "/inflow_postQAQC.cs
 observed_met_file <- file.path(config$qaqc_data_location,"observed-met_fcre.nc")
 
 #Step up Drivers
-met_out <- FLAREr::generate_glm_met_files(obs_met_file = observed_met_file,
-                                         out_dir = config$run_config$execute_location,
-                                         forecast_dir = file.path(config$data_location, config$forecast_met_model),
-                                         config)
+met_out <- FLAREr::generate_met_files(obs_met_file = observed_met_file,
+                                      out_dir = config$run_config$execute_location,
+                                      forecast_dir = file.path(config$data_location, config$forecast_met_model),
+                                      config)
 met_file_names <- met_out$filenames
 
 historical_met_error <- met_out$historical_met_error

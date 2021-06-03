@@ -33,7 +33,7 @@ run_model_ler <- function(model,
                       model_depths_start,
                       lake_depth_start,
                       x_start,
-                      full_time_local,
+                      full_time,
                       wq_start,
                       wq_end,
                       management = NULL,
@@ -143,10 +143,10 @@ run_model_ler <- function(model,
 
       if(simulate_sss){
         if(is.na(management$specified_sss_inflow_file)){
-          flare:::create_sss_input_output(x = x_start,
+          FLAREr:::create_sss_input_output(x = x_start,
                                           i,
                                           m,
-                                          full_time_local,
+                                          full_time,
                                           working_directory,
                                           wq_start,
                                           management$management_input,
@@ -264,11 +264,11 @@ run_model_ler <- function(model,
 
 
   if(model == "GLM" & include_wq){
-    flare:::update_nml(update_aed_nml_list,
+    FLAREr:::update_nml(update_aed_nml_list,
                        update_aed_nml_names,
                        working_directory,
                        "aed2.nml")
-    flare:::update_nml(update_phyto_nml_list,
+    FLAREr:::update_nml(update_phyto_nml_list,
                        update_phyto_nml_names,
                        working_directory,
                        "aed2_phyto_pars.nml")
@@ -322,7 +322,7 @@ run_model_ler <- function(model,
     old_output <- list.files(file.path(working_directory, model, "output"))
     unlink(file.path(working_directory, model, "output", old_output), recursive = TRUE)
 
-    model_states <- flare:::run_models_ler(model = model,
+    model_states <- FLAREr:::run_models_ler(model = model,
                           folder = working_directory,
                           verbose = FALSE,
                           restart = restart,
@@ -343,7 +343,7 @@ run_model_ler <- function(model,
         output_vars_no_depth <- NA
 
         # LakeEnsemblR Output
-        ler_temp_out <-  flare:::get_ler_var_all(model = model,
+        ler_temp_out <-  FLAREr:::get_ler_var_all(model = model,
                                                   working_dir = working_directory,
                                                   z_out = modeled_depths,
                                                   vars_depth = output_vars_multi_depth,

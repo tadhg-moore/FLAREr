@@ -64,6 +64,9 @@ parameter_uncertainty: TRUE
 met_downscale_uncertainty: TRUE
 inflow_process_uncertainty: TRUE
 
+use_forecasted_met: TRUE
+forecast_met_model: NOAAGEFS_1hr-debias
+
 specified_inflow1: FCR_weir_inflow_2013_2019_20200624_allfractions_2poolsDOC.csv
 specified_outflow1: FCR_spillway_outflow_SUMMED_WeirWetland_2013_2019_20200615.csv
 
@@ -73,7 +76,6 @@ future_inflow_flow_error: 0.00965
 future_inflow_temp_coeff: [0.20291, 0.94214, 0.04278]
 future_inflow_temp_error: 0.943
 
-forecast_met_model: NOAAGEFS_1hr-debias
 forecast_inflow_model: FLOWS-NOAAGEFS-AR1
 #########################
 ### Depth information
