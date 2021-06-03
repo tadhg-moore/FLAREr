@@ -12,7 +12,8 @@
 ##'
 
 write_forecast_netcdf <- function(enkf_output,
-                                      forecast_location, config){
+                                  forecast_location,
+                                  config){
 
 
   x <- enkf_output$x

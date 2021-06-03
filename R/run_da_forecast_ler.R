@@ -130,17 +130,16 @@
 #' @param management list of management inputs and configuration  (Default = NULL)
 #' @param da_method data assimilation method (enkf or pf; Default = enkf)
 #' @param par_fit_method parameter fit (perturb or inflate)
-#' @param model model to be used in FLARE. Can be GLM, GOTM or Simstrat
 #' @return enkf_output a list is passed to `write_forecast_netcdf()` to write the
 #' netcdf output and `create_flare_eml()` to generate the EML metadata
 #' @example
 #'
 #'
-#'  start_datetime_local <- lubridate(as_datetime("2018-07-12 07:00:00, tz = "EST"))
-#'  end_datetime_local <- lubridate(as_datetime("2018-07-15 07:00:00, tz = "EST"))
+#'  start_datetime <- lubridate(as_datetime("2018-07-12 07:00:00, tz = "EST"))
+#'  end_datetime <- lubridate(as_datetime("2018-07-15 07:00:00, tz = "EST"))
 #'  forecast_start_datetime <- lubridate(as_datetime("2018-07-13 07:00:00, tz = "EST"))
 #'
-#'enkf_output <- flare::run_enkf_forecast(states_init = init$states,
+#'enkf_output <- FLAREr::run_enkf_forecast(states_init = init$states,
 #'               pars_init = init$pars,
 #'               aux_states_init = aux_states_init,
 #'               obs = obs,
@@ -150,9 +149,9 @@
 #'               met_file_names = met_file_names,
 #'               inflow_file_names = inflow_file_names,
 #'               outflow_file_names = outflow_file_names,
-#'               start_datetime = start_datetime_local,
-#'               end_datetime = end_datetime_local,
-#'               forecast_start_datetime = forecast_start_datetime_local,
+#'               start_datetime = start_datetime,
+#'               end_datetime = end_datetime,
+#'               forecast_start_datetime = forecast_start_datetime,
 #'               config = config,
 #'               pars_config = pars_config,
 #'               states_config = states_config,
@@ -168,25 +167,20 @@ run_da_forecast_ler <- function(states_init,
                                 met_file_names,
                                 inflow_file_names = NULL,
                                 outflow_file_names = NULL,
-                                start_datetime,
-                                end_datetime,
-                                forecast_start_datetime = NA,
                                 config,
                                 pars_config = NULL,
                                 states_config,
                                 obs_config,
                                 management = NULL,
                                 da_method = "enkf",
-                                par_fit_method = "inflate",
-                                model
-                                ){
+                                par_fit_method = "inflate"){
 
   nstates <- dim(states_init)[1]
   ndepths_modeled <- dim(states_init)[2]
   nmembers <- dim(states_init)[3]
   n_met_members <- length(met_file_names)
   if(!is.null(pars_config)){
-    pars_config <- pars_config[pars_config$model == model, ]
+    pars_config <- pars_config[pars_config$model == config$model, ]
     npars <- nrow(pars_config)
     par_names <- pars_config$par_names
     par_file <- pars_config$par_file
@@ -232,7 +226,7 @@ run_da_forecast_ler <- function(states_init,
   states_config$wq_start <- wq_start
   states_config$wq_end <- wq_end
 
-  flare:::check_enkf_inputs(states_init,
+  FLAREr:::check_enkf_inputs(states_init,
                             pars_init,
                             obs,
                             psi,
@@ -242,17 +236,22 @@ run_da_forecast_ler <- function(states_init,
                             states_config,
                             obs_config)
 
-  if(is.na(forecast_start_datetime)){
+  start_datetime <- lubridate::as_datetime(config$run_config$start_datetime)
+  if(is.na(config$run_config$forecast_start_datetime)){
+    end_datetime <- lubridate::as_datetime(config$run_config$end_datetime)
     forecast_start_datetime <- end_datetime
+  }else{
+    forecast_start_datetime <- lubridate::as_datetime(config$run_config$forecast_start_datetime)
+    end_datetime <- forecast_start_datetime + lubridate::days(config$run_config$forecast_horizon)
   }
 
   hist_days <- as.numeric(forecast_start_datetime - start_datetime)
   start_forecast_step <- 1 + hist_days
-  full_time_local <- seq(start_datetime, end_datetime, by = "1 day")
+  full_time <- seq(start_datetime, end_datetime, by = "1 day")
   forecast_days <- as.numeric(end_datetime - forecast_start_datetime)
 
   nstates <- dim(x_init)[2] -  npars
-  nsteps <- length(full_time_local)
+  nsteps <- length(full_time)
   nmembers <- dim(x_init)[1]
   n_met_members <- length(met_file_names)
   ndepths_modeled <- length(config$modeled_depths)
@@ -289,13 +288,13 @@ run_da_forecast_ler <- function(states_init,
 
   num_phytos <- length(which(stringr::str_detect(states_config$state_names,"PHY_") & !stringr::str_detect(states_config$state_names,"_IP") & !stringr::str_detect(states_config$state_names,"_IN")))
 
-  full_time_local_char <- strftime(full_time_local,
+  full_time_char <- strftime(full_time,
                                    format="%Y-%m-%d %H:%M",
                                    tz = config$local_tzone)
 
   x_prior <- array(NA, dim = c(nsteps, nmembers, nstates + npars))
 
-  if(!is.null(ncol(inflow_file_names))) {
+  if(!is.null(inflow_file_names)){
     inflow_file_names <- as.matrix(inflow_file_names)
     outflow_file_names <- as.matrix(outflow_file_names)
   }else{
@@ -311,8 +310,7 @@ run_da_forecast_ler <- function(states_init,
       unlink(file.path(working_directory, "1"), recursive = TRUE)
       dir.create(file.path(working_directory, "1"), showWarnings = FALSE)
     }
-    flare:::set_up_model_ler(model,
-                             config,
+    FLAREr:::set_up_model_ler(config,
                              ens_working_directory = file.path(working_directory,"1"),
                              state_names = states_config$state_names,
                              inflow_file_names = inflow_file_names,
@@ -325,12 +323,11 @@ run_da_forecast_ler <- function(states_init,
         unlink(file.path(working_directory, m), recursive = TRUE)
         dir.create(file.path(working_directory, m), showWarnings = FALSE)
       }
-      flare:::set_up_model_ler(model,
-                               config,
-                               ens_working_directory = file.path(working_directory,m),
-                               state_names = states_config$state_names,
-                               inflow_file_names = inflow_file_names,
-                               outflow_file_names = outflow_file_names)
+      FLAREr:::set_up_model_ler(config,
+                                ens_working_directory = file.path(working_directory,m),
+                                state_names = states_config$state_names,
+                                inflow_file_names = inflow_file_names,
+                                outflow_file_names = outflow_file_names)
     })
   }
 
@@ -339,7 +336,7 @@ run_da_forecast_ler <- function(states_init,
   snow_ice_thickness <- array(NA, dim = c(3, nsteps, nmembers))
   salt <- array(NA, dim = c(nsteps, ndepths_modeled, nmembers))
   restart_list = NULL
-  if(model == "GLM") {
+  if(config$model == "GLM") {
     mixing_vars <- array(NA, dim = c(17, nsteps, nmembers))
     avg_surf_temp <- array(NA, dim = c(nsteps, nmembers))
     mixing_vars[,1 ,] <- aux_states_init$mixing_vars
@@ -347,7 +344,7 @@ run_da_forecast_ler <- function(states_init,
     restart_list <- list(mixing_vars = mixing_vars,
                          avg_surf_temp = avg_surf_temp)
   }
-  if(model == "Simstrat") {
+  if(config$model == "Simstrat") {
     U_restart <- array(NA, dim = c(ndepths_modeled, nsteps, nmembers))
     V_restart <- array(NA, dim = c(ndepths_modeled, nsteps, nmembers))
     k_restart <- array(NA, dim = c(ndepths_modeled, nsteps, nmembers))
@@ -377,12 +374,12 @@ run_da_forecast_ler <- function(states_init,
   ###START EnKF
   for(i in start_step:nsteps){
 
-    curr_start <- strftime(full_time_local[i - 1],
+    curr_start <- strftime(full_time[i - 1],
                            format="%Y-%m-%d %H:%M:%S",
-                           tz = config$local_tzone)
-    curr_stop <- strftime(full_time_local[i],
+                           tz = "UTC")
+    curr_stop <- strftime(full_time[i],
                           format="%Y-%m-%d %H:%M:%S",
-                          tz = config$local_tzone)
+                          tz = "UTC")
 
     message(paste0("Running time step ", i-1, "/", nsteps, " : ",
                    curr_start, " - ",
@@ -414,7 +411,7 @@ run_da_forecast_ler <- function(states_init,
     if(i == start_step) {
       if(machine == "windows") {
         cl <- parallel::makeCluster(config$ncore, setup_strategy = "sequential")
-        parallel::clusterEvalQ(cl, library(flare))
+        parallel::clusterEvalQ(cl, library(FLAREr))
       } else {
         cl <- parallel::makeCluster(config$ncore, setup_strategy = "sequential")
       }
@@ -424,7 +421,7 @@ run_da_forecast_ler <- function(states_init,
                                                  "pars_config", "inflow_file_names", "inflow_outflow_index",
                                                  "outflow_file_names", "i", "curr_start",
                                                  "curr_stop", "par_names", "par_file",
-                                                 "num_phytos", "full_time_local", "management",
+                                                 "num_phytos", "full_time", "management",
                                                  "hist_days", "config", "states_config",
                                                  "ndepths_modeled", "output_vars", "num_wq_vars"),
                               envir = environment())
@@ -441,7 +438,7 @@ run_da_forecast_ler <- function(states_init,
     }
 
     #If i == 1 then assimilate the first time step without running the process
-    #model (i.e., use yesterday's forecast of today as initial conditions and
+    #config$model (i.e., use yesterday's forecast of today as initial conditions and
     #assimilate new observations)
     if(i > 1){
 
@@ -473,7 +470,7 @@ run_da_forecast_ler <- function(states_init,
           outflow_file_name <- NULL
         }
 
-        # model
+        # config$model
         # ler_yaml = "LakeEnsemblR.yaml"
         # i
         # m
@@ -487,7 +484,7 @@ run_da_forecast_ler <- function(states_init,
         # model_depths_start = model_internal_depths[i-1, , m]
         # lake_depth_start = lake_depth[i-1, m]
         # x_start = x[i-1, m, ]
-        # full_time_local
+        # full_time
         # wq_start = states_config$wq_start
         # wq_end = states_config$wq_end
         # management = management
@@ -509,7 +506,7 @@ run_da_forecast_ler <- function(states_init,
         # restart = restart
         # restart_list = restart_list
 
-        out <- run_model_ler(model,
+        out <- FLAREr:::run_model_ler(model = config$model,
                              ler_yaml = "LakeEnsemblR.yaml",
                              i,
                              m,
@@ -523,7 +520,7 @@ run_da_forecast_ler <- function(states_init,
                              model_depths_start = model_internal_depths[i-1, , m],
                              lake_depth_start = lake_depth[i-1, m],
                              x_start = x[i-1, m, ],
-                             full_time_local,
+                             full_time,
                              wq_start = states_config$wq_start,
                              wq_end = states_config$wq_end,
                              management = management,
@@ -555,11 +552,11 @@ run_da_forecast_ler <- function(states_init,
 	    diagnostics[, i, , m] <- out[[m]]$diagnostics_end
 	    model_internal_depths[i, ,m] <- out[[m]]$model_internal_depths
 	    salt[i, , m]  <- out[[m]]$salt_end
-	    if(model == "GLM") {
+	    if(config$model == "GLM") {
 	      restart_list$avg_surf_temp[i , m] <- out[[m]]$restart_vars$avg_surf_temp
 	      restart_list$mixing_vars[, i, m] <- out[[m]]$restart_vars$mixing_vars
 	    }
-	    if(model == "Simstrat") {
+	    if(config$model == "Simstrat") {
 	      restart_list$U_restart[, i, m] <- out[[m]]$restart_vars$U
 	      restart_list$V_restart[, i, m] <- out[[m]]$restart_vars$V
 	      restart_list$k_restart[, i, m] <- out[[m]]$restart_vars$k
@@ -899,25 +896,25 @@ run_da_forecast_ler <- function(states_init,
 
   }
 
-  if(lubridate::day(full_time_local[1]) < 10){
-    file_name_H_day <- paste0("0",lubridate::day(full_time_local[1]))
+  if(lubridate::day(full_time[1]) < 10){
+    file_name_H_day <- paste0("0",lubridate::day(full_time[1]))
   }else{
-    file_name_H_day <- lubridate::day(full_time_local[1])
+    file_name_H_day <- lubridate::day(full_time[1])
   }
-  if(lubridate::day(full_time_local[hist_days+1]) < 10){
-    file_name_F_day <- paste0("0",lubridate::day(full_time_local[hist_days+1]))
+  if(lubridate::day(full_time[hist_days+1]) < 10){
+    file_name_F_day <- paste0("0",lubridate::day(full_time[hist_days+1]))
   }else{
-    file_name_F_day <- lubridate::day(full_time_local[hist_days+1])
+    file_name_F_day <- lubridate::day(full_time[hist_days+1])
   }
-  if(lubridate::month(full_time_local[1]) < 10){
-    file_name_H_month <- paste0("0",lubridate::month(full_time_local[1]))
+  if(lubridate::month(full_time[1]) < 10){
+    file_name_H_month <- paste0("0",lubridate::month(full_time[1]))
   }else{
-    file_name_H_month <- lubridate::month(full_time_local[1])
+    file_name_H_month <- lubridate::month(full_time[1])
   }
-  if(lubridate::month(full_time_local[hist_days+1]) < 10){
-    file_name_F_month <- paste0("0",lubridate::month(full_time_local[hist_days+1]))
+  if(lubridate::month(full_time[hist_days+1]) < 10){
+    file_name_F_month <- paste0("0",lubridate::month(full_time[hist_days+1]))
   }else{
-    file_name_F_month <- lubridate::month(full_time_local[hist_days+1])
+    file_name_F_month <- lubridate::month(full_time[hist_days+1])
   }
 
 
@@ -944,20 +941,20 @@ run_da_forecast_ler <- function(states_init,
                                   curr_second)
 
   save_file_name <- paste0(config$run_config$sim_name, "_H_",
-                           (lubridate::year(full_time_local[1])),"_",
+                           (lubridate::year(full_time[1])),"_",
                            file_name_H_month,"_",
                            file_name_H_day,"_",
-                           (lubridate::year(full_time_local[hist_days+1])),"_",
+                           (lubridate::year(full_time[hist_days+1])),"_",
                            file_name_F_month,"_",
                            file_name_F_day,"_F_",
                            forecast_days,"_",
                            forecast_iteration_id, "_",
-                           model)
+                           config$model)
 
   for(m in 1:nmembers){
     unlink(file.path(working_directory, m), recursive = TRUE)
   }
-  return(list(full_time_local = full_time_local,
+  return(list(full_time = full_time,
               forecast_start_datetime = forecast_start_datetime,
               x = x,
               obs = obs,
