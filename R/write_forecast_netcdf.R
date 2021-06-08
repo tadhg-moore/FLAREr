@@ -24,12 +24,12 @@ write_forecast_netcdf <- function(enkf_output,
   full_time <- enkf_output$full_time
   forecast_start_datetime <- enkf_output$forecast_start_datetime
   config <- enkf_output$config
-  if(config$use_ler) {
-    if(config$model == "GLM") {
+  if(config$model_settings$use_ler) {
+    if(config$model_settings$model_name == "glm") {
       avg_surf_temp <- enkf_output$restart_list$avg_surf_temp
       mixing_vars <- enkf_output$restart_list$mixing_vars
     }
-    if(config$model == "Simstrat") {
+    if(config$model_settings$model_name == "simstrat") {
       U <- aperm(enkf_output$restart_list$U_restart, c(2, 3, 1))
       V <- aperm(enkf_output$restart_list$V_restart, c(2, 3, 1))
       k_restart <- aperm(enkf_output$restart_list$k_restart, c(2, 3, 1))
@@ -80,7 +80,7 @@ write_forecast_netcdf <- function(enkf_output,
   timedim <- ncdf4::ncdim_def("time",units = 'seconds', longname = 'seconds since 1970-01-01 00:00.00 UTC',vals = t)
   snow_ice_dim <- ncdf4::ncdim_def("snow_ice_dim",units = "",vals = c(1, 2, 3), longname = 'snow ice dims')
   internal_model_depths_dim <- ncdf4::ncdim_def("internal_model_depths_dim",units = '', vals = seq(1, dim(model_internal_depths)[2]), longname = 'number of possible depths that are simulated in GLM')
-  if(config$model == "GLM") {
+  if(config$model_settings$model_name == "glm") {
     mixing_vars_dim <- ncdf4::ncdim_def("mixing_vars_dim",units = '', vals = seq(1, dim(mixing_vars)[1], 1), longname = 'number of mixing restart variables')
   }
 
@@ -102,13 +102,13 @@ write_forecast_netcdf <- function(enkf_output,
   idx <- idx + 1
   def_list[[idx]] <- ncdf4::ncvar_def("lake_depth","meter",list(timedim,ensdim),missval = -99,longname = 'Depth of lake',prec="single")
   idx <- idx + 1
-  if(config$model == "GLM") {
+  if(config$model_settings$model_name == "glm") {
     def_list[[idx]] <- ncdf4::ncvar_def("avg_surf_temp","degC",list(timedim, ensdim),missval = -99,longname ='Running Average of Surface Temperature',prec="single")
     idx <- idx + 1
     def_list[[idx]] <- ncdf4::ncvar_def("mixing_vars","dimensionless",list(mixing_vars_dim, timedim, ensdim),fillvalue,longname = "variables required to restart mixing",prec="single")
     idx <- idx + 1
   }
-  if(config$model == "Simstrat") {
+  if(config$model_settings$model_name == "simstrat") {
     def_list[[idx]] <- ncdf4::ncvar_def("U","ms-1", list(timedim, depthdim, ensdim), fillvalue, 'horizontal water velocity East U', prec="single")
     idx <- idx + 1
     def_list[[idx]] <- ncdf4::ncvar_def("V","ms-1", list(timedim, depthdim, ensdim), fillvalue, 'horizontal water velocity North V', prec="single")
@@ -197,13 +197,13 @@ write_forecast_netcdf <- function(enkf_output,
   idx <- idx + 1
   ncdf4::ncvar_put(ncout,def_list[[idx]] ,lake_depth)
   idx <- idx + 1
-  if(config$model == "GLM") {
+  if(config$model_settings$model_name == "glm") {
     ncdf4::ncvar_put(ncout,def_list[[idx]] ,avg_surf_temp)
     idx <- idx + 1
     ncdf4::ncvar_put(ncout,def_list[[idx]] ,mixing_vars)
     idx <- idx + 1
   }
-  if(config$model == "Simstrat") {
+  if(config$model_settings$model_name == "simstrat") {
     ncdf4::ncvar_put(ncout,def_list[[idx]] ,U)
     idx <- idx + 1
     ncdf4::ncvar_put(ncout,def_list[[idx]] ,V)

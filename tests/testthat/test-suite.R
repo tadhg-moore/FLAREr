@@ -193,9 +193,8 @@ test_that("EnKF can be run", {
   testthat::expect_true(is.list(enkf_output))
   chk <- lapply(1:length(enkf_output), function(x) {
     class(enkf_output[[x]]) == class(samp_enkf_output[[x]])
-
   })
-  testthat::expect_true(any(unlist(chk)))
+  testthat::expect_true(all(unlist(chk)))
 
   # Save forecast
   saved_file <- FLAREr::write_forecast_netcdf(enkf_output,
