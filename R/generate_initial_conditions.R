@@ -24,6 +24,7 @@ generate_initial_conditions <- function(states_config,
 
     init <- list()
     if(!is.null(pars_config)){
+      pars_config <- pars_config[pars_config$model == config$model_settings$model_name, ]
       npars <- nrow(pars_config)
     }else{
       npars <- 0
