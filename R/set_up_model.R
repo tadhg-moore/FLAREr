@@ -21,8 +21,8 @@ set_up_model <- function(config,
                          inflow_file_names,
                          outflow_file_names){
 
-  file.copy(from = file.path(config$run_config$forecast_location, config$base_GLM_nml),
-            to = paste0(ens_working_directory, "/", "glm3.nml"), overwrite = TRUE)
+  file.copy(from = file.path(config$file_path$configuration_directory, "forecast_model", config$model_settings$model_name, config$model_settings$base_GLM_nml),
+            to = file.path(ens_working_directory, "glm3.nml"), overwrite = TRUE)
 
   non_temp_names <- state_names[which(!(state_names %in% c("temp", "salt")))]
 
@@ -35,12 +35,6 @@ set_up_model <- function(config,
   if(!is.null(ncol(inflow_file_names))) {
     FLAREr:::update_var(ncol(inflow_file_names), "num_inflows", ens_working_directory, "glm3.nml")
     FLAREr:::update_var(ncol(outflow_file_names), "num_outlet", ens_working_directory, "glm3.nml")
-    inflow_var_names <- c("FLOW","TEMP","SALT", non_temp_names)
-    FLAREr:::update_var(inflow_var_names, "inflow_vars", ens_working_directory, "glm3.nml")
-    FLAREr:::update_var(length(inflow_var_names), "inflow_varnum", ens_working_directory, "glm3.nml")
-  } else {
-    FLAREr:::update_var(0, "num_inflows", ens_working_directory, "glm3.nml")
-    FLAREr:::update_var(0, "num_outlet", ens_working_directory, "glm3.nml")
     inflow_var_names <- c("FLOW","TEMP","SALT", non_temp_names)
     FLAREr:::update_var(inflow_var_names, "inflow_vars", ens_working_directory, "glm3.nml")
     FLAREr:::update_var(length(inflow_var_names), "inflow_varnum", ens_working_directory, "glm3.nml")
