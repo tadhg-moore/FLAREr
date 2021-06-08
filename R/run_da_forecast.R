@@ -157,22 +157,22 @@
 #'
 
 run_da_forecast <- function(states_init,
-                              pars_init = NULL,
-                              aux_states_init,
-                              obs,
-                              obs_sd,
-                              model_sd,
-                              working_directory,
-                              met_file_names,
-                              inflow_file_names = NULL,
-                              outflow_file_names = NULL,
-                              config,
-                              pars_config = NULL,
-                              states_config,
-                              obs_config,
-                              management = NULL,
-                              da_method = "enkf",
-                              par_fit_method = "inflate"){
+                            pars_init = NULL,
+                            aux_states_init,
+                            obs,
+                            obs_sd,
+                            model_sd,
+                            working_directory,
+                            met_file_names,
+                            inflow_file_names = NULL,
+                            outflow_file_names = NULL,
+                            config,
+                            pars_config = NULL,
+                            states_config,
+                            obs_config,
+                            management = NULL,
+                            da_method = "enkf",
+                            par_fit_method = "inflate"){
 
 
 
@@ -187,9 +187,10 @@ run_da_forecast <- function(states_init,
   nmembers <- dim(states_init)[3]
   n_met_members <- length(met_file_names)
   if(!is.null(pars_config)){
+    pars_config <- pars_config[pars_config$model == "glm", ]
     npars <- nrow(pars_config)
     par_names <- pars_config$par_names
-    par_nml <- pars_config$par_nml
+    par_nml <- pars_config$par_file
   }else{
     npars <- 0
     par_names <- NA
@@ -259,7 +260,7 @@ run_da_forecast <- function(states_init,
   if(!is.null(pars_config)){
     npars <- nrow(pars_config)
     par_names <- pars_config$par_names
-    par_nml <- pars_config$par_nml
+    par_nml <- pars_config$par_file
   }else{
     npars <- 0
     par_names <- NA
