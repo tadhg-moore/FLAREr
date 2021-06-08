@@ -36,7 +36,9 @@ da_setup:
     assimilate_first_step: FALSE
 model_settings:
    ncore: 2
+   use_ler: FALSE
    model_name: glm #other is "null"
+   ler_yaml: LakeEnsemblR.yaml
    base_GLM_nml: glm3.nml
    modeled_depths: [0.10, 0.33, 0.67,
                     1.00, 1.33, 1.67,

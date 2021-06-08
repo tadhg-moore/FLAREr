@@ -37,9 +37,15 @@ generate_initial_conditions <- function(states_config,
     init$pars <- array(NA, dim=c(npars, nmembers))
     init$lake_depth <- array(NA, dim=c(nmembers))
     init$snow_ice_thickness <- array(NA, dim=c(3, nmembers))
-    if(config$model == "glm") {
+    if(config$model_settings$model_name == "glm") {
       init$avg_surf_temp <- array(NA, dim=c(nmembers))
       init$mixing_vars <- array(NA, dim=c(17, nmembers))
+    }
+    if(config$model_settings$model_name == "simstrat") {
+      init$U <- array(0, dim = c(ndepths_modeled, nmembers))
+      init$V <- array(0, dim = c(ndepths_modeled, nmembers))
+      init$k <- array(3e-6, dim = c(ndepths_modeled, nmembers))
+      init$eps <- array(5e-10, dim = c(ndepths_modeled, nmembers))
     }
     init$model_internal_depths <- array(NA, dim = c(500, nmembers))
     init$salt <- array(NA, dim = c(ndepths_modeled, nmembers))
@@ -106,7 +112,7 @@ generate_initial_conditions <- function(states_config,
     init$snow_ice_thickness[1, ] <- config$default_init$snow_thickness
     init$snow_ice_thickness[2, ] <- config$default_init$white_ice_thickness
     init$snow_ice_thickness[3, ] <- config$default_init$blue_ice_thickness
-    if(config$model == "glm") {
+    if(config$model_settings$model_name == "glm") {
       init$avg_surf_temp[] <- init$states[1 , 1, ]
       init$mixing_vars[, ] <- 0.0
     }
@@ -118,9 +124,16 @@ generate_initial_conditions <- function(states_config,
 
     aux_states_init <- list()
     aux_states_init$snow_ice_thickness <- init$snow_ice_thickness
-    if(config$model == "glm") {
+    if(config$model_settings$model_name == "glm") {
       aux_states_init$avg_surf_temp <- init$avg_surf_temp
       aux_states_init$mixing_vars <- init$mixing_vars
+    }
+
+    if(config$model_settings$model_name == "simstrat") {
+      aux_states_init$U <- init$U
+      aux_states_init$V <- init$V
+      aux_states_init$k <- init$k
+      aux_states_init$eps <- init$eps
     }
     aux_states_init$the_sals_init <- config$the_sals_init
     aux_states_init$model_internal_depths <- init$model_internal_depths

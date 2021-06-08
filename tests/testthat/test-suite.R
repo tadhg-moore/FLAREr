@@ -94,9 +94,7 @@ test_that("initial model error is generated", {
 
   source(file.path(test_directory, "R/test_met_prep.R"))
 
-  config_file_directory <- file.path(config$file_path$configuration_directory, "flarer")
-
-  model_sd <- FLAREr::initiate_model_error(config, states_config, config_file_directory)
+  model_sd <- FLAREr::initiate_model_error(config, states_config)
   testthat::expect_true(is.array(model_sd))
   testthat::expect_true(any(!is.na(model_sd)))
 })
@@ -105,7 +103,7 @@ test_that("initial model error is generated", {
 # Set initial conditions ----
 test_that("initial conditions are generated", {
 
-  template_folder <- system.file("example", package= "FLAREr")
+  template_folder <- system.file("example", package = "FLAREr")
   temp_dir <- tempdir()
   # dir.create("example")
   file.copy(from = template_folder, to = temp_dir, recursive = TRUE)
@@ -199,18 +197,18 @@ test_that("EnKF can be run", {
 
   # Save forecast
   saved_file <- FLAREr::write_forecast_netcdf(enkf_output,
-                                             forecast_location = config$run_config$forecast_output_directory)
+                                             forecast_location = config$file_path$forecast_output_directory)
   testthat::expect_true(file.exists(saved_file))
 
   #Create EML Metadata
   FLAREr::create_flare_metadata(file_name = saved_file,
                           enkf_output)
-  file_chk <- list.files(config$run_config$forecast_output_directory, pattern = ".xml")
+  file_chk <- list.files(config$file_path$forecast_output_directory, pattern = ".xml")
   testthat::expect_true(length(file_chk) > 0)
 
   FLAREr::plotting_general(file_name = saved_file,
                           qaqc_location = config$file_path$qaqc_data_directory)
-  file_chk <- list.files(config$run_config$forecast_output_directory, pattern = ".pdf")
+  file_chk <- list.files(config$file_path$forecast_output_directory, pattern = ".pdf")
   testthat::expect_true(length(file_chk) > 0)
 
 
@@ -287,18 +285,18 @@ test_that("particle filter can be run", {
 
   # Save forecast
   saved_file <- FLAREr::write_forecast_netcdf(enkf_output,
-                                             forecast_location = config$run_config$forecast_output_directory)
+                                             forecast_location = config$file_path$forecast_output_directory)
   testthat::expect_true(file.exists(saved_file))
 
   #Create EML Metadata
   FLAREr::create_flare_metadata(file_name = saved_file,
-                          enkf_output)
-  file_chk <- list.files(config$run_config$forecast_output_directory, pattern = ".xml")
+                                enkf_output)
+  file_chk <- list.files(config$file_path$forecast_output_directory, pattern = ".xml")
   testthat::expect_true(length(file_chk) > 0)
 
   FLAREr::plotting_general(file_name = saved_file,
                           qaqc_location = config$file_path$qaqc_data_directory)
-  file_chk <- list.files(config$run_config$forecast_output_directory, pattern = ".pdf")
+  file_chk <- list.files(config$file_path$forecast_output_directory, pattern = ".pdf")
   testthat::expect_true(length(file_chk) > 0)
 
 })
@@ -355,18 +353,18 @@ test_that("EnKF can be run with NO inflows/outflows", {
 
   # Save forecast
   saved_file <- FLAREr::write_forecast_netcdf(enkf_output,
-                                              forecast_location = config$run_config$forecast_output_directory)
+                                              forecast_location = config$file_path$forecast_output_directory)
   testthat::expect_true(file.exists(saved_file))
 
   #Create EML Metadata
   FLAREr::create_flare_metadata(file_name = saved_file,
                                 enkf_output)
-  file_chk <- list.files(config$run_config$forecast_output_directory, pattern = ".xml")
+  file_chk <- list.files(config$file_path$forecast_output_directory, pattern = ".xml")
   testthat::expect_true(length(file_chk) > 0)
 
   FLAREr::plotting_general(file_name = saved_file,
                            qaqc_location = config$file_path$qaqc_data_directory)
-  file_chk <- list.files(config$run_config$forecast_output_directory, pattern = ".pdf")
+  file_chk <- list.files(config$file_path$forecast_output_directory, pattern = ".pdf")
   testthat::expect_true(length(file_chk) > 0)
 
 })
