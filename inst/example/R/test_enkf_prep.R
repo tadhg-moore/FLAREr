@@ -42,7 +42,7 @@ observed_met_file <- file.path(config$file_path$qaqc_data_directory,"observed-me
 
 #Step up Drivers
 met_out <- FLAREr::generate_glm_met_files(obs_met_file = observed_met_file,
-                                          out_dir = config$run_config$execute_directory,
+                                          out_dir = config$file_path$execute_directory,
                                           forecast_dir = config$file_path$noaa_directory,
                                           config)
 met_file_names <- met_out$filenames
@@ -53,7 +53,7 @@ inflow_forecast_path <- config$file_path$inflow_directory
 
 inflow_outflow_files <- FLAREr::create_glm_inflow_outflow_files(inflow_file_dir = inflow_forecast_path,
                                                                 inflow_obs = cleaned_inflow_file,
-                                                                working_directory = config$run_config$execute_directory,
+                                                                working_directory = config$file_path$execute_directory,
                                                                 config,
                                                                 state_names = NULL)
 
@@ -61,14 +61,14 @@ inflow_file_names <- inflow_outflow_files$inflow_file_name
 outflow_file_names <- inflow_outflow_files$outflow_file_name
 
 obs <- FLAREr::create_obs_matrix(cleaned_observations_file_long,
-                                obs_config,
-                                config)
+                                 obs_config,
+                                 config)
 
 states_config <- FLAREr::generate_states_to_obs_mapping(states_config, obs_config)
 
 model_sd <- FLAREr::initiate_model_error(config, states_config)
 init <- FLAREr::generate_initial_conditions(states_config,
-                                           obs_config,
-                                           pars_config,
-                                           obs,
-                                           config)
+                                            obs_config,
+                                            pars_config,
+                                            obs,
+                                            config)
