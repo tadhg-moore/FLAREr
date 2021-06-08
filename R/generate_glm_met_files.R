@@ -12,7 +12,8 @@
 generate_glm_met_files <- function(obs_met_file = NULL,
                                    out_dir,
                                    forecast_dir = NULL,
-                                   config){
+                                   config,
+                                   use_forecasted_met){
 
   if(is.null(obs_met_file) & is.null(forecast_dir)){
     stop("missing files to convert")
@@ -28,7 +29,7 @@ generate_glm_met_files <- function(obs_met_file = NULL,
   }
 
   full_time <- seq(start_datetime, end_datetime, by = "1 hour")
-  if(config$use_forecasted_met){
+  if(config$met$use_forecasted_met){
     if(forecast_start_datetime > start_datetime){
       full_time_hist <- seq(start_datetime, forecast_start_datetime - lubridate::hours(1), by = "1 hour")
     }else{
@@ -106,7 +107,7 @@ generate_glm_met_files <- function(obs_met_file = NULL,
 
   for(j in 1:nfiles){
 
-    if(!is.null(forecast_dir) & config$use_forecasted_met){
+    if(!is.null(forecast_dir) & config$met$use_forecasted_met){
 
 
       ens <- dplyr::last(unlist(stringr::str_split(basename(forecast_files[j]),"_")))
@@ -149,7 +150,7 @@ generate_glm_met_files <- function(obs_met_file = NULL,
 
     combined_met$time <- strftime(combined_met$time, format="%Y-%m-%d %H:%M", tz = "UTC")
 
-    readr::write_csv(combined_met, paste0(out_dir, "/", current_filename), quote_escape = "none")
+    readr::write_csv(combined_met,file = paste0(out_dir, "/", current_filename), quote_escape = "none")
 
     filenames[j] <- paste0(out_dir, "/", current_filename)
   }
