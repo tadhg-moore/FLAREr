@@ -12,8 +12,7 @@
 ##'
 
 write_forecast_netcdf <- function(enkf_output,
-                                  forecast_location,
-                                  config){
+                                  forecast_location){
 
 
   x <- enkf_output$x
@@ -24,6 +23,7 @@ write_forecast_netcdf <- function(enkf_output,
   da_qc_flag = enkf_output$da_qc_flag
   full_time <- enkf_output$full_time
   forecast_start_datetime <- enkf_output$forecast_start_datetime
+  config <- enkf_output$config
   if(config$use_ler) {
     if(config$model == "GLM") {
       avg_surf_temp <- enkf_output$restart_list$avg_surf_temp

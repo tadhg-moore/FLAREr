@@ -4,7 +4,7 @@
 \alias{write_forecast_netcdf}
 \title{Write netcdf output file from object created by run_ENKF}
 \usage{
-write_forecast_netcdf(enkf_output, forecast_location, config)
+write_forecast_netcdf(enkf_output, forecast_location)
 }
 \arguments{
 \item{config}{}
