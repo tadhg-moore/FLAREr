@@ -59,6 +59,7 @@ met_file_names <- met_out$filenames
 historical_met_error <- met_out$historical_met_error
 
 inflow_forecast_path <- file.path(config$data_location, config$forecast_inflow_model)
+config$use_future_inflow <- TRUE
 #### NEED A TEST HERE TO CHECK THAT INFLOW FILES ARE GENERATED AND CORRECT
 inflow_outflow_files <- FLAREr::create_inflow_outflow_files(inflow_file_dir = inflow_forecast_path,
                                                             inflow_obs = cleaned_inflow_file,
