@@ -4,6 +4,7 @@ file_path:
    inflow_directory: inst/example/forecasted_drivers/
    configuration_directory: inst/example/configuration/
    execute_directory: inst/example/flare_tempdir
+   forecast_output_directory: inst/example/forecast_output
    run_config: inst/example/configuration/flarer/configure_run.yml
 location:
    site_id: fcre
