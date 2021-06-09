@@ -245,7 +245,7 @@ test_that("LER-GOTM-EnKF can be run", {
   test_directory <- file.path(temp_dir, "example")
 
   mod <- "gotm"
-  source(file.path(test_directory, "R/test_enkf_prep_ler.R"))
+  source(file.path(test_directory, "R/test_enkf_prep_ler.R"), local = TRUE)
   config$model_settings$ncore <- 2
   config$output_settings$diagnostics_names <- NULL
 
