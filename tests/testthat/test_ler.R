@@ -139,7 +139,7 @@ test_that("LER-GLM-EnKF can be run", {
   test_directory <- file.path(temp_dir, "example")
 
   mod <- "glm"
-  source(file.path(test_directory, "R/test_enkf_prep_ler.R"))
+  source(file.path(test_directory, "R/test_enkf_prep_ler.R"), local = TRUE)
   config$model_settings$ncore <- 2
 
   # states_init = init$states
@@ -216,7 +216,7 @@ test_that("LER-GLM initial conditions are generated", {
   # test_directory <- "C:\\Users\\mooret\\Desktop\\FLARE\\flare-1\\inst\\example"
   test_directory <- file.path(temp_dir, "example")
 
-  source(file.path(test_directory, "R/test_met_prep.R"))
+  source(file.path(test_directory, "R/test_met_prep.R"), local = TRUE)
   config$model_settings$use_ler <- TRUE
   config$model_settings$model_name <- "gotm"
 
@@ -334,7 +334,7 @@ test_that("LER-Simstrat-EnKF can be run", {
   test_directory <- file.path(temp_dir, "example")
 
   mod <- "simstrat"
-  source(file.path(test_directory, "R/test_enkf_prep_ler.R"))
+  source(file.path(test_directory, "R/test_enkf_prep_ler.R"), local = TRUE)
   config$model_settings$ncore <- 2
   config$output_settings$diagnostics_names <- NULL
 
