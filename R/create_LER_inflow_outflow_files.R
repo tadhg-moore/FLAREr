@@ -99,7 +99,7 @@ create_ler_inflow_outflow_files <- function(inflow_file_dir,
 
         inflow_file_names[i, j] <- inflow_file_name
 
-        if(config$use_future_inflow){
+        if(config$inflow$use_forecasted_inflow){
           readr::write_csv(x = inflow,
                            inflow_file_name,
                            quote_escape = "none")
@@ -164,7 +164,7 @@ create_ler_inflow_outflow_files <- function(inflow_file_dir,
 
         outflow_file_names[i, j]  <- outflow_file_name
 
-        if(config$use_future_inflow){
+        if(config$inflow$use_forecasted_inflow){
           readr::write_csv(x = outflow,
                            outflow_file_name,
                            quote_escape = "none")

@@ -55,6 +55,11 @@ run_model_ler <- function(model,
                       restart,
                       restart_list){
 
+  switch(config$model_settings$model_name,
+         glm = { model <- "GLM" },
+         gotm = { model <- "GOTM" },
+         simstrat = { model <- "Simstrat"})
+
   if(is.null(management)){
     simulate_sss <- FALSE
   }else{
@@ -84,7 +89,7 @@ run_model_ler <- function(model,
 
 
   # GLM ----
-  if( model == "GLM") {
+  if(model == "GLM") {
     mixing_vars_start = restart_list$mixing_vars[,i-1 , m]
     avg_surf_temp_start = restart_list$avg_surf_temp[i-1, m]
 
@@ -178,9 +183,6 @@ run_model_ler <- function(model,
     yml[["model_parameters"]][[model]][["init_profiles/white_ice_thickness"]] <- round(snow_ice_thickness_start[2], 4)
     yml[["model_parameters"]][[model]][["init_profiles/blue_ice_thickness"]] <- round(snow_ice_thickness_start[3], 4)
     yml[["model_parameters"]][[model]][["init_profiles/avg_surf_temp"]] <- round(avg_surf_temp_start, 4)
-
-
-
   }
 
   # GOTM ----
@@ -274,18 +276,6 @@ run_model_ler <- function(model,
                        "aed2_phyto_pars.nml")
   }
 
-
-  #if(ncol(as.matrix(inflow_file_names)) == 2){
-  #  tmp <- file.copy(from = inflow_file_names[inflow_outflow_index, 1],
-  #                   to = "inflow_file1.csv", overwrite = TRUE)
-  #  tmp <- file.copy(from = inflow_file_names[inflow_outflow_index, 2],
-  #                   to = "inflow_file2.csv", overwrite = TRUE)
-  #}else{
-  #  tmp <- file.copy(from = inflow_file_names[inflow_outflow_index],
-  #                   to = "inflow_file1.csv", overwrite = TRUE)
-  #}
-  #tmp <- file.copy(from = outflow_file_names[inflow_outflow_index],
-  #                 to = "outflow_file1.csv", overwrite = TRUE)
 
   #Use GLM NML files to run GLM for a day
   # Only allow simulations without NaN values in the output to proceed.

@@ -5,9 +5,6 @@ temp_dir <- tempdir()
 file.copy(from = template_folder, to = temp_dir, recursive = TRUE)
 
 test_directory <- file.path(temp_dir, "example")
-# print(list.files(test_directory))
-# print(readLines(file.path(test_directory, "test_met_prep.R")))
-
 
 lake_directory <- test_directory
 configuration_directory <- file.path(lake_directory, "configuration")

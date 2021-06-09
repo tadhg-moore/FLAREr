@@ -21,11 +21,7 @@ test_that("inflow & outflow files are generated", {
 
   source(file.path(template_folder, "R/test_inflow_prep.R"))
 
-
-  inflow_forecast_path <- config$file_path$inflow_directory
-
-  #### NEED A TEST HERE TO CHECK THAT INFLOW FILES ARE GENERATED AND CORRECT
-  inflow_outflow_files <- FLAREr::create_glm_inflow_outflow_files(inflow_file_dir = inflow_forecast_path,
+  inflow_outflow_files <- FLAREr::create_glm_inflow_outflow_files(inflow_file_dir = config$file_path$inflow_directory,
                                                                   inflow_obs = cleaned_inflow_file,
                                                                   working_directory = config$file_path$execute_directory,
                                                                   config,

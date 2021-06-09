@@ -175,12 +175,24 @@ run_da_forecast_ler <- function(states_init,
                                 da_method = "enkf",
                                 par_fit_method = "inflate"){
 
+  # Reset to original working directory when finished
+  oldwd <- getwd()
+  on.exit({
+    setwd(oldwd)
+  })
+
+  if(length(states_config$state_names) > 1){
+    config$include_wq <- TRUE
+  }else{
+    config$include_wq <- FALSE
+  }
+
   nstates <- dim(states_init)[1]
   ndepths_modeled <- dim(states_init)[2]
   nmembers <- dim(states_init)[3]
   n_met_members <- length(met_file_names)
   if(!is.null(pars_config)){
-    pars_config <- pars_config[pars_config$model == config$model, ]
+    pars_config <- pars_config[pars_config$model == config$model_settings$model_name, ]
     npars <- nrow(pars_config)
     par_names <- pars_config$par_names
     par_file <- pars_config$par_file
@@ -254,7 +266,7 @@ run_da_forecast_ler <- function(states_init,
   nsteps <- length(full_time)
   nmembers <- dim(x_init)[1]
   n_met_members <- length(met_file_names)
-  ndepths_modeled <- length(config$modeled_depths)
+  ndepths_modeled <- length(config$model_settings$modeled_depths)
 
   data_assimilation_flag <- rep(NA, nsteps)
   forecast_flag <- rep(NA, nsteps)
@@ -280,7 +292,7 @@ run_da_forecast_ler <- function(states_init,
     num_wq_vars <- 0
   }
 
-  if(length(config$diagnostics_names) > 0){
+  if(length(config$output_settings$diagnostics_names) > 0){
     diagnostics <- array(NA, dim=c(length(config$diagnostics_names), nsteps, ndepths_modeled, nmembers))
   }else{
     diagnostics <- array(NA, dim=c(1, nsteps, ndepths_modeled, nmembers))
@@ -289,8 +301,8 @@ run_da_forecast_ler <- function(states_init,
   num_phytos <- length(which(stringr::str_detect(states_config$state_names,"PHY_") & !stringr::str_detect(states_config$state_names,"_IP") & !stringr::str_detect(states_config$state_names,"_IN")))
 
   full_time_char <- strftime(full_time,
-                                   format="%Y-%m-%d %H:%M",
-                                   tz = config$local_tzone)
+                             format="%Y-%m-%d %H:%M",
+                             tz = "UTC")
 
   x_prior <- array(NA, dim = c(nsteps, nmembers, nstates + npars))
 
@@ -302,8 +314,8 @@ run_da_forecast_ler <- function(states_init,
     outflow_file_names <- NULL
   }
 
-  config$ncore <- min(c(config$ncore, parallel::detectCores()))
-  if(config$ncore == 1){
+  config$model_settings$ncore <- min(c(config$model_settings$ncore, parallel::detectCores()))
+  if(config$model_settings$ncore == 1){
     if(!dir.exists(file.path(working_directory, "1"))){
       dir.create(file.path(working_directory, "1"), showWarnings = FALSE)
     }else{
@@ -316,7 +328,11 @@ run_da_forecast_ler <- function(states_init,
                              inflow_file_names = inflow_file_names,
                              outflow_file_names = outflow_file_names)
   }else{
-    lapply(1:nmembers, function(m){
+    cl <- parallel::makeCluster(config$model_settings$ncore)
+    parallel::clusterExport(cl, varlist = list("working_directory", "m", "states_config",
+                                               "config", "inflow_file_names", "outflow_file_names"),
+                            envir = environment())
+    parallel::parLapply(cl, 1:nmembers, function(m){
       if(!dir.exists(file.path(working_directory, m))){
         dir.create(file.path(working_directory, m), showWarnings = FALSE)
       }else{
@@ -329,6 +345,7 @@ run_da_forecast_ler <- function(states_init,
                                 inflow_file_names = inflow_file_names,
                                 outflow_file_names = outflow_file_names)
     })
+    parallel::stopCluster(cl)
   }
 
   model_internal_depths <- array(NA, dim = c(nsteps, 500, nmembers))
@@ -336,7 +353,7 @@ run_da_forecast_ler <- function(states_init,
   snow_ice_thickness <- array(NA, dim = c(3, nsteps, nmembers))
   salt <- array(NA, dim = c(nsteps, ndepths_modeled, nmembers))
   restart_list = NULL
-  if(config$model == "GLM") {
+  if(config$model_settings$model_name == "glm") {
     mixing_vars <- array(NA, dim = c(17, nsteps, nmembers))
     avg_surf_temp <- array(NA, dim = c(nsteps, nmembers))
     mixing_vars[,1 ,] <- aux_states_init$mixing_vars
@@ -344,7 +361,7 @@ run_da_forecast_ler <- function(states_init,
     restart_list <- list(mixing_vars = mixing_vars,
                          avg_surf_temp = avg_surf_temp)
   }
-  if(config$model == "Simstrat") {
+  if(config$model_settings$model_name == "simstrat") {
     U_restart <- array(NA, dim = c(ndepths_modeled, nsteps, nmembers))
     V_restart <- array(NA, dim = c(ndepths_modeled, nsteps, nmembers))
     k_restart <- array(NA, dim = c(ndepths_modeled, nsteps, nmembers))
@@ -365,7 +382,7 @@ run_da_forecast_ler <- function(states_init,
   snow_ice_thickness[,1 , ] <- aux_states_init$snow_ice_thickness
   salt[1, , ] <- aux_states_init$salt
 
-  if(config$assimilate_first_step){
+  if(config$da_setup$assimilate_first_step){
     start_step <- 1
   }else{
     start_step <- 2
@@ -381,7 +398,7 @@ run_da_forecast_ler <- function(states_init,
                           format="%Y-%m-%d %H:%M:%S",
                           tz = "UTC")
 
-    message(paste0("Running time step ", i-1, "/", nsteps, " : ",
+    message(paste0("Running time step ", i-1, "/", (nsteps - 1), " : ",
                    curr_start, " - ",
                    curr_stop, " [", Sys.time(), "]"))
 
@@ -408,29 +425,32 @@ run_da_forecast_ler <- function(states_init,
            Linux = { machine <- "unix" },
            Darwin = { machine <- "mac" },
            Windows = { machine <- "windows"})
-    if(i == start_step) {
-      if(machine == "windows") {
-        cl <- parallel::makeCluster(config$ncore, setup_strategy = "sequential")
-        parallel::clusterEvalQ(cl, library(FLAREr))
-      } else {
-        cl <- parallel::makeCluster(config$ncore, setup_strategy = "sequential")
+    if(config$model_settings$ncore > 1) {
+      if(i == start_step) {
+
+        if(machine == "windows") {
+          cl <- parallel::makeCluster(config$model_settings$ncore)
+          parallel::clusterEvalQ(cl, library(FLAREr))
+        } else {
+          cl <- parallel::makeCluster(config$model_settings$ncore, setup_strategy = "sequential")
+        }
+
+        parallel::clusterExport(cl, varlist = list("working_directory", "met_file_names", "met_index",
+                                                   "par_fit_method", "da_method", "nstates", "npars",
+                                                   "pars_config", "inflow_file_names", "inflow_outflow_index",
+                                                   "outflow_file_names", "i", "curr_start",
+                                                   "curr_stop", "par_names", "par_file",
+                                                   "num_phytos", "full_time", "management",
+                                                   "hist_days", "config", "states_config",
+                                                   "ndepths_modeled", "output_vars", "num_wq_vars"),
+                                envir = environment())
       }
 
-      parallel::clusterExport(cl, varlist = list("working_directory", "met_file_names", "met_index",
-                                                 "par_fit_method", "da_method", "nstates", "npars",
-                                                 "pars_config", "inflow_file_names", "inflow_outflow_index",
-                                                 "outflow_file_names", "i", "curr_start",
-                                                 "curr_stop", "par_names", "par_file",
-                                                 "num_phytos", "full_time", "management",
-                                                 "hist_days", "config", "states_config",
-                                                 "ndepths_modeled", "output_vars", "num_wq_vars"),
+      # Variables that need to be exported at each timestep
+      parallel::clusterExport(cl, varlist = list("x", "restart_list", "model_internal_depths", "lake_depth",
+                                                 "snow_ice_thickness", "salt"),
                               envir = environment())
     }
-
-	  # Variables that need to be exported at each timestep
-    parallel::clusterExport(cl, varlist = list("x", "restart_list", "model_internal_depths", "lake_depth",
-                                               "snow_ice_thickness", "salt"),
-                            envir = environment())
     if(i == start_step) {
       restart = FALSE
     } else {
@@ -443,179 +463,241 @@ run_da_forecast_ler <- function(states_init,
     if(i > 1){
 
       # Start loop through ensemble members
-	  out <- parallel::parLapply(cl, 1:nmembers, function(m) {
-      # out <- lapply(1:nmembers, function(m) { # Commented out for debugging
+      if(config$model_settings$ncore > 1) {
+        out <- parallel::parLapply(cl, 1:nmembers, function(m) {
+          curr_met_file <- met_file_names[met_index[m]]
 
-        curr_met_file <- met_file_names[met_index[m]]
-
-        if(npars > 0){
-          if(par_fit_method == "inflate" & da_method == "enkf"){
-            curr_pars <- x[i - 1, m , (nstates+1):(nstates+ npars)]
-          }else if(par_fit_method == "perturb"){
-            if(i > (hist_days + 1)){
-              curr_pars <- x[i - 1, m , (nstates+1):(nstates+ npars)] + rnorm(npars, mean = rep(0, npars), sd = pars_config$perturb_par)
-            }else{
+          if(npars > 0){
+            if(par_fit_method == "inflate" & da_method == "enkf"){
               curr_pars <- x[i - 1, m , (nstates+1):(nstates+ npars)]
+            }else if(par_fit_method == "perturb"){
+              if(i > (hist_days + 1)){
+                curr_pars <- x[i - 1, m , (nstates+1):(nstates+ npars)] + rnorm(npars, mean = rep(0, npars), sd = pars_config$perturb_par)
+              }else{
+                curr_pars <- x[i - 1, m , (nstates+1):(nstates+ npars)]
+              }
+            }else{
+              message("parameter fitting method not supported.  inflate or perturb are supported. only inflate is supported for enkf")
             }
-          }else{
-            message("parameter fitting method not supported.  inflate or perturb are supported. only inflate is supported for enkf")
           }
+
+          if(!is.null(ncol(inflow_file_names))){
+            inflow_file_name <- inflow_file_names[inflow_outflow_index[m], ]
+            outflow_file_name <- outflow_file_names[inflow_outflow_index[m], ]
+          }else{
+            inflow_file_name <- NULL
+            outflow_file_name <- NULL
+          }
+          out <- FLAREr:::run_model_ler(model = config$model_settings$model_name,
+                                        ler_yaml = "LakeEnsemblR.yaml",
+                                        i,
+                                        m,
+                                        curr_start,
+                                        curr_stop,
+                                        par_names,
+                                        curr_pars,
+                                        working_directory = file.path(working_directory, m),
+                                        par_file,
+                                        num_phytos,
+                                        model_depths_start = model_internal_depths[i-1, , m],
+                                        lake_depth_start = lake_depth[i-1, m],
+                                        x_start = x[i-1, m, ],
+                                        full_time,
+                                        wq_start = states_config$wq_start,
+                                        wq_end = states_config$wq_end,
+                                        management = management,
+                                        hist_days,
+                                        modeled_depths = config$model_settings$modeled_depths,
+                                        ndepths_modeled,
+                                        curr_met_file,
+                                        inflow_file_name = inflow_file_name,
+                                        outflow_file_name = outflow_file_name,
+                                        output_vars = output_vars,
+                                        diagnostics_names = config$output_settings$diagnostics_names,
+                                        npars,
+                                        num_wq_vars,
+                                        snow_ice_thickness_start = snow_ice_thickness[, i-1,m ],
+                                        salt_start = salt[i-1, ,m],
+                                        nstates,
+                                        state_names = states_config$state_names,
+                                        include_wq = config$include_wq,
+                                        restart = restart,
+                                        restart_list = restart_list)
+          return(out)
+        })
+      } else {
+        out <- lapply(1:nmembers, function(m) {
+          curr_met_file <- met_file_names[met_index[m]]
+
+          if(npars > 0){
+            if(par_fit_method == "inflate" & da_method == "enkf"){
+              curr_pars <- x[i - 1, m , (nstates+1):(nstates+ npars)]
+            }else if(par_fit_method == "perturb"){
+              if(i > (hist_days + 1)){
+                curr_pars <- x[i - 1, m , (nstates+1):(nstates+ npars)] + rnorm(npars, mean = rep(0, npars), sd = pars_config$perturb_par)
+              }else{
+                curr_pars <- x[i - 1, m , (nstates+1):(nstates+ npars)]
+              }
+            }else{
+              message("parameter fitting method not supported.  inflate or perturb are supported. only inflate is supported for enkf")
+            }
+          }
+
+          if(!is.null(ncol(inflow_file_names))){
+            inflow_file_name <- inflow_file_names[inflow_outflow_index[m], ]
+            outflow_file_name <- outflow_file_names[inflow_outflow_index[m], ]
+          }else{
+            inflow_file_name <- NULL
+            outflow_file_name <- NULL
+          }
+
+          # model = config$model_settings$model_name
+          # ler_yaml = "LakeEnsemblR.yaml"
+          # i
+          # m
+          # curr_start
+          # curr_stop
+          # par_names
+          # curr_pars
+          # working_directory = file.path(working_directory, m)
+          # par_file
+          # num_phytos
+          # model_depths_start = model_internal_depths[i-1, , m]
+          # lake_depth_start = lake_depth[i-1, m]
+          # x_start = x[i-1, m, ]
+          # full_time
+          # wq_start = states_config$wq_start
+          # wq_end = states_config$wq_end
+          # management = management
+          # hist_days
+          # modeled_depths = config$model_settings$modeled_depths
+          # ndepths_modeled
+          # curr_met_file
+          # inflow_file_name = inflow_file_name
+          # outflow_file_name = outflow_file_name
+          # output_vars = output_vars
+          # diagnostics_names = config$output_settings$diagnostics_names
+          # npars
+          # num_wq_vars
+          # snow_ice_thickness_start = snow_ice_thickness[, i-1,m ]
+          # salt_start = salt[i-1, ,m]
+          # nstates
+          # state_names = states_config$state_names
+          # include_wq = config$include_wq
+          # restart = restart
+          # restart_list = restart_list
+
+          out <- FLAREr:::run_model_ler(model = config$model_settings$model_name,
+                                        ler_yaml = "LakeEnsemblR.yaml",
+                                        i,
+                                        m,
+                                        curr_start,
+                                        curr_stop,
+                                        par_names,
+                                        curr_pars,
+                                        working_directory = file.path(working_directory, "1"),
+                                        par_file,
+                                        num_phytos,
+                                        model_depths_start = model_internal_depths[i-1, , m],
+                                        lake_depth_start = lake_depth[i-1, m],
+                                        x_start = x[i-1, m, ],
+                                        full_time,
+                                        wq_start = states_config$wq_start,
+                                        wq_end = states_config$wq_end,
+                                        management = management,
+                                        hist_days,
+                                        modeled_depths = config$model_settings$modeled_depths,
+                                        ndepths_modeled,
+                                        curr_met_file,
+                                        inflow_file_name = inflow_file_name,
+                                        outflow_file_name = outflow_file_name,
+                                        output_vars = output_vars,
+                                        diagnostics_names = config$output_settings$diagnostics_names,
+                                        npars,
+                                        num_wq_vars,
+                                        snow_ice_thickness_start = snow_ice_thickness[, i-1,m ],
+                                        salt_start = salt[i-1, ,m],
+                                        nstates,
+                                        state_names = states_config$state_names,
+                                        include_wq = config$include_wq,
+                                        restart = restart,
+                                        restart_list = restart_list)
+          return(out)
+        })
+      }
+      # Loop through output and assign to matrix
+  	  for(m in 1:nmembers) {
+
+  	    x_star[m, ] <- out[[m]]$x_star_end
+  	    lake_depth[i ,m ] <- out[[m]]$lake_depth_end
+  	    snow_ice_thickness[,i ,m] <- out[[m]]$snow_ice_thickness_end
+  	    diagnostics[, i, , m] <- out[[m]]$diagnostics_end
+  	    model_internal_depths[i, ,m] <- out[[m]]$model_internal_depths
+  	    salt[i, , m]  <- out[[m]]$salt_end
+  	    if(config$model_settings$model_name == "glm") {
+  	      restart_list$avg_surf_temp[i , m] <- out[[m]]$restart_vars$avg_surf_temp
+  	      restart_list$mixing_vars[, i, m] <- out[[m]]$restart_vars$mixing_vars
+  	    }
+  	    if(config$model_settings$model_name == "simstrat") {
+  	      restart_list$U_restart[, i, m] <- out[[m]]$restart_vars$U
+  	      restart_list$V_restart[, i, m] <- out[[m]]$restart_vars$V
+  	      restart_list$k_restart[, i, m] <- out[[m]]$restart_vars$k
+  	      restart_list$eps_restart[, i, m] <- out[[m]]$restart_vars$eps
+  	    }
+
+  	    #Add process noise
+  	    q_v[] <- NA
+  	    w[] <- NA
+  	    w_new[] <- NA
+  	    for(jj in 1:nrow(model_sd)){
+  	      w[] <- rnorm(ndepths_modeled, 0, 1)
+  	      w_new[1] <- w[1]
+  	      q_v[1] <- model_sd[jj, 1] * w_new[1]
+  	      for(kk in 2:ndepths_modeled){
+  	        #q_v[kk] <- alpha_v * q_v[kk-1] + sqrt(1 - alpha_v^2) * model_sd[jj, kk] * w[kk]
+
+  	        w_new[kk] <- (alpha_v[jj] * w_new[kk-1] + sqrt(1 - alpha_v[jj]^2) * w[kk])
+  	        q_v[kk] <- w_new[kk] * model_sd[jj, kk]
+  	      }
+
+  	      x_corr[m, (((jj-1)*ndepths_modeled)+1):(jj*ndepths_modeled)] <-
+  	        x_star[m, (((jj-1)*ndepths_modeled)+1):(jj*ndepths_modeled)] + q_v
+  	    }
+
+  	  } # END ENSEMBLE LOOP
+
+  	  # Close clusters at the last time step
+  	  if(i == nsteps & config$model_settings$ncore > 1) {
+  	    parallel::stopCluster(cl)
+  	  }
+
+
+      #Correct any negative water quality states
+      if(config$include_wq & config$da_setup$no_negative_states){
+        for(m in 1:nmembers){
+          index <- which(x_corr[m,] < 0.0)
+          x_corr[m, index[which(index <= states_config$wq_end[num_wq_vars + 1] & index >= states_config$wq_start[2])]] <- 0.0
         }
-
-        if(!is.null(ncol(inflow_file_names))){
-          inflow_file_name <- inflow_file_names[inflow_outflow_index[m], ]
-          outflow_file_name <- outflow_file_names[inflow_outflow_index[m], ]
-        }else{
-          inflow_file_name <- NULL
-          outflow_file_name <- NULL
-        }
-
-        # config$model
-        # ler_yaml = "LakeEnsemblR.yaml"
-        # i
-        # m
-        # curr_start
-        # curr_stop
-        # par_names
-        # curr_pars
-        # working_directory = file.path(working_directory, m)
-        # par_file
-        # num_phytos
-        # model_depths_start = model_internal_depths[i-1, , m]
-        # lake_depth_start = lake_depth[i-1, m]
-        # x_start = x[i-1, m, ]
-        # full_time
-        # wq_start = states_config$wq_start
-        # wq_end = states_config$wq_end
-        # management = management
-        # hist_days
-        # modeled_depths = config$modeled_depths
-        # ndepths_modeled
-        # curr_met_file
-        # inflow_file_name = inflow_file_name
-        # outflow_file_name = outflow_file_name
-        # output_vars = output_vars
-        # diagnostics_names = config$diagnostics_names
-        # npars
-        # num_wq_vars
-        # snow_ice_thickness_start = snow_ice_thickness[, i-1,m ]
-        # salt_start = salt[i-1, ,m]
-        # nstates
-        # state_names = states_config$state_names
-        # include_wq = config$include_wq
-        # restart = restart
-        # restart_list = restart_list
-
-        out <- FLAREr:::run_model_ler(model = config$model,
-                             ler_yaml = "LakeEnsemblR.yaml",
-                             i,
-                             m,
-                             curr_start,
-                             curr_stop,
-                             par_names,
-                             curr_pars,
-                             working_directory = file.path(working_directory, m),
-                             par_file,
-                             num_phytos,
-                             model_depths_start = model_internal_depths[i-1, , m],
-                             lake_depth_start = lake_depth[i-1, m],
-                             x_start = x[i-1, m, ],
-                             full_time,
-                             wq_start = states_config$wq_start,
-                             wq_end = states_config$wq_end,
-                             management = management,
-                             hist_days,
-                             modeled_depths = config$modeled_depths,
-                             ndepths_modeled,
-                             curr_met_file,
-                             inflow_file_name = inflow_file_name,
-                             outflow_file_name = outflow_file_name,
-                             output_vars = output_vars,
-                             diagnostics_names = config$diagnostics_names,
-                             npars,
-                             num_wq_vars,
-                             snow_ice_thickness_start = snow_ice_thickness[, i-1,m ],
-                             salt_start = salt[i-1, ,m],
-                             nstates,
-                             state_names = states_config$state_names,
-                             include_wq = config$include_wq,
-                             restart = restart,
-                             restart_list = restart_list)
-	  })
-
-	  # Loop through output and assign to matrix
-	  for(m in 1:nmembers) {
-
-	    x_star[m, ] <- out[[m]]$x_star_end
-	    lake_depth[i ,m ] <- out[[m]]$lake_depth_end
-	    snow_ice_thickness[,i ,m] <- out[[m]]$snow_ice_thickness_end
-	    diagnostics[, i, , m] <- out[[m]]$diagnostics_end
-	    model_internal_depths[i, ,m] <- out[[m]]$model_internal_depths
-	    salt[i, , m]  <- out[[m]]$salt_end
-	    if(config$model == "GLM") {
-	      restart_list$avg_surf_temp[i , m] <- out[[m]]$restart_vars$avg_surf_temp
-	      restart_list$mixing_vars[, i, m] <- out[[m]]$restart_vars$mixing_vars
-	    }
-	    if(config$model == "Simstrat") {
-	      restart_list$U_restart[, i, m] <- out[[m]]$restart_vars$U
-	      restart_list$V_restart[, i, m] <- out[[m]]$restart_vars$V
-	      restart_list$k_restart[, i, m] <- out[[m]]$restart_vars$k
-	      restart_list$eps_restart[, i, m] <- out[[m]]$restart_vars$eps
-	    }
-
-	    #Add process noise
-	    q_v[] <- NA
-	    w[] <- NA
-	    w_new[] <- NA
-	    for(jj in 1:nrow(model_sd)){
-	      w[] <- rnorm(ndepths_modeled, 0, 1)
-	      w_new[1] <- w[1]
-	      q_v[1] <- model_sd[jj, 1] * w_new[1]
-	      for(kk in 2:ndepths_modeled){
-	        #q_v[kk] <- alpha_v * q_v[kk-1] + sqrt(1 - alpha_v^2) * model_sd[jj, kk] * w[kk]
-
-	        w_new[kk] <- (alpha_v[jj] * w_new[kk-1] + sqrt(1 - alpha_v[jj]^2) * w[kk])
-	        q_v[kk] <- w_new[kk] * model_sd[jj, kk]
-	      }
-
-	      x_corr[m, (((jj-1)*ndepths_modeled)+1):(jj*ndepths_modeled)] <-
-	        x_star[m, (((jj-1)*ndepths_modeled)+1):(jj*ndepths_modeled)] + q_v
-	    }
-
-	  } # END ENSEMBLE LOOP
-
-	  # Close clusters at the last time step
-	  if(i == nsteps) {
-	    parallel::stopCluster(cl)
-	  }
-
-
-    #Correct any negative water quality states
-    if(config$include_wq & config$no_negative_states){
-      for(m in 1:nmembers){
-        index <- which(x_corr[m,] < 0.0)
-        x_corr[m, index[which(index <= states_config$wq_end[num_wq_vars + 1] & index >= states_config$wq_start[2])]] <- 0.0
       }
-    }
 
-    if(npars > 0){
-      pars_corr <- x[i - 1, , (nstates + 1):(nstates+ npars)]
-      if(npars == 1){
-        pars_corr <- matrix(pars_corr,nrow = length(pars_corr),ncol = 1)
-      }
-      pars_star <- pars_corr
-      }
-	  } else {
-      x_star <- x[i, ,1:nstates]
-      x_corr <- x_star
       if(npars > 0){
-        pars_corr <- x[i, , (nstates + 1):(nstates+ npars)]
+        pars_corr <- x[i - 1, , (nstates + 1):(nstates+ npars)]
         if(npars == 1){
           pars_corr <- matrix(pars_corr,nrow = length(pars_corr),ncol = 1)
         }
         pars_star <- pars_corr
+        }
+  	  } else {
+        x_star <- x[i, ,1:nstates]
+        x_corr <- x_star
+        if(npars > 0){
+          pars_corr <- x[i, , (nstates + 1):(nstates+ npars)]
+          if(npars == 1){
+            pars_corr <- matrix(pars_corr,nrow = length(pars_corr),ncol = 1)
+          }
+          pars_star <- pars_corr
+        }
       }
-    }
 
     if(npars > 0){
       x_prior[i, , ] <- cbind(x_corr, pars_corr)
@@ -651,13 +733,13 @@ run_da_forecast_ler <- function(states_init,
 
         x[i, , ] <- cbind(x_corr, pars_star)
 
-        if(config$process_uncertainty == FALSE & i > (hist_days + 1)){
+        if(config$uncertainty$process == FALSE & i > (hist_days + 1)){
           #don't add process noise if process uncertainty is false (x_star doesn't have noise)
           #don't add the noise to parameters in future forecast mode ()
           x[i, , ] <- cbind(x_star, pars_star)
         }
 
-        if(i == (hist_days + 1) & config$initial_condition_uncertainty == FALSE){
+        if(i == (hist_days + 1) & config$uncertainty$initial_condition == FALSE){
           for(m in 1:nmembers){
             x[i, m, ] <- c(colMeans(x_star), pars_star[m, ])
           }
@@ -666,7 +748,7 @@ run_da_forecast_ler <- function(states_init,
       }else{
         x[i, , ] <- cbind(x_corr)
 
-        if(config$process_uncertainty == FALSE & i > (hist_days + 1)){
+        if(config$uncertainty$process == FALSE & i > (hist_days + 1)){
           x[i, , ] <- x_star
         }
 
@@ -746,7 +828,7 @@ run_da_forecast_ler <- function(states_init,
 
 
         #Set any negative observations of water quality variables to zero
-        d_mat[which(z_index > length(config$modeled_depths) & d_mat < 0.0)] <- 0.0
+        d_mat[which(z_index > length(config$model_settings$modeled_depths) & d_mat < 0.0)] <- 0.0
 
 
 
@@ -798,11 +880,11 @@ run_da_forecast_ler <- function(states_init,
           p_t_pars <- p_it_pars / (nmembers - 1)
         }
 
-        if(!is.na(config$localization_distance)){
+        if(!is.na(config$da_setup$localization_distance)){
           p_t <- localization(p_t,
                               nstates,
-                              modeled_depths = config$modeled_depths,
-                              localization_distance = config$localization_distance)
+                              modeled_depths = config$model_settings$modeled_depths,
+                              localization_distance = config$da_setup$localization_distance)
         }
         #Kalman gain
         k_t <- p_t %*% t(h) %*% solve(h %*% p_t %*% t(h) + psi_t, tol = 1e-17)
@@ -845,14 +927,14 @@ run_da_forecast_ler <- function(states_init,
     #AT THE INITIATION OF ThE FUTURE FORECAST
     if(i == (hist_days + 1)){
 
-      if(config$initial_condition_uncertainty == FALSE){
+      if(config$uncertainty$initial_condition == FALSE){
         state_means <- colMeans(x[i, ,1:nstates])
         for(m in 1:nmembers){
           x[i, m, 1:nstates]  <- state_means
         }
       }
       if(npars > 0){
-        if(config$parameter_uncertainty == FALSE){
+        if(config$uncertainty$parameter == FALSE){
           par_means <- colMeans(x[i, ,(nstates + 1):(nstates + npars)])
           for(m in 1:nmembers){
             x[i, m, (nstates + 1):(nstates + npars)] <- par_means
@@ -866,7 +948,7 @@ run_da_forecast_ler <- function(states_init,
     ##################
 
     #Correct any negative water quality states
-    if(config$include_wq & config$no_negative_states){
+    if(config$include_wq & config$da_setup$no_negative_states){
       for(m in 1:nmembers){
         index <- which(x[i,m,] < 0.0)
         x[i, m, index[which(index <= states_config$wq_end[num_wq_vars + 1] & index >= states_config$wq_start[2])]] <- 0.0
@@ -949,7 +1031,7 @@ run_da_forecast_ler <- function(states_init,
                            file_name_F_day,"_F_",
                            forecast_days,"_",
                            forecast_iteration_id, "_",
-                           config$model)
+                           config$model_settings$model_name)
 
   for(m in 1:nmembers){
     unlink(file.path(working_directory, m), recursive = TRUE)

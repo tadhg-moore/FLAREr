@@ -13,23 +13,18 @@ set_up_model_ler <- function(config,
   })
 
 
-  file.copy(from = file.path(config$run_config$forecast_location, config$ler_yaml),
+  file.copy(from = file.path(config$file_path$execute_directory, config$model_settings$ler_yaml),
             to = file.path(ens_working_directory, "LakeEnsemblR.yaml"), overwrite = TRUE)
   yaml_file <- file.path(ens_working_directory, "LakeEnsemblR.yaml")
   ler_yaml <- yaml::read_yaml(yaml_file)
   # yml <- yaml::read_yaml(file.path(ens_working_directory, ler_yaml))
-  ler_directory <- gsub(config$lake_name_code, "", ens_working_directory)
+  ler_directory <- gsub(config$location$site_id, "", ens_working_directory)
 
-  if(config$model == "GLM") {
-
-    # GLM_folder <- executable_location
-    # fl <- c(list.files(GLM_folder, full.names = TRUE))
-    # model_directory <- file.path(ens_working_directory, config$model)
-    # dir.create(model_directory, showWarnings = FALSE)
-    # tmp <- file.copy(from = fl, to = model_directory, overwrite = TRUE)
+  if(config$model_settings$model_name == "glm") {
 
     dir.create(file.path(ens_working_directory, "GLM"), showWarnings = FALSE)
-    file.copy(from = file.path(config$run_config$forecast_location, config$base_GLM_nml),
+    file.copy(from = file.path(config$file_path$configuration_directory, "forecast_model",
+                               config$model_settings$model_name, config$model_settings$base_GLM_nml),
               to = file.path(ens_working_directory, "GLM", "glm3.nml"), overwrite = TRUE)
 
     non_temp_names <- state_names[which(!(state_names %in% "temp"))]
@@ -64,18 +59,14 @@ set_up_model_ler <- function(config,
                 to = paste0(ens_working_directory, "/", "aed2_zoop_pars.nml"), overwrite = TRUE)
 
     }
-
-    #Create a copy of the NML to record starting initial conditions
-    # file.copy(from = paste0(ens_working_directory, "/", "glm3.nml"), #GLM SPECIFIC
-    #           to = paste0(ens_working_directory, "/", "glm3_initial.nml"), overwrite = TRUE) #GLM SPECIFIC
   }
 
+  switch(config$model_settings$model_name,
+         glm = { model <- "GLM" },
+         gotm = { model <- "GOTM" },
+         simstrat = { model <- "Simstrat"})
 
-
-  # yaml::write_yaml(yml, file.path(ens_working_directory, "test.yaml")) # file.path(ens_working_directory, ler_yaml)
-
-
-  LakeEnsemblR::export_config(config_file = basename(yaml_file), model = config$model, dirs = TRUE,
+    LakeEnsemblR::export_config(config_file = basename(yaml_file), model = model, dirs = TRUE,
                               time = FALSE, location = TRUE, output_settings = TRUE,
                               meteo = FALSE, init_cond = FALSE, extinction = TRUE,
                               inflow = FALSE, model_parameters = TRUE,

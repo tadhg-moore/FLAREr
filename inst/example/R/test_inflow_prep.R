@@ -1,13 +1,13 @@
-template_folder <- system.file("example", package= "FLAREr")
+template_folder <- system.file("example", package = "FLAREr")
 temp_dir <- tempdir()
 # dir.create("example")
 file.copy(from = template_folder, to = temp_dir, recursive = TRUE)
 
-lake_directory <- test_directory
+lake_directory <- file.path(temp_dir, "example")
 configuration_directory <- file.path(lake_directory, "configuration")
-execute_directory <- file.path(test_directory, "flare_tempdir")
-qaqc_data_directory <- file.path(test_directory, "data_processed")
-forecast_input_directory <- file.path(test_directory, "forecasted_drivers")
+execute_directory <- file.path(lake_directory, "flare_tempdir")
+qaqc_data_directory <- file.path(lake_directory, "data_processed")
+forecast_input_directory <- file.path(lake_directory, "forecasted_drivers")
 
 ##### Read configuration files
 config <- yaml::read_yaml(file.path(configuration_directory, "flarer","configure_flare.yml"))
@@ -18,14 +18,12 @@ config$file_path$noaa_directory <- file.path(forecast_input_directory, config$me
 config$file_path$inflow_directory <- file.path(forecast_input_directory, config$inflow$forecast_inflow_model)
 config$file_path$configuration_directory<- configuration_directory
 config$file_path$execute_directory <- file.path(lake_directory, "flare_tempdir")
-config$file_path$forecast_output_directory <- file.path(test_directory, "forecast_output")
-config$file_path$qaqc_data_directory <- file.path(test_directory, "data_processed")
+config$file_path$forecast_output_directory <- file.path(lake_directory, "forecast_output")
+config$file_path$qaqc_data_directory <- file.path(lake_directory, "data_processed")
 
 if(!dir.exists(config$file_path$execute_directory)){
   dir.create(config$file_path$execute_directory)
 }
-
-file.copy(file.path(configuration_directory, "forecast_model", "glm", "glm3.nml"), execute_directory)
 
 config$qaqc_data_directory <- qaqc_data_directory
 
