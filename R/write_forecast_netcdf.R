@@ -14,6 +14,9 @@
 write_forecast_netcdf <- function(enkf_output,
                                   forecast_location){
 
+  if(!dir.exists(forecast_location)) {
+    dir.create(forecast_location, recursive = TRUE)
+  }
 
   x <- enkf_output$x
   lake_depth <- enkf_output$lake_depth
@@ -65,7 +68,7 @@ write_forecast_netcdf <- function(enkf_output,
   ncfname <- paste0(forecast_location,"/",enkf_output$save_file_name,".nc")
   #Set dimensionsenkf_output
   ens <- seq(1,dim(x)[2],1)
-  depths <- config$modeled_depths
+  depths <- config$model_settings$modeled_depths
   t <- as.numeric(as.POSIXct(lubridate::with_tz(full_time),origin = '1970-01-01 00:00.00 UTC'))
   states <- seq(1,nstates,1)
   #obs_states <- seq(1,dim(obs)[3],1)
@@ -172,13 +175,13 @@ write_forecast_netcdf <- function(enkf_output,
     }
   }
 
-  if(length(config$diagnostics_names) > 0){
-    for(s in 1:length(config$diagnostics_names)){
-      def_list[[index+npars+length(states_config$state_names)-1 + s]]<- ncdf4::ncvar_def(config$diagnostics_names[s],"-",list(timedim,depthdim, ensdim),fillvalue,paste0("diagnostic:",config$diagnostics_names[s]),prec="single")
+  if(length(config$output_settings$diagnostics_names) > 0){
+    for(s in 1:length(config$output_settings$diagnostics_names)){
+      def_list[[index+npars+length(states_config$state_names)-1 + s]]<- ncdf4::ncvar_def(config$output_settings$diagnostics_names[s],"-",list(timedim,depthdim, ensdim),fillvalue,paste0("diagnostic:",config$diagnostics_names[s]),prec="single")
     }
   }
 
-  ncout <- ncdf4::nc_create(ncfname, def_list, force_v4=T)
+  ncout <- ncdf4::nc_create(ncfname, def_list, force_v4 = TRUE)
   # on.exit({
   #   ncdf4::nc_close(ncout)
   # })

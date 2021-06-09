@@ -125,8 +125,9 @@ test_that("initial conditions are generated", {
                                               obs,
                                               config)
   testthat::expect_true(is.list(init))
-  chk <- lapply(init, is.array)
-  testthat::expect_true(any(unlist(chk)))
+  testthat::expect_true(is.array(init$states))
+  testthat::expect_true(is.array(init$pars))
+  testthat::expect_true(is.list(init$aux_states_init))
 })
 
 # EnKF ----
@@ -282,7 +283,7 @@ test_that("particle filter can be run", {
     class(enkf_output[[x]]) == class(samp_enkf_output[[x]])
 
   })
-  testthat::expect_true(any(unlist(chk)))
+  testthat::expect_true(all(unlist(chk)))
 
   # Save forecast
   saved_file <- FLAREr::write_forecast_netcdf(enkf_output,
@@ -350,7 +351,7 @@ test_that("EnKF can be run with NO inflows/outflows", {
     class(enkf_output[[x]]) == class(samp_enkf_output[[x]])
 
   })
-  testthat::expect_true(any(unlist(chk)))
+  testthat::expect_true(all(unlist(chk)))
 
   # Save forecast
   saved_file <- FLAREr::write_forecast_netcdf(enkf_output,
