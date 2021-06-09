@@ -30,7 +30,7 @@ create_ler_inflow_outflow_files <- function(inflow_file_dir,
   obs_inflow <- readr::read_csv(inflow_obs, col_types = readr::cols())
   hour_step <- lubridate::hour(config$run_config$start_datetime)
 
-  if(config$use_future_inflow) {
+  if(config$inflow$use_forecasted_inflow) {
     obs_inflow <- obs_inflow %>%
       dplyr::filter(time >= lubridate::as_date(start_datetime) & time <= lubridate::as_date(forecast_start_datetime)) %>%
       dplyr::mutate(inflow_num = 1)
@@ -38,8 +38,6 @@ create_ler_inflow_outflow_files <- function(inflow_file_dir,
     obs_inflow <- obs_inflow %>%
       dplyr::filter(time >= lubridate::as_date(start_datetime) & time <= lubridate::as_date(end_datetime)) %>%
       dplyr::mutate(inflow_num = 1)
-
-
   }
 
   obs_outflow <- obs_inflow %>%

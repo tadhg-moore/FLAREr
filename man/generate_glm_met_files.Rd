@@ -8,8 +8,7 @@ generate_glm_met_files(
   obs_met_file = NULL,
   out_dir,
   forecast_dir = NULL,
-  config,
-  use_forecasted_met
+  config
 )
 }
 \arguments{

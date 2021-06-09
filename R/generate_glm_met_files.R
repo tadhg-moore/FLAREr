@@ -12,8 +12,7 @@
 generate_glm_met_files <- function(obs_met_file = NULL,
                                    out_dir,
                                    forecast_dir = NULL,
-                                   config,
-                                   use_forecasted_met){
+                                   config){
 
   if(is.null(obs_met_file) & is.null(forecast_dir)){
     stop("missing files to convert")
