@@ -643,13 +643,13 @@ run_da_forecast <- function(states_init,
 
           x[i, , ] <- cbind(x_corr, pars_star)
 
-          if(config$uncertainty$process_uncertainty == FALSE & i > (hist_days + 1)){
+          if(config$uncertainty$process == FALSE & i > (hist_days + 1)){
             #don't add process noise if process uncertainty is false (x_star doesn't have noise)
             #don't add the noise to parameters in future forecast mode ()
             x[i, , ] <- cbind(x_star, pars_star)
           }
 
-          if(i == (hist_days + 1) & config$uncertainty$initial_condition_uncertainty == FALSE){
+          if(i == (hist_days + 1) & config$uncertainty$initial_condition == FALSE){
             for(m in 1:nmembers){
               x[i, m, ] <- c(colMeans(x_star), pars_star[m, ])
             }
@@ -658,7 +658,7 @@ run_da_forecast <- function(states_init,
         }else{
           x[i, , ] <- cbind(x_corr)
 
-          if(config$uncertainty$process_uncertainty == FALSE & i > (hist_days + 1)){
+          if(config$uncertainty$process == FALSE & i > (hist_days + 1)){
             x[i, , ] <- x_star
           }
 
@@ -825,14 +825,14 @@ run_da_forecast <- function(states_init,
       #AT THE INITIATION OF ThE FUTURE FORECAST
       if(i == (hist_days + 1)){
 
-        if(config$uncertainty$initial_condition_uncertainty == FALSE){
+        if(config$uncertainty$initial_condition == FALSE){
           state_means <- colMeans(x[i, ,1:nstates])
           for(m in 1:nmembers){
             x[i, m, 1:nstates]  <- state_means
           }
         }
         if(npars > 0){
-          if(config$uncertainty$parameter_uncertainty == FALSE){
+          if(config$uncertainty$parameter == FALSE){
             par_means <- colMeans(x[i, ,(nstates + 1):(nstates + npars)])
             for(m in 1:nmembers){
               x[i, m, (nstates + 1):(nstates + npars)] <- par_means
