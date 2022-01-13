@@ -38,12 +38,11 @@ da_setup:
     use_obs_constraint: TRUE
 model_settings:
    ncore: 2
-   model_name: glm #other is "null"
    model: GLM #other is "null"
    base_GLM_nml: glm3.nml
    base_ler_yaml: LakeEnsemblR.yaml
    ler_bathymetry_file: LakeEnsemblR_bathymetry_standard.csv
-   use_ler: FALSE
+   use_ler: TRUE
    modeled_depths: [0.10, 0.33, 0.67,
                     1.00, 1.33, 1.67,
                     2.00, 2.33, 2.67,
@@ -54,7 +53,7 @@ model_settings:
                     7.00, 7.33, 7.67,
                     8.00, 8.33, 8.67,
                     9.00]
-   par_config_file: parameter_calibration_config.csv
+   par_config_file: parameter_calibration_config_ler.csv
    obs_config_file: observations_config.csv
    states_config_file: states_config.csv
    depth_model_sd_config_file: depth_model_sd.csv

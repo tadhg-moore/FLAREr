@@ -8,7 +8,7 @@
 #' @param par_names names of parameters that are being calibrated
 #' @param curr_pars value for the parameters
 #' @param working_directory full path to the directory where the model is executed
-#' @param par_nml vector of namelist names associated with each parameter being calibrated
+#' @param par_file vector of namelist names associated with each parameter being calibrated
 #' @param num_phytos number of phytoplankton groups
 #' @param glm_depths_start depth from the last GLM run
 #' @param lake_depth_start depth of lake
@@ -47,7 +47,7 @@ run_model <- function(i,
                       par_names,
                       curr_pars,
                       working_directory,
-                      par_nml,
+                      par_file,
                       num_phytos,
                       glm_depths_start,
                       lake_depth_start,
@@ -120,7 +120,7 @@ run_model <- function(i,
     for(par in 1:length(unique_pars)){
 
       curr_par_set <- which(par_names == unique_pars[par])
-      curr_nml <- par_nml[curr_par_set[1]]
+      curr_nml <- par_file[curr_par_set[1]]
       if(curr_nml == "glm3.nml"){
         update_glm_nml_list[[list_index]] <- round(curr_pars[curr_par_set], 4)
         update_glm_nml_names[list_index] <- unique_pars[par]
@@ -225,18 +225,27 @@ run_model <- function(i,
 
   #ALLOWS THE LOOPING THROUGH NOAA ENSEMBLES
 
-  update_glm_nml_list[[list_index]] <- curr_met_file
+  update_glm_nml_list[[list_index]] <- paste0("../", basename(curr_met_file))
   update_glm_nml_names[list_index] <- "meteo_fl"
   list_index <- list_index + 1
 
   if(!is.null(inflow_file_name)){
-    update_glm_nml_list[[list_index]] <- unlist(inflow_file_name)
+    update_glm_nml_list[[list_index]] <- paste0("../", basename(inflow_file_name))
     update_glm_nml_names[list_index] <- "inflow_fl"
     list_index <- list_index + 1
 
-    update_glm_nml_list[[list_index]] <- unlist(outflow_file_name)
+    update_glm_nml_list[[list_index]] <- paste0("../", basename(outflow_file_name))
     update_glm_nml_names[list_index] <- "outflow_fl"
     list_index <- list_index + 1
+
+    update_glm_nml_list[[list_index]] <- length(inflow_file_name)
+    update_glm_nml_names[list_index] <- "num_inflows"
+    list_index <- list_index + 1
+
+    update_glm_nml_list[[list_index]] <- length(outflow_file_name)
+    update_glm_nml_names[list_index] <- "num_outlet"
+    list_index <- list_index + 1
+
   } else {
     update_glm_nml_list[[list_index]] <- 0
     update_glm_nml_names[list_index] <- "num_inflows"
@@ -244,6 +253,12 @@ run_model <- function(i,
 
     update_glm_nml_list[[list_index]] <- 0
     update_glm_nml_names[list_index] <- "num_outlet"
+    list_index <- list_index + 1
+  }
+
+  if(machine == "windows") {
+    update_glm_nml_list[[list_index]] <- 24
+    update_glm_nml_names[list_index] <- "nsave"
     list_index <- list_index + 1
   }
 
@@ -296,7 +311,7 @@ run_model <- function(i,
     unlink(paste0(working_directory, "/output.nc"))
 
     if(machine %in% c("unix", "mac", "windows")){
-      GLM3r::run_glm(sim_folder = working_directory, verbose = verbose)
+      GLM3r::run_glm(sim_folder = working_directory, verbose = T)
     }else{
       message("Machine not identified")
       stop()

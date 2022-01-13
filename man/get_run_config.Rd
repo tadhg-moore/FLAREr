@@ -4,7 +4,7 @@
 \alias{get_run_config}
 \title{Get run configuration from s3 bucket}
 \usage{
-get_run_config(configure_run_file, lake_directory, config, clean_start)
+get_run_config(configure_run_file, lake_directory, config, clean_start = FALSE)
 }
 \arguments{
 \item{configure_run_file}{file name (no path) of run configuration file}

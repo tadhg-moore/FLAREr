@@ -1,16 +1,15 @@
-#' @title Generating inflow and output files in the GLM format
-#' @details Processes historical inflow data from inflow_obs and from files in the inflow_file_dir into the GLM format
+#' @title Generating inflow and output files in the LakeEnsemblR format
+#' @details Processes historical inflow data from inflow_obs and from files in the inflow_file_dir into the LakeEnsemblR format
 #' @param inflow_file_dir string; full directory path that contains forecasted inflow and outflow files
 #' @param inflow_obs string; full path to cleaned inflow observation in the specified format
 #' @param working_directory string; full directory where FLARE executes
 #' @param state_names vector; vector of state names that will be included in the inflow files
 #' @return list with two vectors. One vector is the matrix of inflow_file_names and the other is the matrix of outflow_file_names
-#' @export
+
+#' @noRd
+#'
 #' @examples
-##' \dontrun{
-##' inflow_outflow_files <- create_glm_inflow_outflow_files(inflow_file_dir = inflow_forecast_path, inflow_obs = cleaned_inflow_file, working_directory = config$file_path$execute_directory, config, state_names = NULL)
-##' }
-create_glm_inflow_outflow_files <- function(inflow_file_dir = NULL,
+create_ler_inflow_outflow_files <- function(inflow_file_dir = NULL,
                                             inflow_obs,
                                             working_directory,
                                             config,
@@ -54,6 +53,7 @@ create_glm_inflow_outflow_files <- function(inflow_file_dir = NULL,
   }
 
   obs_inflow <- readr::read_csv(inflow_obs, col_types = readr::cols())
+  hour_step <- lubridate::hour(start_datetime)
 
   if(config$inflow$use_forecasted_inflow){
     obs_inflow <- obs_inflow %>%
@@ -89,7 +89,7 @@ create_glm_inflow_outflow_files <- function(inflow_file_dir = NULL,
 
   inflow_file_names <- array(NA, dim = c(max(c(1, length(inflow_files))), num_inflows))
 
-  for(j in 1:num_inflows){
+  for(j in 1:num_inflows) {
 
     if(length(inflow_files) == 0 | end_datetime == forecast_start_datetime){
 
@@ -103,9 +103,9 @@ create_glm_inflow_outflow_files <- function(inflow_file_dir = NULL,
                        file = inflow_file_name,
                        quote = "none")
       inflow_file_names[, j] <- inflow_file_name
-    }else{
+    } else {
 
-      for(i in 1:length(inflow_files)){
+      for(i in 1:length(inflow_files)) {
         d <- readr::read_csv(inflow_files[i], col_types = readr::cols()) %>%
           dplyr::filter(inflow_num == j) %>%
           dplyr::select(dplyr::all_of(VARS)) %>%
@@ -118,6 +118,12 @@ create_glm_inflow_outflow_files <- function(inflow_file_dir = NULL,
 
 
         inflow <- rbind(obs_inflow_tmp, d)
+        inflow <- as.data.frame(inflow)
+        # inflow[, 1] <- as.POSIXct(inflow[, 1], tz = tz) + lubridate::hours(hour_step)
+        inflow[, 1] <- format(inflow[, 1], format="%Y-%m-%d %H:%M:%S")
+        inflow[, 1] <- lubridate::with_tz(inflow[, 1]) + lubridate::hours(hour_step)
+        inflow[, 1] <- format(inflow[, 1], format="%Y-%m-%d %H:%M:%S")
+        colnames(inflow) <- c("datetime", "Flow_metersCubedPerSecond", "Water_Temperature_celsius", "Salinity_practicalSalinityUnits")
 
         inflow_file_name <- file.path(working_directory, paste0("inflow",j,"_ens",i,".csv"))
 
@@ -125,11 +131,11 @@ create_glm_inflow_outflow_files <- function(inflow_file_dir = NULL,
 
         if(config$inflow$use_forecasted_inflow){
           readr::write_csv(x = inflow,
-                           file = inflow_file_name,
+                           inflow_file_name,
                            quote = "none")
         }else{
           readr::write_csv(x = obs_inflow_tmp,
-                           file = inflow_file_name,
+                           inflow_file_name,
                            quote = "none")
 
         }
@@ -142,12 +148,10 @@ create_glm_inflow_outflow_files <- function(inflow_file_dir = NULL,
     d <- readr::read_csv(outflow_files[1], col_types = readr::cols())
     num_outflows <- max(c(d$outflow_num,obs_outflow$outflow_num))
   }else{
-    num_outflows <- max(obs_inflow$inflow_num)
+    num_outflows <- max(obs_outflow$outflow_num)
   }
 
-
-  outflow_file_names <- array(NA, dim = c(max(c(1, length(outflow_files))),num_outflows))
-
+  outflow_file_names <- array(NA, dim = c(length(outflow_files),num_outflows))
 
   for(j in 1:num_outflows){
 
@@ -160,10 +164,10 @@ create_glm_inflow_outflow_files <- function(inflow_file_dir = NULL,
       outflow_file_name <- file.path(working_directory, paste0("outflow",j,".csv"))
 
       readr::write_csv(x = obs_outflow_tmp,
-                       file = outflow_file_name,
+                       outflow_file_name,
                        quote = "none")
       outflow_file_names[, j] <- outflow_file_name
-    }else{
+    } else {
 
       for(i in 1:length(outflow_files)){
         d <- readr::read_csv(outflow_files[i], col_types = readr::cols())%>%
@@ -177,6 +181,9 @@ create_glm_inflow_outflow_files <- function(inflow_file_dir = NULL,
           dplyr::select(-outflow_num)
 
         outflow <- rbind(obs_outflow_tmp, d)
+        outflow <- as.data.frame(outflow)
+        outflow[, 1] <- format(outflow[, 1], format="%Y-%m-%d %H:%M:%S")
+        colnames(outflow) <- c("datetime", "Flow_metersCubedPerSecond")
 
         outflow_file_name <- file.path(working_directory, paste0("outflow",j,"_ens",i,".csv"))
 
@@ -184,17 +191,17 @@ create_glm_inflow_outflow_files <- function(inflow_file_dir = NULL,
 
         if(config$inflow$use_forecasted_inflow){
           readr::write_csv(x = outflow,
-                           file = outflow_file_name,
+                           outflow_file_name,
                            quote = "none")
         }else{
           readr::write_csv(x = obs_outflow_tmp,
-                           file = outflow_file_name,
+                           outflow_file_name,
                            quote = "none")
         }
       }
     }
   }
 
-  return(list(inflow_file_names = as.character(gsub("\\\\", "/", inflow_file_names)),
-              outflow_file_names = as.character(gsub("\\\\", "/", outflow_file_names))))
+  return(list(inflow_file_names = as.character(inflow_file_names),
+              outflow_file_names = as.character(outflow_file_names)))
 }

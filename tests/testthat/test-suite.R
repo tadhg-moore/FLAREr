@@ -5,10 +5,10 @@ test_that("met files are generated", {
 
   source(file.path(template_folder, "R/test_met_prep.R"))
 
-  met_out <- FLAREr::generate_glm_met_files(obs_met_file = observed_met_file,
-                                           out_dir = config$file_path$execute_directory,
-                                           forecast_dir = config$file_path$noaa_directory,
-                                           config)
+  met_out <- FLAREr::generate_glm_met_files(obs_met_file = obs_met_file,
+                                            out_dir = config$file_path$execute_directory,
+                                            forecast_dir = config$file_path$noaa_directory,
+                                            config)
   met_file_names <- met_out$filenames
   testthat::expect_equal(file.exists(met_file_names), expected = rep(TRUE, 21))
 })
@@ -169,6 +169,7 @@ test_that("EnKF can be run", {
   # management = NULL
   # da_method = "enkf"
   # par_fit_method = "inflate"
+  # debug = FALSE
 
   #Run EnKF
   enkf_output <- FLAREr::run_da_forecast(states_init = init$states,
@@ -184,7 +185,8 @@ test_that("EnKF can be run", {
                                           config = config,
                                           pars_config = pars_config,
                                           states_config = states_config,
-                                          obs_config = obs_config
+                                          obs_config = obs_config,
+                                         debug = TRUE
   )
 
   #Load in pre-prepared output
