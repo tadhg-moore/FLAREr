@@ -6,6 +6,7 @@ on:
       - main
       - master
       - dev
+      - ler-dev2
   pull_request:
     branches:
       - main
