@@ -193,7 +193,7 @@ run_da_forecast_ler <- function(states_init,
   #   outflow_file_names <- NULL
   # }
 
-  file.copy(from = file.path(config$file_path$configuration_directory, "forecast_model", "ler", config$model_settings$ler_bathymetry_file),
+  file.copy(from = file.path(config$file_path$configuration_directory, config$model_settings$ler_bathymetry_file),
             to = working_directory, overwrite = TRUE)
   yaml_file <- file.path(working_directory, config$model_settings$base_ler_yaml)
 
@@ -280,7 +280,7 @@ run_da_forecast_ler <- function(states_init,
                           format="%Y-%m-%d %H:%M:%S",
                           tz = config$local_tzone)
 
-    message(paste0("Running time step ", i-1, "/", nsteps, " : ",
+    message(paste0("Running time step ", i-1, "/", (nsteps - 1), " : ",
                    curr_start, " - ",
                    curr_stop, " [", Sys.time(), "]"))
 
@@ -887,9 +887,8 @@ run_da_forecast_ler <- function(states_init,
               forecast_iteration_id = forecast_iteration_id,
               forecast_project_id = config$run_config$sim_name,
               time_of_forecast = time_of_forecast,
-              mixing_vars =  mixing_vars,
+              restart_list =  restart_list,
               snow_ice_thickness = snow_ice_thickness,
-              avg_surf_temp = avg_surf_temp,
               lake_depth = lake_depth,
               salt = salt,
               model_internal_depths = model_internal_depths,

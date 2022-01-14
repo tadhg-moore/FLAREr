@@ -133,14 +133,8 @@ test_that("initial conditions are generated", {
 test_that("EnKF can be run", {
 
   template_folder <- system.file("example", package = "FLAREr")
-  temp_dir <- tempdir()
-  # dir.create("example")
-  file.copy(from = template_folder, to = temp_dir, recursive = TRUE)
 
-  # test_directory <- "C:\\Users\\mooret\\Desktop\\FLARE\\flare-1\\inst\\data"
-  test_directory <- file.path(temp_dir, "example")
-
-  source(file.path(test_directory, "R/test_enkf_prep.R"))
+  source(file.path(template_folder, "R/test_enkf_prep.R"))
 
   obs <- FLAREr::create_obs_matrix(cleaned_observations_file_long,
                                   obs_config,

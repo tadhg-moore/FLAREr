@@ -42,7 +42,7 @@ output:
    compression: 4                               # set to an integer between 1 (least compression) and 9 (most compression), this enables compression for the variable as it is written to the file
    time_unit: hour                              # time unit [second, hour, day]
    time_step: 12                                # number of time units between output [min=1]
-   time_method: mean                            # treatment of time dimension [point=instantaneous, mean, integrated; only used in GOTM]
+   time_method: point                            # treatment of time dimension [point=instantaneous, mean, integrated; only used in GOTM]
    variables:
       - temp
       - ice_height
@@ -114,9 +114,6 @@ model_parameters:
          - 0
          - 0
          - 0
-
-
-
    GOTM:                                        # GOTM specific parameters
       turbulence/turb_param/k_min: 5.0E-8                             # minimum turbulent kinetic energy [m^2/s^2; min=0.0]
    Simstrat:                                    # Simstrat specific parameters

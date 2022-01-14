@@ -132,8 +132,8 @@ generate_initial_conditions <- function(states_config,
     aux_states_init$lake_depth <- init$lake_depth
     aux_states_init$salt <- init$salt
     if(config$model_settings$model == "GLM") {
-      aux_states_init$avg_surf_temp <- out$avg_surf_temp
-      aux_states_init$mixing_vars <- out$mixing_vars
+      aux_states_init$avg_surf_temp <- init$avg_surf_temp
+      aux_states_init$mixing_vars <- init$mixing_vars
     }
     if(config$model_settings$model == "Simstrat") {
       aux_states_init$U <- array(0, dim = c(ndepths_modeled, nmembers))

@@ -15,7 +15,7 @@ set_up_model_ler <- function(model,
     setwd(oldwd)
   })
 
-  file.copy(from = file.path(config$file_path$configuration_directory, "forecast_model", "ler", config$model_settings$base_ler_yaml),
+  file.copy(from = file.path(config$file_path$configuration_directory, config$model_settings$base_ler_yaml),
             to = ens_working_directory, overwrite = TRUE)
   yaml_file <- config$model_settings$base_ler_yaml
 

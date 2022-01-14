@@ -3,15 +3,15 @@ temp_dir <- tempdir()
 # dir.create("example")
 file.copy(from = template_folder, to = temp_dir, recursive = TRUE)
 
-lake_directory <- file.path(temp_dir, "example")
-configuration_directory <- file.path(lake_directory, "configuration")
-execute_directory <- file.path(lake_directory, "flare_tempdir")
-qaqc_data_directory <- file.path(lake_directory, "data_processed")
-forecast_input_directory <- file.path(lake_directory, "forecasted_drivers")
+lake_directory <- test_directory
+configuration_directory <- file.path(lake_directory, "configuration","default")
+execute_directory <- file.path(test_directory, "flare_tempdir")
+qaqc_data_directory <- file.path(test_directory, "data_processed")
+forecast_input_directory <- file.path(test_directory, "forecasted_drivers")
 
 ##### Read configuration files
-config <- yaml::read_yaml(file.path(configuration_directory, "FLAREr","configure_flare.yml"))
-run_config <- yaml::read_yaml(file.path(configuration_directory, "FLAREr","configure_run.yml"))
+config <- yaml::read_yaml(file.path(configuration_directory, "configure_flare.yml"))
+run_config <- yaml::read_yaml(file.path(configuration_directory, "configure_run.yml"))
 
 config$run_config <- run_config
 config$file_path$noaa_directory <- file.path(forecast_input_directory, config$met$forecast_met_model)
@@ -29,10 +29,11 @@ if(!dir.exists(config$file_path$execute_directory)){
 
 config$qaqc_data_directory <- qaqc_data_directory
 
-pars_config <- readr::read_csv(file.path(configuration_directory, "FLAREr", config$model_settings$par_config_file), col_types = readr::cols())
-obs_config <- readr::read_csv(file.path(configuration_directory, "FLAREr", config$model_settings$obs_config_file), col_types = readr::cols())
-states_config <- readr::read_csv(file.path(configuration_directory, "FLAREr", config$model_settings$states_config_file), col_types = readr::cols())
+file.copy(file.path(configuration_directory, "glm3.nml"), execute_directory)
 
+pars_config <- readr::read_csv(file.path(configuration_directory, config$model_settings$par_config_file), col_types = readr::cols())
+obs_config <- readr::read_csv(file.path(configuration_directory, config$model_settings$obs_config_file), col_types = readr::cols())
+states_config <- readr::read_csv(file.path(configuration_directory, config$model_settings$states_config_file), col_types = readr::cols())
 #Download and process observations (already done)
 
 cleaned_observations_file_long <- file.path(config$qaqc_data_directory,"observations_postQAQC_long.csv")

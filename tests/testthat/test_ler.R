@@ -38,8 +38,6 @@ test_that("LER inflow & outflow files are generated", {
   testthat::expect_equal(file.exists(inflow_outflow_files[[2]]), expected = rep(TRUE, 21))
 })
 
-
-
 #Create observation matrix
 test_that("observation matrix is generated and correct", {
 
@@ -62,8 +60,6 @@ test_that("observation matrix is generated and correct", {
 
 })
 
-
-
 test_that("generate states to obs mapping", {
 
   template_folder <- system.file("example", package = "FLAREr")
@@ -77,8 +73,6 @@ test_that("generate states to obs mapping", {
   states_config <- FLAREr::generate_states_to_obs_mapping(states_config, obs_config)
   testthat::expect_true(is.data.frame(states_config))
 })
-
-
 
 test_that("initial model error is generated", {
 
@@ -98,7 +92,6 @@ test_that("initial model error is generated", {
   testthat::expect_true(is.array(model_sd))
   testthat::expect_true(any(!is.na(model_sd)))
 })
-
 
 #Set initial conditions
 test_that("LER-GLM initial conditions are generated", {

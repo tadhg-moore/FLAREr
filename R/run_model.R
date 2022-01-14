@@ -2,7 +2,6 @@
 #' Run GLM
 #' @param i time step index
 #' @param m ensemble index
-#' @param mixing_vars_start vector; mixing variables vector
 #' @param curr_start datetime of current time step
 #' @param curr_stop datetime of end of run
 #' @param par_names names of parameters that are being calibrated
@@ -28,11 +27,11 @@
 #' @param npars number of parameters calibrated
 #' @param num_wq_vars number of water quality variables
 #' @param snow_ice_thickness_start vector of snow and ice states
-#' @param avg_surf_temp_start average surface temperature
 #' @param salt_start salt
 #' @param nstates number of nstates simulated
 #' @param state_names state names
 #' @param include_wq boolean; TRUE = use water quality model
+#' @param restart_list list; containing mixing_vars_start & avg_surf_temp_start
 #' @param debug boolen; TRUE = turn on more messages for debugging
 #'
 #' @return list of output variables
@@ -41,7 +40,6 @@
 
 run_model <- function(i,
                       m,
-                      mixing_vars_start,
                       curr_start,
                       curr_stop,
                       par_names,
@@ -67,11 +65,11 @@ run_model <- function(i,
                       npars,
                       num_wq_vars,
                       snow_ice_thickness_start,
-                      avg_surf_temp_start,
                       salt_start,
                       nstates,
                       state_names,
                       include_wq,
+                      restart_list,
                       debug = FALSE){
 
   switch(Sys.info() [["sysname"]],
@@ -84,6 +82,9 @@ run_model <- function(i,
   }else{
     simulate_sss <- management$simulate_sss
   }
+
+  mixing_vars_start = restart_list$mixing_vars[,i-1 , m]
+  avg_surf_temp_start = restart_list$avg_surf_temp[i-1, m]
 
   update_glm_nml_list <- list()
   update_aed_nml_list <- list()
@@ -425,8 +426,7 @@ run_model <- function(i,
   return(list(x_star_end  = x_star_end,
               lake_depth_end  = GLM_temp_wq_out$lake_depth,
               snow_ice_thickness_end  = GLM_temp_wq_out$snow_wice_bice,
-              avg_surf_temp_end  = GLM_temp_wq_out$avg_surf_temp,
-              mixing_vars_end = GLM_temp_wq_out$mixing_vars,
+              restart_vars = GLM_temp_wq_out$restart_vars,
               salt_end = salt_end,
               diagnostics_end  = diagnostics,
               model_internal_depths  = glm_depths_end,

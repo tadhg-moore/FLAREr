@@ -221,18 +221,21 @@ run_da_forecast <- function(states_init,
   }
 
 
-  mixing_vars <- array(NA, dim = c(17, nsteps, nmembers))
   model_internal_depths <- array(NA, dim = c(nsteps, 500, nmembers))
   lake_depth <- array(NA, dim = c(nsteps, nmembers))
   snow_ice_thickness <- array(NA, dim = c(3, nsteps, nmembers))
-  avg_surf_temp <- array(NA, dim = c(nsteps, nmembers))
   salt <- array(NA, dim = c(nsteps, ndepths_modeled, nmembers))
-
+  restart_list = NULL
+  mixing_vars <- array(NA, dim = c(17, nsteps, nmembers))
+  avg_surf_temp <- array(NA, dim = c(nsteps, nmembers))
   mixing_vars[,1 ,] <- aux_states_init$mixing_vars
+  avg_surf_temp[1, ] <- aux_states_init$avg_surf_temp
+  restart_list <- list(mixing_vars = mixing_vars,
+                       avg_surf_temp = avg_surf_temp)
+
   model_internal_depths[1, ,] <- aux_states_init$model_internal_depths
   lake_depth[1, ] <- aux_states_init$lake_depth
   snow_ice_thickness[,1 , ] <- aux_states_init$snow_ice_thickness
-  avg_surf_temp[1, ] <- aux_states_init$avg_surf_temp
   salt[1, , ] <- aux_states_init$salt
 
   if(config$da_setup$assimilate_first_step){
@@ -317,8 +320,8 @@ run_da_forecast <- function(states_init,
     }
 
     # Variables that need to be exported at each timestep
-    parallel::clusterExport(cl, varlist = list("x", "i", "mixing_vars", "model_internal_depths", "lake_depth",
-                                               "snow_ice_thickness", "avg_surf_temp", "salt"),
+    parallel::clusterExport(cl, varlist = list("x", "i", "restart_list", "model_internal_depths", "lake_depth",
+                                               "snow_ice_thickness", "salt"),
                             envir = environment())
 
 
@@ -369,7 +372,6 @@ run_da_forecast <- function(states_init,
 
         out <- FLAREr:::run_model(i,
                                  m,
-                                 mixing_vars_start = mixing_vars[,i-1 , m],
                                  curr_start,
                                  curr_stop,
                                  par_names,
@@ -395,11 +397,11 @@ run_da_forecast <- function(states_init,
                                  npars,
                                  num_wq_vars,
                                  snow_ice_thickness_start = snow_ice_thickness[, i-1, m ],
-                                 avg_surf_temp_start = avg_surf_temp[i-1, m],
                                  salt_start = salt[i-1, , m],
                                  nstates,
                                  state_names = states_config$state_names,
                                  include_wq = config$include_wq,
+                                 restart_list = restart_list,
                                  debug = debug)
       })
 
@@ -408,9 +410,8 @@ run_da_forecast <- function(states_init,
         x_star[m, ] <- out[[m]]$x_star_end
         lake_depth[i ,m ] <- out[[m]]$lake_depth_end
         snow_ice_thickness[,i ,m] <- out[[m]]$snow_ice_thickness_end
-        avg_surf_temp[i , m] <- out[[m]]$avg_surf_temp_end
-        mixing_vars[, i, m] <- out[[m]]$mixing_vars_end
-        diagnostics[, i, , m] <- out[[m]]$diagnostics_end
+        restart_list$avg_surf_temp[i , m] <- out[[m]]$restart_vars$avg_surf_temp
+        restart_list$mixing_vars[, i, m] <- out[[m]]$restart_vars$mixing_vars
         model_internal_depths[i, ,m] <- out[[m]]$model_internal_depths
         salt[i, , m]  <- out[[m]]$salt_end
         curr_pars[m, ] <- out[[m]]$curr_pars
@@ -818,9 +819,8 @@ run_da_forecast <- function(states_init,
               forecast_iteration_id = forecast_iteration_id,
               forecast_project_id = config$run_config$sim_name,
               time_of_forecast = time_of_forecast,
-              mixing_vars =  mixing_vars,
+              restart_list =  restart_list,
               snow_ice_thickness = snow_ice_thickness,
-              avg_surf_temp = avg_surf_temp,
               lake_depth = lake_depth,
               salt = salt,
               model_internal_depths = model_internal_depths,

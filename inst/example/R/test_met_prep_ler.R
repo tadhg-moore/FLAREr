@@ -5,19 +5,16 @@ temp_dir <- tempdir()
 file.copy(from = template_folder, to = temp_dir, recursive = TRUE)
 
 test_directory <- file.path(temp_dir, "example")
-# print(list.files(test_directory))
-# print(readLines(file.path(test_directory, "test_met_prep.R")))
-
 
 lake_directory <- test_directory
-configuration_directory <- file.path(lake_directory, "configuration")
+configuration_directory <- file.path(lake_directory, "configuration","default")
 execute_directory <- file.path(test_directory, "flare_tempdir")
 qaqc_data_directory <- file.path(test_directory, "data_processed")
 forecast_input_directory <- file.path(test_directory, "forecasted_drivers")
 
 ##### Read configuration files
-config <- yaml::read_yaml(file.path(configuration_directory, "FLAREr","configure_flare_ler.yml"))
-run_config <- yaml::read_yaml(file.path(configuration_directory, "FLAREr","configure_run.yml"))
+config <- yaml::read_yaml(file.path(configuration_directory, "configure_flare.yml"))
+run_config <- yaml::read_yaml(file.path(configuration_directory, "configure_run.yml"))
 
 config$run_config <- run_config
 config$file_path$noaa_directory <- file.path(forecast_input_directory, config$met$forecast_met_model)

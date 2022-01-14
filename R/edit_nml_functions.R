@@ -161,14 +161,16 @@ get_glm_nc_var_all_wq <- function(ncFile,working_dir, z_out,vars_depth, vars_no_
 
   ncdf4::nc_close(glm_nc)
 
+  restart_vars <- list(avg_surf_temp = avg_surf_temp,
+                       mixing_vars = mixing_vars)
+
 
   return(list(output = output,
               output_no_depth = output_no_depth,
               lake_depth = heights_surf,
               depths_enkf = rev(heights_surf - heights),
               snow_wice_bice = c(snow, ice_white, ice_blue),
-              avg_surf_temp = avg_surf_temp,
-              mixing_vars = mixing_vars,
+              restart_vars = restart_vars,
               salt = salt,
               diagnostics_output = diagnostics_output))
 }
