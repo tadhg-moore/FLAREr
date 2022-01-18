@@ -38,73 +38,12 @@ test_that("LER inflow & outflow files are generated", {
   testthat::expect_equal(file.exists(inflow_outflow_files[[2]]), expected = rep(TRUE, 21))
 })
 
-#Create observation matrix
-test_that("observation matrix is generated and correct", {
-
-  template_folder <- system.file("example", package = "FLAREr")
-  temp_dir <- tempdir()
-  # dir.create("example")
-  file.copy(from = template_folder, to = temp_dir, recursive = TRUE)
-
-  # test_directory <- "C:\\Users\\mooret\\Desktop\\FLARE\\flare-1\\inst\\data"
-  test_directory <- file.path(temp_dir, "example")
-
-  source(file.path(test_directory, "R/test_met_prep.R"))
-
-  obs <- FLAREr::create_obs_matrix(cleaned_observations_file_long,
-                                   obs_config,
-                                   config)
-  testthat::expect_true(is.array(obs))
-
-  testthat::expect_true(any(!is.na(obs[1, , ])))
-
-})
-
-test_that("generate states to obs mapping", {
-
-  template_folder <- system.file("example", package = "FLAREr")
-  temp_dir <- tempdir()
-  file.copy(from = template_folder, to = temp_dir, recursive = TRUE)
-
-  test_directory <- file.path(temp_dir, "example")
-
-  source(file.path(test_directory, "R/test_met_prep.R"))
-
-  states_config <- FLAREr::generate_states_to_obs_mapping(states_config, obs_config)
-  testthat::expect_true(is.data.frame(states_config))
-})
-
-test_that("initial model error is generated", {
-
-  template_folder <- system.file("example", package = "FLAREr")
-  temp_dir <- tempdir()
-  # dir.create("example")
-  file.copy(from = template_folder, to = temp_dir, recursive = TRUE)
-
-  # test_directory <- "C:\\Users\\mooret\\Desktop\\FLARE\\flare-1\\inst\\data"
-  test_directory <- file.path(temp_dir, "example")
-
-  source(file.path(test_directory, "R/test_met_prep.R"))
-
-  config_file_directory <- file.path(config$file_path$configuration_directory, "flarer")
-
-  model_sd <- FLAREr::initiate_model_error(config, states_config)
-  testthat::expect_true(is.array(model_sd))
-  testthat::expect_true(any(!is.na(model_sd)))
-})
-
 #Set initial conditions
 test_that("LER-GLM initial conditions are generated", {
 
   template_folder <- system.file("example", package = "FLAREr")
-  temp_dir <- tempdir()
-  # dir.create("example")
-  file.copy(from = template_folder, to = temp_dir, recursive = TRUE)
+  source(file.path(template_folder, "R/test_met_prep_ler.R"))
 
-  # test_directory <- "C:\\Users\\mooret\\Desktop\\FLARE\\flare-1\\inst\\data"
-  test_directory <- file.path(temp_dir, "example")
-
-  source(file.path(test_directory, "R/test_met_prep_ler.R"))
   config$model_settings$model <- "GLM"
 
   obs <- FLAREr::create_obs_matrix(cleaned_observations_file_long,
@@ -126,14 +65,8 @@ test_that("LER-GLM initial conditions are generated", {
 test_that("LER-GOTM initial conditions are generated", {
 
   template_folder <- system.file("example", package = "FLAREr")
-  temp_dir <- tempdir()
-  # dir.create("example")
-  file.copy(from = template_folder, to = temp_dir, recursive = TRUE)
+  source(file.path(template_folder, "R/test_met_prep_ler.R"))
 
-  # test_directory <- "C:\\Users\\mooret\\Desktop\\FLARE\\flare-1\\inst\\data"
-  test_directory <- file.path(temp_dir, "example")
-
-  source(file.path(test_directory, "R/test_met_prep_ler.R"))
   config$model_settings$model <- "GOTM"
 
   obs <- FLAREr::create_obs_matrix(cleaned_observations_file_long,
@@ -155,14 +88,8 @@ test_that("LER-GOTM initial conditions are generated", {
 test_that("LER-Simstrat initial conditions are generated", {
 
   template_folder <- system.file("example", package = "FLAREr")
-  temp_dir <- tempdir()
-  # dir.create("example")
-  file.copy(from = template_folder, to = temp_dir, recursive = TRUE)
+  source(file.path(template_folder, "R/test_met_prep_ler.R"))
 
-  # test_directory <- "C:\\Users\\mooret\\Desktop\\FLARE\\flare-1\\inst\\data"
-  test_directory <- file.path(temp_dir, "example")
-
-  source(file.path(test_directory, "R/test_met_prep_ler.R"))
   config$model_settings$model <- "Simstrat"
 
   obs <- FLAREr::create_obs_matrix(cleaned_observations_file_long,
@@ -181,7 +108,6 @@ test_that("LER-Simstrat initial conditions are generated", {
 })
 
 # LER-GLM-EnKF Tests ----
-# library(testthat)
 test_that("LER-GLM-EnKF can be run", {
 
   template_folder <- system.file("example", package = "FLAREr")

@@ -13,7 +13,7 @@ qaqc_data_directory <- file.path(test_directory, "data_processed")
 forecast_input_directory <- file.path(test_directory, "forecasted_drivers")
 
 ##### Read configuration files
-config <- yaml::read_yaml(file.path(configuration_directory, "configure_flare.yml"))
+config <- yaml::read_yaml(file.path(configuration_directory, "configure_flare_ler.yml"))
 run_config <- yaml::read_yaml(file.path(configuration_directory, "configure_run.yml"))
 
 config$run_config <- run_config
@@ -32,9 +32,9 @@ if(!dir.exists(config$file_path$execute_directory)){
 
 config$qaqc_data_directory <- qaqc_data_directory
 
-pars_config <- readr::read_csv(file.path(configuration_directory, "FLAREr", config$model_settings$par_config_file), col_types = readr::cols())
-obs_config <- readr::read_csv(file.path(configuration_directory, "FLAREr", config$model_settings$obs_config_file), col_types = readr::cols())
-states_config <- readr::read_csv(file.path(configuration_directory, "FLAREr", config$model_settings$states_config_file), col_types = readr::cols())
+pars_config <- readr::read_csv(file.path(configuration_directory, config$model_settings$par_config_file), col_types = readr::cols())
+obs_config <- readr::read_csv(file.path(configuration_directory, config$model_settings$obs_config_file), col_types = readr::cols())
+states_config <- readr::read_csv(file.path(configuration_directory, config$model_settings$states_config_file), col_types = readr::cols())
 
 #Download and process observations (already done)
 

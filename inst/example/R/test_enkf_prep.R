@@ -25,6 +25,7 @@ config$file_path$forecast_output_directory <- file.path(test_directory, "forecas
 config$file_path$qaqc_data_directory <- file.path(test_directory, "data_processed")
 
 config$model_settings$model <- "GLM"
+config$da_setup$ensemble_size <- 21
 
 if(!dir.exists(config$file_path$execute_directory)){
   dir.create(config$file_path$execute_directory)

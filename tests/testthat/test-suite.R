@@ -21,15 +21,13 @@ test_that("inflow & outflow files are generated", {
 
   source(file.path(template_folder, "R/test_inflow_prep.R"))
 
-
   inflow_forecast_path <- config$file_path$inflow_directory
 
-  #### NEED A TEST HERE TO CHECK THAT INFLOW FILES ARE GENERATED AND CORRECT
-  inflow_outflow_files <- FLAREr::create_glm_inflow_outflow_files(inflow_file_dir = inflow_forecast_path,
-                                                                 inflow_obs = cleaned_inflow_file,
-                                                                 working_directory = config$file_path$execute_directory,
-                                                                 config,
-                                                                 state_names = NULL)
+  inflow_outflow_files <- FLAREr::create_inflow_outflow_files(inflow_file_dir = inflow_forecast_path,
+                                                              inflow_obs = cleaned_inflow_file,
+                                                              working_directory = config$file_path$execute_directory,
+                                                              config,
+                                                              state_names = NULL)
 
   inflow_file_names <- inflow_outflow_files$inflow_file_name
   outflow_file_names <- inflow_outflow_files$outflow_file_name
@@ -38,20 +36,12 @@ test_that("inflow & outflow files are generated", {
   testthat::expect_equal(file.exists(inflow_outflow_files[[2]]), expected = rep(TRUE, 21))
 })
 
-
-
 # Create observation matrix ----
 test_that("observation matrix is generated and correct", {
 
   template_folder <- system.file("example", package = "FLAREr")
-  temp_dir <- tempdir()
-  # dir.create("example")
-  file.copy(from = template_folder, to = temp_dir, recursive = TRUE)
 
-  # test_directory <- "C:\\Users\\mooret\\Desktop\\FLARE\\flare-1\\inst\\data"
-  test_directory <- file.path(temp_dir, "example")
-
-  source(file.path(test_directory, "R/test_met_prep.R"))
+  source(file.path(template_folder, "R/test_met_prep.R"))
 
   obs <- FLAREr::create_obs_matrix(cleaned_observations_file_long,
                                   obs_config,
@@ -62,37 +52,23 @@ test_that("observation matrix is generated and correct", {
 
 })
 
-
 # State to obs mapping ----
 test_that("generate states to obs mapping", {
 
   template_folder <- system.file("example", package = "FLAREr")
-  temp_dir <- tempdir()
-  # dir.create("example")
-  file.copy(from = template_folder, to = temp_dir, recursive = TRUE)
 
-  # test_directory <- "C:\\Users\\mooret\\Desktop\\FLARE\\flare-1\\inst\\data"
-  test_directory <- file.path(temp_dir, "example")
-
-  source(file.path(test_directory, "R/test_met_prep.R"))
+  source(file.path(template_folder, "R/test_met_prep.R"))
 
   states_config <- FLAREr::generate_states_to_obs_mapping(states_config, obs_config)
   testthat::expect_true(is.data.frame(states_config))
 })
 
-
 # Initial model error ----
 test_that("initial model error is generated", {
 
   template_folder <- system.file("example", package = "FLAREr")
-  temp_dir <- tempdir()
-  # dir.create("example")
-  file.copy(from = template_folder, to = temp_dir, recursive = TRUE)
 
-  # test_directory <- "C:\\Users\\mooret\\Desktop\\FLARE\\flare-1\\inst\\data"
-  test_directory <- file.path(temp_dir, "example")
-
-  source(file.path(test_directory, "R/test_met_prep.R"))
+  source(file.path(template_folder, "R/test_met_prep.R"))
 
   config_file_directory <- file.path(config$file_path$configuration_directory, "flarer")
 
@@ -101,19 +77,12 @@ test_that("initial model error is generated", {
   testthat::expect_true(any(!is.na(model_sd)))
 })
 
-
 # Set initial conditions ----
 test_that("initial conditions are generated", {
 
   template_folder <- system.file("example", package = "FLAREr")
-  temp_dir <- tempdir()
-  # dir.create("example")
-  file.copy(from = template_folder, to = temp_dir, recursive = TRUE)
 
-  # test_directory <- "C:\\Users\\mooret\\Desktop\\FLARE\\flare-1\\inst\\data"
-  test_directory <- file.path(temp_dir, "example")
-
-  source(file.path(test_directory, "R/test_met_prep.R"))
+  source(file.path(template_folder, "R/test_met_prep.R"))
 
   obs <- FLAREr::create_obs_matrix(cleaned_observations_file_long,
                                   obs_config,
@@ -135,16 +104,6 @@ test_that("EnKF can be run", {
   template_folder <- system.file("example", package = "FLAREr")
 
   source(file.path(template_folder, "R/test_enkf_prep.R"))
-
-  obs <- FLAREr::create_obs_matrix(cleaned_observations_file_long,
-                                  obs_config,
-                                  config)
-
-  init <- FLAREr::generate_initial_conditions(states_config,
-                                             obs_config,
-                                             pars_config,
-                                             obs,
-                                             config)
 
   # states_init = init$states
   # pars_init = init$pars
@@ -208,32 +167,14 @@ test_that("EnKF can be run", {
                           qaqc_data_directory = config$file_path$qaqc_data_directory)
   file_chk <- list.files(config$file_path$forecast_output_directory, pattern = ".pdf")
   testthat::expect_true(length(file_chk) > 0)
-
-
 })
 
 # Particle filter ----
 test_that("particle filter can be run", {
 
   template_folder <- system.file("example", package = "FLAREr")
-  temp_dir <- tempdir()
-  # dir.create("example")
-  file.copy(from = template_folder, to = temp_dir, recursive = TRUE)
 
-  # test_directory <- "C:\\Users\\mooret\\Desktop\\FLARE\\flare-1\\inst\\data"
-  test_directory <- file.path(temp_dir, "example")
-
-  source(file.path(test_directory, "R/test_enkf_prep.R"))
-
-  obs <- FLAREr::create_obs_matrix(cleaned_observations_file_long,
-                                  obs_config,
-                                  config)
-
-  init <- FLAREr::generate_initial_conditions(states_config,
-                                             obs_config,
-                                             pars_config,
-                                             obs,
-                                             config)
+  source(file.path(template_folder, "R/test_enkf_prep.R"))
 
   # states_init = init$states
   # pars_init = init$pars
@@ -296,31 +237,14 @@ test_that("particle filter can be run", {
                           qaqc_data_directory = config$file_path$qaqc_data_directory)
   file_chk <- list.files(config$file_path$forecast_output_directory, pattern = ".pdf")
   testthat::expect_true(length(file_chk) > 0)
-
 })
 
 # EnKF no inflows/outflows ----
 test_that("EnKF can be run with NO inflows/outflows", {
 
   template_folder <- system.file("example", package = "FLAREr")
-  temp_dir <- tempdir()
-  # dir.create("example")
-  file.copy(from = template_folder, to = temp_dir, recursive = TRUE)
 
-  # test_directory <- "C:\\Users\\mooret\\Desktop\\FLARE\\flare-1\\inst\\data"
-  test_directory <- file.path(temp_dir, "example")
-
-  source(file.path(test_directory, "R/test_enkf_prep.R"))
-
-  obs <- FLAREr::create_obs_matrix(cleaned_observations_file_long,
-                                   obs_config,
-                                   config)
-
-  init <- FLAREr::generate_initial_conditions(states_config,
-                                              obs_config,
-                                              pars_config,
-                                              obs,
-                                              config)
+  source(file.path(template_folder, "R/test_enkf_prep.R"))
 
   #Run EnKF
   enkf_output <- FLAREr::run_da_forecast(states_init = init$states,
@@ -364,7 +288,6 @@ test_that("EnKF can be run with NO inflows/outflows", {
                            qaqc_data_directory = config$file_path$qaqc_data_directory)
   file_chk <- list.files(config$file_path$forecast_output_directory, pattern = ".pdf")
   testthat::expect_true(length(file_chk) > 0)
-
 })
 
 # end
