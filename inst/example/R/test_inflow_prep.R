@@ -42,6 +42,4 @@ cleaned_observations_file_long <- file.path(config$file_path$qaqc_data_directory
 cleaned_inflow_file <- file.path(config$file_path$qaqc_data_directory, "/inflow_postQAQC.csv")
 observed_met_file <- file.path(config$file_path$qaqc_data_directory,"observed-met_fcre.nc")
 
-historical_met_error <- met_out$historical_met_error
-
 inflow_forecast_path <- config$file_path$inflow_directory
