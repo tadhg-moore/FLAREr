@@ -7,10 +7,10 @@
 update_run_config(
   config,
   lake_directory,
-  configure_run_file,
-  saved_file,
-  new_horizon,
-  day_advance = 1,
+  configure_run_file = "configure_run.yml",
+  saved_file = NA,
+  new_horizon = NA,
+  day_advance = NA,
   new_start_datetime = TRUE
 )
 }
