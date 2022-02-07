@@ -4,7 +4,11 @@
 \alias{update_run_config_neon}
 \title{Update run configuration and upload to s3 bucket}
 \usage{
-update_run_config_neon(config, lake_directory, configure_run_file)
+update_run_config_neon(
+  config,
+  lake_directory,
+  configure_run_file = "configure_run.yml"
+)
 }
 \arguments{
 \item{config}{flare configuration object}
