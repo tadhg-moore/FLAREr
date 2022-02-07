@@ -8,19 +8,26 @@
 #' @return
 #' @export
 #'
-get_run_config <- function(configure_run_file, lake_directory, config, clean_start = FALSE){
+get_run_config <- function(configure_run_file = "configure_run.yml", lake_directory, config, clean_start = FALSE, config_set_name = "default"){
 
   if(clean_start | !config$run_config$use_s3){
     restart_exists <- file.exists(file.path(lake_directory, "restart", config$location$site_id, config$run_config$sim_name, configure_run_file))
     if(!restart_exists){
-      file.copy(file.path(lake_directory,"configuration","FLAREr",configure_run_file), file.path(lake_directory, "restart", config$location$site_id, config$run_config$sim_name, configure_run_file))
+      file.copy(file.path(lake_directory,"configuration",config_set_name,configure_run_file), file.path(lake_directory, "restart", config$location$site_id, config$run_config$sim_name, configure_run_file))
     }
   }else if(config$run_config$use_s3){
-    restart_exists <- suppressMessages(aws.s3::object_exists(object = file.path(config$location$site_id, config$run_config$sim_name, configure_run_file), bucket = "restart"))
+    restart_exists <- suppressMessages(aws.s3::object_exists(object = file.path(config$location$site_id, config$run_config$sim_name, configure_run_file),
+                                                             bucket = "restart",
+                                                             region = Sys.getenv("AWS_DEFAULT_REGION"),
+                                                             use_https = as.logical(Sys.getenv("USE_HTTPS"))))
     if(restart_exists){
-      aws.s3::save_object(object = file.path(config$location$site_id, config$run_config$sim_name, configure_run_file), bucket = "restart", file = file.path(lake_directory, "restart", config$location$site_id, config$run_config$sim_name, configure_run_file))
+      aws.s3::save_object(object = file.path(config$location$site_id, config$run_config$sim_name, configure_run_file),
+                          bucket = "restart",
+                          file = file.path(lake_directory, "restart", config$location$site_id, config$run_config$sim_name, configure_run_file),
+                          region = Sys.getenv("AWS_DEFAULT_REGION"),
+                          use_https = as.logical(Sys.getenv("USE_HTTPS")))
     }else{
-      file.copy(file.path(lake_directory,"configuration","FLAREr",configure_run_file), file.path(lake_directory, "restart", config$location$site_id, config$run_config$sim_name, configure_run_file))
+      file.copy(file.path(lake_directory,"configuration",config_set_name,configure_run_file), file.path(lake_directory, "restart", config$location$site_id, config$run_config$sim_name, configure_run_file))
     }
   }
   run_config <- yaml::read_yaml(file.path(lake_directory, "restart", config$location$site_id, config$run_config$sim_name, configure_run_file))
@@ -84,13 +91,25 @@ put_targets <- function(site_id, cleaned_insitu_file = NA, cleaned_met_file = NA
 
   if(use_s3){
     if(!is.na(cleaned_insitu_file)){
-      aws.s3::put_object(file = cleaned_insitu_file, object = file.path(site_id, basename(cleaned_insitu_file)), bucket = "targets")
+      aws.s3::put_object(file = cleaned_insitu_file,
+                         object = file.path(site_id, basename(cleaned_insitu_file)),
+                         bucket = "targets",
+                         region = Sys.getenv("AWS_DEFAULT_REGION"),
+                         use_https = as.logical(Sys.getenv("USE_HTTPS")))
     }
     if(!is.na(cleaned_inflow_file)){
-      aws.s3::put_object(file = cleaned_inflow_file, object = file.path(site_id, basename(cleaned_inflow_file)), bucket = "targets")
+      aws.s3::put_object(file = cleaned_inflow_file,
+                         object = file.path(site_id, basename(cleaned_inflow_file)),
+                         bucket = "targets",
+                         region = Sys.getenv("AWS_DEFAULT_REGION"),
+                         use_https = as.logical(Sys.getenv("USE_HTTPS")))
     }
     if(!is.na(cleaned_met_file)){
-      aws.s3::put_object(file = cleaned_met_file, object = file.path(site_id, basename(cleaned_met_file)), bucket = "targets")
+      aws.s3::put_object(file = cleaned_met_file,
+                         object = file.path(site_id, basename(cleaned_met_file)),
+                         bucket = "targets",
+                         region = Sys.getenv("AWS_DEFAULT_REGION"),
+                         use_https = as.logical(Sys.getenv("USE_HTTPS")))
     }
   }
 }
@@ -105,7 +124,9 @@ put_targets <- function(site_id, cleaned_insitu_file = NA, cleaned_met_file = NA
 #'
 get_targets <- function(lake_directory, config){
   if(config$run_config$use_s3){
-    download_s3_objects(lake_directory, bucket = "targets", prefix = config$location$site_id)
+    download_s3_objects(lake_directory,
+                        bucket = "targets",
+                        prefix = config$location$site_id)
   }
 }
 
@@ -120,11 +141,11 @@ get_targets <- function(lake_directory, config){
 #' @export
 #'
 get_stacked_noaa <- function(lake_directory, config, averaged = TRUE){
-    if(averaged){
-      download_s3_objects(lake_directory, bucket = "drivers", prefix = file.path("noaa/NOAAGEFS_1hr_stacked_average",config$location$site_id))
-    }else{
-      download_s3_objects(lake_directory, bucket = "drivers", prefix = file.path("noaa/NOAAGEFS_1hr_stacked",config$location$site_id))
-    }
+  if(averaged){
+    download_s3_objects(lake_directory, bucket = "drivers", prefix = file.path("noaa/NOAAGEFS_1hr_stacked_average",config$location$site_id))
+  }else{
+    download_s3_objects(lake_directory, bucket = "drivers", prefix = file.path("noaa/NOAAGEFS_1hr_stacked",config$location$site_id))
+  }
 }
 
 #' Get file path for driver forecasts
@@ -182,14 +203,14 @@ get_driver_forecast <- function(lake_directory, forecast_path){
 #' @return
 #' @export
 #'
-set_configuration <- function(configure_run_file, lake_directory, clean_start = FALSE){
-  run_config <- yaml::read_yaml(file.path(lake_directory,"configuration","FLAREr",configure_run_file))
-  config <- yaml::read_yaml(file.path(lake_directory,"configuration","FLAREr",run_config$configure_flare))
+set_configuration <- function(configure_run_file = "configure_run.yml", lake_directory, clean_start = FALSE, config_set_name = "default"){
+  run_config <- yaml::read_yaml(file.path(lake_directory,"configuration",config_set_name,configure_run_file))
+  config <- yaml::read_yaml(file.path(lake_directory,"configuration",config_set_name,run_config$configure_flare))
   config$run_config <- run_config
   config$file_path$qaqc_data_directory <- file.path(lake_directory, "targets", config$location$site_id)
   config$file_path$data_directory <- file.path(lake_directory, "data_raw")
   config$file_path$noaa_directory <- file.path(lake_directory, "drivers")
-  config$file_path$configuration_directory <- file.path(lake_directory, "configuration")
+  config$file_path$configuration_directory <- file.path(lake_directory, "configuration",config_set_name)
   config$file_path$inflow_directory <- file.path(lake_directory, "drivers")
   config$file_path$analysis_directory <- file.path(lake_directory, "analysis")
   config$file_path$forecast_output_directory <- file.path(lake_directory, "forecasts", config$location$site_id)
@@ -227,7 +248,7 @@ set_configuration <- function(configure_run_file, lake_directory, clean_start = 
     dir.create(config$file_path$execute_directory, recursive = TRUE)
   }
 
-  run_config <- get_run_config(configure_run_file, lake_directory, config, clean_start = clean_start)
+  run_config <- get_run_config(configure_run_file, lake_directory, config, clean_start, config_set_name = config_set_name)
   config$run_config <- run_config
 
   return(config)
@@ -247,7 +268,9 @@ get_restart_file <- function(config, lake_directory){
     if(config$run_config$use_s3){
       aws.s3::save_object(object = file.path(config$location$site_id, restart_file),
                           bucket = "forecasts",
-                          file = file.path(lake_directory, "forecasts", config$location$site_id, restart_file))
+                          file = file.path(lake_directory, "forecasts", config$location$site_id, restart_file),
+                          region = Sys.getenv("AWS_DEFAULT_REGION"),
+                          use_https = as.logical(Sys.getenv("USE_HTTPS")))
     }
     config$run_config$restart_file <- file.path(lake_directory, "forecasts", config$location$site_id, restart_file)
   }
@@ -266,23 +289,31 @@ get_restart_file <- function(config, lake_directory){
 #' @return
 #' @export
 #'
-update_run_config <- function(config, lake_directory, configure_run_file, saved_file, new_horizon, day_advance = 1, new_start_datetime = TRUE){
+update_run_config <- function(config, lake_directory, configure_run_file = "configure_run.yml", saved_file = NA, new_horizon = NA, day_advance = NA, new_start_datetime = TRUE){
   if(new_start_datetime){
-  config$run_config$start_datetime <- config$run_config$forecast_start_datetime
+    config$run_config$start_datetime <- config$run_config$forecast_start_datetime
   }
-  if(config$run_config$forecast_horizon == 0){
-    config$run_config$forecast_horizon <- new_horizon
+  if(!is.na(new_horizon)){
+    if(!is.na(config$run_config$forecast_horizon)){
+      config$run_config$forecast_horizon <- new_horizon
+    }
   }
-  config$run_config$forecast_start_datetime <- as.character(lubridate::as_datetime(config$run_config$forecast_start_datetime) + lubridate::days(day_advance))
-  if(lubridate::hour(config$run_config$forecast_start_datetime) == 0){
-    config$run_config$forecast_start_datetime <- paste(config$run_config$forecast_start_datetime, "00:00:00")
+  if(!is.na(day_advance)){
+    config$run_config$forecast_start_datetime <- as.character(lubridate::as_datetime(config$run_config$forecast_start_datetime) + lubridate::days(day_advance))
+    if(lubridate::hour(config$run_config$forecast_start_datetime) == 0){
+      config$run_config$forecast_start_datetime <- paste(config$run_config$forecast_start_datetime, "00:00:00")
+    }
   }
   if(!is.na(saved_file)){
-  config$run_config$restart_file <- basename(saved_file)
+    config$run_config$restart_file <- basename(saved_file)
   }
   yaml::write_yaml(config$run_config, file = file.path(lake_directory,"restart",config$location$site_id,config$run_config$sim_name,configure_run_file))
   if(config$run_config$use_s3){
-    aws.s3::put_object(file = file.path(lake_directory,"restart",config$location$site_id,config$run_config$sim_name, configure_run_file), object = file.path(config$location$site_id,config$run_config$sim_name, configure_run_file), bucket = "restart")
+    aws.s3::put_object(file = file.path(lake_directory,"restart",config$location$site_id,config$run_config$sim_name, configure_run_file),
+                       object = file.path(config$location$site_id,config$run_config$sim_name, configure_run_file),
+                       bucket = "restart",
+                       region = Sys.getenv("AWS_DEFAULT_REGION"),
+                       use_https = as.logical(Sys.getenv("USE_HTTPS")))
   }
   invisible(config)
 }
@@ -296,7 +327,7 @@ update_run_config <- function(config, lake_directory, configure_run_file, saved_
 #' @return
 #' @export
 #'
-update_run_config_neon <- function(config, lake_directory, configure_run_file){
+update_run_config_neon <- function(config, lake_directory, configure_run_file = "configure_run.yml"){
   config$run_config$start_datetime <- config$run_config$forecast_start_datetime
   if(config$run_config$forecast_horizon == 0){
     config$run_config$forecast_horizon <- new_horizon
@@ -308,7 +339,11 @@ update_run_config_neon <- function(config, lake_directory, configure_run_file){
   config$run_config$restart_file <- basename(saved_file)
   yaml::write_yaml(config$run_config, file = file.path(lake_directory,"restart",config$location$site_id,config$run_config$sim_name,configure_run_file))
   if(config$run_config$use_s3){
-    aws.s3::put_object(file = file.path(lake_directory,"restart",config$location$site_id,config$run_config$sim_name, configure_run_file), object = file.path(config$location$site_id,config$run_config$sim_name, configure_run_file), bucket = "restart")
+    aws.s3::put_object(file = file.path(lake_directory,"restart",config$location$site_id,config$run_config$sim_name, configure_run_file),
+                       object = file.path(config$location$site_id,config$run_config$sim_name, configure_run_file),
+                       bucket = "restart",
+                       region = Sys.getenv("AWS_DEFAULT_REGION"),
+                       use_https = as.logical(Sys.getenv("USE_HTTPS")))
   }
   invisible(config)
 }
@@ -325,11 +360,19 @@ update_run_config_neon <- function(config, lake_directory, configure_run_file){
 #'
 put_forecast <- function(saved_file, eml_file_name, config){
   if(config$run_config$use_s3){
-    success <- aws.s3::put_object(file = saved_file, object = file.path(config$location$site_id, basename(saved_file)), bucket = "forecasts")
+    success <- aws.s3::put_object(file = saved_file,
+                                  object = file.path(config$location$site_id, basename(saved_file)),
+                                  bucket = "forecasts",
+                                  region = Sys.getenv("AWS_DEFAULT_REGION"),
+                                  use_https = as.logical(Sys.getenv("USE_HTTPS")))
     if(success){
       unlink(saved_file)
     }
-    success <- aws.s3::put_object(file = eml_file_name, object = file.path(config$location$site_id, basename(eml_file_name)), bucket = "forecasts")
+    success <- aws.s3::put_object(file = eml_file_name,
+                                  object = file.path(config$location$site_id, basename(eml_file_name)),
+                                  bucket = "forecasts",
+                                  region = Sys.getenv("AWS_DEFAULT_REGION"),
+                                  use_https = as.logical(Sys.getenv("USE_HTTPS")))
     if(success){
       unlink(eml_file_name)
     }
@@ -347,13 +390,20 @@ put_forecast <- function(saved_file, eml_file_name, config){
 #'
 download_s3_objects <- function(lake_directory, bucket, prefix){
 
-  files <- aws.s3::get_bucket(bucket = bucket, prefix = prefix)
+  files <- aws.s3::get_bucket(bucket = bucket,
+                              prefix = prefix,
+                              region = Sys.getenv("AWS_DEFAULT_REGION"),
+                              use_https = as.logical(Sys.getenv("USE_HTTPS")))
   keys <- vapply(files, `[[`, "", "Key", USE.NAMES = FALSE)
   empty <- grepl("/$", keys)
   keys <- keys[!empty]
   if(length(keys) > 0){
     for(i in 1:length(keys)){
-      aws.s3::save_object(object = keys[i],bucket = bucket, file = file.path(lake_directory, bucket, keys[i]))
+      aws.s3::save_object(object = keys[i],
+                          bucket = bucket,
+                          file = file.path(lake_directory, bucket, keys[i]),
+                          region = Sys.getenv("AWS_DEFAULT_REGION"),
+                          use_https = as.logical(Sys.getenv("USE_HTTPS")))
     }
   }
 }
@@ -367,13 +417,19 @@ download_s3_objects <- function(lake_directory, bucket, prefix){
 #' @export
 #'
 delete_restart <- function(site_id, sim_name){
-  files <- aws.s3::get_bucket(bucket = "restart", prefix = file.path(site_id, sim_name))
+  files <- aws.s3::get_bucket(bucket = "restart",
+                              prefix = file.path(site_id, sim_name),
+                              region = Sys.getenv("AWS_DEFAULT_REGION"),
+                              use_https = as.logical(Sys.getenv("USE_HTTPS")))
   keys <- vapply(files, `[[`, "", "Key", USE.NAMES = FALSE)
   empty <- grepl("/$", keys)
   keys <- keys[!empty]
   if(length(keys > 0)){
     for(i in 1:length(keys)){
-      aws.s3::delete_object(object = keys[i], bucket = "restart")
+      aws.s3::delete_object(object = keys[i],
+                            bucket = "restart",
+                            region = Sys.getenv("AWS_DEFAULT_REGION"),
+                            use_https = as.logical(Sys.getenv("USE_HTTPS")))
     }
   }
 }
@@ -385,7 +441,7 @@ delete_restart <- function(site_id, sim_name){
 #' @return
 #' @export
 #'
-initialize_obs_processing <- function(lake_directory, observation_yml = NA){
+initialize_obs_processing <- function(lake_directory, observation_yml = NA, config_set_name = "default"){
 
   curr_dir1 <- file.path(lake_directory, "data_raw")
   if(!dir.exists(curr_dir1)){
@@ -397,7 +453,7 @@ initialize_obs_processing <- function(lake_directory, observation_yml = NA){
   }
 
   if(!is.na(observation_yml)){
-    config_obs <- yaml::read_yaml(file.path(lake_directory,"configuration","observation_processing", observation_yml))
+    config_obs <- yaml::read_yaml(file.path(lake_directory,"configuration",config_set_name, observation_yml))
     config_obs$file_path$data_directory <- curr_dir1
     config_obs$file_path$targets_directory <- curr_dir2
     return(config_obs)
@@ -416,15 +472,18 @@ initialize_obs_processing <- function(lake_directory, observation_yml = NA){
 #' @return
 #' @export
 #'
-check_noaa_present <- function(lake_directory, configure_run_file){
+check_noaa_present <- function(lake_directory, configure_run_file = "configure_run.yml", config_set_name = "default"){
 
-  config <- set_configuration(configure_run_file,lake_directory)
+  config <- set_configuration(configure_run_file,lake_directory, config_set_name = config_set_name)
 
   noaa_forecast_path <- get_driver_forecast_path(config,
                                                  forecast_model = config$met$forecast_met_model)
 
   if(config$run_config$forecast_horizon > 0 & !is.null(noaa_forecast_path)){
-    noaa_files <- aws.s3::get_bucket(bucket = "drivers", prefix = noaa_forecast_path)
+    noaa_files <- aws.s3::get_bucket(bucket = "drivers",
+                                     prefix = noaa_forecast_path,
+                                     region = Sys.getenv("AWS_DEFAULT_REGION"),
+                                     use_https = as.logical(Sys.getenv("USE_HTTPS")))
     noaa_forecast_path <- file.path(lake_directory,"drivers", noaa_forecast_path)
     keys <- vapply(noaa_files, `[[`, "", "Key", USE.NAMES = FALSE)
     empty <- grepl("/$", keys)
@@ -435,7 +494,7 @@ check_noaa_present <- function(lake_directory, configure_run_file){
     noaa_forecasts_ready <- TRUE
   }
 
-  if(length(forecast_files) == 31){
+  if(length(forecast_files) == 31 | length(forecast_files) == 21){
     noaa_forecasts_ready <- TRUE
   }else{
     if(config$run_config$forecast_horizon > 0){
@@ -460,45 +519,57 @@ delete_sim <- function(site_id, sim_name){
 
   if(go){
     message("deleting analysis files")
-    files <- aws.s3::get_bucket(bucket = "analysis", prefix = site_id)
+    files <- aws.s3::get_bucket(bucket = "analysis",
+                                prefix = site_id,
+                                region = Sys.getenv("AWS_DEFAULT_REGION"),
+                                use_https = as.logical(Sys.getenv("USE_HTTPS")))
     keys <- vapply(files, `[[`, "", "Key", USE.NAMES = FALSE)
     empty <- grepl("/$", keys)
     keys <- keys[!empty]
     keys <- keys[stringr::str_detect(keys, sim_name)]
     if(length(keys > 0)){
       for(i in 1:length(keys)){
-        aws.s3::delete_object(object = keys[i], bucket = "analysis")
+        aws.s3::delete_object(object = keys[i],
+                              bucket = "analysis",
+                              region = Sys.getenv("AWS_DEFAULT_REGION"),
+                              use_https = as.logical(Sys.getenv("USE_HTTPS")))
       }
     }
 
     #forecasts
     message("deleting forecast files")
-    files <- aws.s3::get_bucket(bucket = "forecasts", prefix = file.path(site_id))
+    files <- aws.s3::get_bucket(bucket = "forecasts",
+                                prefix = file.path(site_id),
+                                region = Sys.getenv("AWS_DEFAULT_REGION"),
+                                use_https = as.logical(Sys.getenv("USE_HTTPS")))
     keys <- vapply(files, `[[`, "", "Key", USE.NAMES = FALSE)
     empty <- grepl("/$", keys)
     keys <- keys[!empty]
     keys <- keys[stringr::str_detect(keys, sim_name)]
     if(length(keys > 0)){
       for(i in 1:length(keys)){
-        aws.s3::delete_object(object = keys[i], bucket = "forecasts")
+        aws.s3::delete_object(object = keys[i],
+                              bucket = "forecasts",
+                              region = Sys.getenv("AWS_DEFAULT_REGION"),
+                              use_https = as.logical(Sys.getenv("USE_HTTPS")))
       }
     }
 
     message("deleting restart files")
-    files <- aws.s3::get_bucket(bucket = "restart", prefix = file.path(site_id, sim_name))
+    files <- aws.s3::get_bucket(bucket = "restart",
+                                prefix = file.path(site_id, sim_name),
+                                region = Sys.getenv("AWS_DEFAULT_REGION"),
+                                use_https = as.logical(Sys.getenv("USE_HTTPS")))
     keys <- vapply(files, `[[`, "", "Key", USE.NAMES = FALSE)
     empty <- grepl("/$", keys)
     keys <- keys[!empty]
     if(length(keys > 0)){
       for(i in 1:length(keys)){
-        aws.s3::delete_object(object = keys[i], bucket = "restart")
+        aws.s3::delete_object(object = keys[i],
+                              bucket = "restart",
+                              region = Sys.getenv("AWS_DEFAULT_REGION"),
+                              use_https = as.logical(Sys.getenv("USE_HTTPS")))
       }
     }
   }
 }
-
-
-
-
-
-
