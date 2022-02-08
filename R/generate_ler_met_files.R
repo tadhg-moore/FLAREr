@@ -143,6 +143,8 @@ generate_ler_met_files <- function(obs_met_file = NULL,
       combined_met$Relative_Humidity_percent[idx] <- NA
       combined_met$Relative_Humidity_percent <- zoo::na.approx(combined_met$Relative_Humidity_percent, rule = 2)
     }
+    # Catch RelH > 100
+    combined_met$Relative_Humidity_percent[combined_met$Relative_Humidity_percent > 100] <- 100
 
     combined_met$Precipitation_millimeterPerHour <- combined_met$Precipitation_millimeterPerHour * (60 * 60)
 
