@@ -17,12 +17,12 @@ generate_met_files <- function(obs_met_file = NULL,
   if(config$model_settings$use_ler) {
     met_out <- generate_ler_met_files(obs_met_file = obs_met_file,
                                       out_dir = out_dir,
-                                      forecast_dir = config$file_path$noaa_directory,
+                                      forecast_dir = forecast_dir,
                                       config = config)
   } else {
     met_out <- generate_glm_met_files(obs_met_file = obs_met_file,
                                       out_dir = out_dir,
-                                      forecast_dir = config$file_path$noaa_directory,
+                                      forecast_dir = forecast_dir,
                                       config = config)
   }
   return(met_out)
