@@ -97,6 +97,12 @@ create_ler_inflow_outflow_files <- function(inflow_file_dir = NULL,
         dplyr::filter(inflow_num == j) %>%
         dplyr::select(dplyr::all_of(VARS))
 
+      obs_inflow_tmp <- as.data.frame(obs_inflow_tmp)
+      obs_inflow_tmp[, 1] <- format(obs_inflow_tmp[, 1], format="%Y-%m-%d %H:%M:%S")
+      obs_inflow_tmp[, 1] <- lubridate::with_tz(obs_inflow_tmp[, 1]) + lubridate::hours(hour_step)
+      obs_inflow_tmp[, 1] <- format(obs_inflow_tmp[, 1], format="%Y-%m-%d %H:%M:%S")
+      colnames(obs_inflow_tmp) <- c("datetime", "Flow_metersCubedPerSecond", "Water_Temperature_celsius", "Salinity_practicalSalinityUnits")
+
       inflow_file_name <- file.path(working_directory, paste0("inflow",j,".csv"))
 
       readr::write_csv(x = obs_inflow_tmp,
