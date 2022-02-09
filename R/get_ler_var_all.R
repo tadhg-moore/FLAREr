@@ -10,9 +10,9 @@ get_ler_var_all <- function(model,
                             ler_yaml,
                             run_success = run_success) {
 
-  temp <- LakeEnsemblR::get_output(config_yaml = ler_yaml, model = model, vars = "temp", obs_depths = z_out, run_success = run_success)$temp
-  salt <- LakeEnsemblR::get_output(config_yaml = ler_yaml, model = model, vars = "salt", obs_depths = z_out, run_success = run_success)$salt
-  ice <- LakeEnsemblR::get_output(config_yaml = ler_yaml, model = model, vars = "ice_height", run_success = run_success)$ice_height
+  temp <- LakeEnsemblR::get_output(yaml = ler_yaml, model = model, vars = "temp", obs_depths = z_out, run_success = run_success)$temp
+  salt <- LakeEnsemblR::get_output(yaml = ler_yaml, model = model, vars = "salt", obs_depths = z_out, run_success = run_success)$salt
+  ice <- LakeEnsemblR::get_output(yaml = ler_yaml, model = model, vars = "ice_height", run_success = run_success)$ice_height
   deps <- rLakeAnalyzer::get.offsets(temp)
   # Subset to z_out
   idx <- which(z_out %in% deps) + 1
