@@ -194,7 +194,7 @@ run_da_forecast_ler <- function(states_init,
   # }
 
   file.copy(from = file.path(config$file_path$configuration_directory, config$model_settings$ler_bathymetry_file),
-            to = working_directory, overwrite = TRUE)
+            to = file.path(working_directory, config$model_settings$ler_bathymetry_file), overwrite = TRUE)
   yaml_file <- file.path(working_directory, config$model_settings$base_ler_yaml)
 
   config$model_settings$ncore <- min(c(config$model_settings$ncore, parallel::detectCores()))
