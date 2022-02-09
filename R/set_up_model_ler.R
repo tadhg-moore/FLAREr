@@ -25,14 +25,8 @@ set_up_model_ler <- function(model,
 
   if(model == "GLM") {
 
-    # GLM_folder <- executable_location
-    # fl <- c(list.files(GLM_folder, full.names = TRUE))
-    # model_directory <- file.path(ens_working_directory, model)
-    # dir.create(model_directory, showWarnings = FALSE)
-    # tmp <- file.copy(from = fl, to = model_directory, overwrite = TRUE)
-
     dir.create(file.path(ens_working_directory, "GLM"), showWarnings = FALSE)
-    file.copy(from = file.path(config$file_path$configuration_directory, "forecast_model", config$model_settings$model, config$model_settings$base_GLM_nml),
+    file.copy(from = file.path(config$file_path$configuration_directory, config$model_settings$base_GLM_nml),
               to = file.path(ens_working_directory, "GLM", "glm3.nml"), overwrite = TRUE)
 
     non_temp_names <- state_names[which(!(state_names %in% "temp"))]
