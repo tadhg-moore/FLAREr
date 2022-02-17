@@ -796,6 +796,8 @@ run_da_forecast_ler <- function(states_init,
                        signif(sd(pars_corr[,par]),4)))
       }
     }
+    message(paste0("surface_temp: mean ", signif(mean(x[i, , 1])), " sd ", signif(sd(x[i, , 1]))))
+    message(paste0("bottom_temp: mean ", signif(mean(x[i, , ndepths_modeled])), " sd ", signif(sd(x[i, , ndepths_modeled]))))
 
   }
 
