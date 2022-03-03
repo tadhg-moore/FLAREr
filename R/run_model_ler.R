@@ -46,8 +46,6 @@ run_model_ler <- function(model,
                       diagnostics_names,
                       npars,
                       num_wq_vars,
-                      snow_ice_thickness_start,
-                      salt_start,
                       nstates,
                       state_names,
                       include_wq,
@@ -68,13 +66,10 @@ run_model_ler <- function(model,
   model_depths_tmp_tmp <- c(model_depths_tmp, lake_depth_start)
   model_depths_mid <- model_depths_tmp_tmp[1:(length(model_depths_tmp_tmp)-1)] + diff(model_depths_tmp_tmp)/2
 
-  the_sals <- approx(modeled_depths, salt_start, modeled_depths, rule = 2)$y
-
   # Initial temperature
   the_temps_enkf_tmp <- x_start[1:ndepths_modeled]
 
   the_temps <- approx(modeled_depths, the_temps_enkf_tmp, modeled_depths, rule = 2)$y
-
 
   init_prof <- data.frame(Depth_meter = round(modeled_depths, 4),
                           Water_Temperature_celsius = round(the_temps, 4))
@@ -84,18 +79,11 @@ run_model_ler <- function(model,
 
   # GLM ----
   if( model == "GLM") {
-    mixing_vars_start = restart_list$mixing_vars[,i-1 , m]
-    avg_surf_temp_start = restart_list$avg_surf_temp[i-1, m]
 
-    yml$model_parameters$GLM$`init_profiles/restart_variables` <- mixing_vars_start
-
-    # update_glm_nml_list <- list()
     update_aed_nml_list <- list()
     update_phyto_nml_list <- list()
-    # update_glm_nml_names <- c()
     update_aed_nml_names <- c()
     update_phyto_nml_names <- c()
-    # list_index <- 1
     list_index_aed <- 1
     list_index_phyto <- 1
 
@@ -168,21 +156,22 @@ run_model_ler <- function(model,
     }
 
 
-    # yml[["model_parameters"]][[model]][["the_temps"]] <- round(the_temps_glm, 4)
-    # yml[["model_parameters"]][[model]][["the_sals"]] <- round(the_sals, 4)
-    # yml[["model_parameters"]][[model]][["the_depths"]] <- round(model_depths_tmp, 4)
-    # yml[["model_parameters"]][[model]][["num_depths"]] <- length(model_depths_tmp)
-    yml[["model_parameters"]][[model]][["init_profiles/lake_depth"]] <- round(lake_depth_start, 4)
-    yml[["model_parameters"]][[model]][["init_profiles/snow_thickness"]] <- 0
-    yml[["model_parameters"]][[model]][["init_profiles/white_ice_thickness"]] <- round(snow_ice_thickness_start[2], 4)
-    yml[["model_parameters"]][[model]][["init_profiles/blue_ice_thickness"]] <- round(snow_ice_thickness_start[3], 4)
-    yml[["model_parameters"]][[model]][["init_profiles/avg_surf_temp"]] <- round(avg_surf_temp_start, 4)
+    inp_list <- list(lake_depth = round(restart_list$lake_depth[i-1, m], 4),
+                     the_depths = round(restart_list$the_depths[i-1, ,m ], 4),
+                     the_temps = init_prof$Water_Temperature_celsius,
+                     the_sals = round(restart_list$the_sals[i-1, ,m ], 4),
+                     snow_thickness = round(restart_list$snow_thickness[i-1, m]),
+                     white_ice_thickness = round(restart_list$white_ice_thickness[i-1, m], 4),
+                     blue_ice_thickness = round(restart_list$blue_ice_thickness[i-1, m], 4),
+                     avg_surf_temp = round(restart_list$avg_surf_temp[i-1, m], 4),
+                     restart_variables = restart_list$restart_variables[, i-1, m]
+                     )
+
+    LakeEnsemblR::write_restart(folder = working_directory, model = model,
+                                restart_list = inp_list)
 
     yml[["model_parameters"]][[model]][["init_profiles/wq_names"]] <- "''"
     yml[["model_parameters"]][[model]][["init_profiles/wq_init_vals"]] <- 0
-
-
-
 
   }
 
@@ -278,18 +267,6 @@ run_model_ler <- function(model,
   }
 
 
-  #if(ncol(as.matrix(inflow_file_names)) == 2){
-  #  tmp <- file.copy(from = inflow_file_names[inflow_outflow_index, 1],
-  #                   to = "inflow_file1.csv", overwrite = TRUE)
-  #  tmp <- file.copy(from = inflow_file_names[inflow_outflow_index, 2],
-  #                   to = "inflow_file2.csv", overwrite = TRUE)
-  #}else{
-  #  tmp <- file.copy(from = inflow_file_names[inflow_outflow_index],
-  #                   to = "inflow_file1.csv", overwrite = TRUE)
-  #}
-  #tmp <- file.copy(from = outflow_file_names[inflow_outflow_index],
-  #                 to = "outflow_file1.csv", overwrite = TRUE)
-
   #Use GLM NML files to run GLM for a day
   # Only allow simulations without NaN values in the output to proceed.
   #Necessary due to random Nan in AED output
@@ -348,7 +325,7 @@ run_model_ler <- function(model,
         output_vars_no_depth <- NA
 
         # LakeEnsemblR Output
-        ler_temp_out <-  FLAREr:::get_ler_var_all(model = model,
+        ler_temp_out <-  get_ler_var_all(model = model,
                                                   working_dir = working_directory,
                                                   z_out = modeled_depths,
                                                   vars_depth = output_vars_multi_depth,
@@ -359,7 +336,6 @@ run_model_ler <- function(model,
 
 
         num_model_depths <- length(ler_temp_out$depths_enkf)
-        # temps <- rev(ler_temp_out$output[ ,1])
         temps <- (ler_temp_out$output[ ,1])
         model_depths_end[1:num_model_depths] <- ler_temp_out$depths_enkf
 
@@ -370,11 +346,9 @@ run_model_ler <- function(model,
 
         x_star_end[1:ndepths_modeled] <- approx(model_depths_mid, temps,
                                                 modeled_depths, rule = 2)$y
-        # x_star_end[1:ndepths_modeled] <- approx(LER_temp_out$depths, LER_temp_out$temp,
-        #                                         modeled_depths, rule = 2)$y
 
         salt_end <- approx(model_depths_mid, ler_temp_out$salt,
-                           modeled_depths, rule = 2)$y #approx(modeled_depths, ler_temp_out$salt, modeled_depths, rule = 2)$y
+                           modeled_depths, rule = 2)$y
 
         if(include_wq){
           for(wq in 1:num_wq_vars){
@@ -409,11 +383,7 @@ run_model_ler <- function(model,
 
     return(list(x_star_end  = x_star_end,
                 lake_depth_end  = ler_temp_out$lake_depth,
-                snow_ice_thickness_end  = ler_temp_out$snow_wice_bice,
                 restart_vars = ler_temp_out$restart_vars,
-                avg_surf_temp_end  = ler_temp_out$avg_surf_temp,
-                mixing_vars_end = ler_temp_out$mixing_vars,
-                salt_end = salt_end,
                 diagnostics_end  = diagnostics,
                 model_internal_depths = model_depths_end))
   }
