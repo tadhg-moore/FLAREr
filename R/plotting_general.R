@@ -211,7 +211,7 @@ plotting_general <- function(file_name,
     print(patchwork::wrap_plots(plist))
   }
 
-  if(length(diagnostics_names) > 0 )
+  if(length(diagnostics_names) > 0 ) {
     for(i in 1:length(diagnostics_names)){
       message(diagnostics_names[i])
       curr_var <- diagnostic_list[[i]]
@@ -260,6 +260,7 @@ plotting_general <- function(file_name,
         ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, size = 10))
       print(p)
     }
+  }
 
   if("extc_coef" %in% diagnostics_names){
 

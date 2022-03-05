@@ -120,11 +120,11 @@ generate_initial_conditions <- function(states_config,
       init$avg_surf_temp[] <- init$states[1 , 1, ]
       init$restart_variables[, ] <- 0.0
       init$the_sals[, ] <- config$default_init$salinity
+      for(m in 1:nmembers){
+        init$the_depths[1:ndepths_modeled, m] <- config$model_settings$modeled_depths
+      }
     }
 
-    for(m in 1:nmembers){
-      init$the_depths[1:ndepths_modeled, m] <- config$model_settings$modeled_depths
-    }
 
     aux_states_init <- list()
     if(config$model_settings$model == "GLM") {

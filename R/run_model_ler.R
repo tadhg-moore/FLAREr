@@ -29,8 +29,6 @@ run_model_ler <- function(model,
                       working_directory,
                       par_file,
                       num_phytos,
-                      model_depths_start,
-                      lake_depth_start,
                       x_start,
                       full_time,
                       wq_start,
@@ -52,7 +50,7 @@ run_model_ler <- function(model,
                       restart,
                       restart_list){
 
-  if(is.null(management)){
+  if(is.null(management)) {
     simulate_sss <- FALSE
   }else{
     simulate_sss <- management$simulate_sss
@@ -60,11 +58,11 @@ run_model_ler <- function(model,
 
   yml <- yaml::read_yaml(file.path(working_directory, config$model_settings$base_ler_yaml))
 
-  model_depths_end <- rep(NA,length(model_depths_start))
-
-  model_depths_tmp <- model_depths_start[!is.na(model_depths_start)]
-  model_depths_tmp_tmp <- c(model_depths_tmp, lake_depth_start)
-  model_depths_mid <- model_depths_tmp_tmp[1:(length(model_depths_tmp_tmp)-1)] + diff(model_depths_tmp_tmp)/2
+  # model_depths_end <- rep(NA,length(model_depths_start))
+  #
+  # model_depths_tmp <- model_depths_start[!is.na(model_depths_start)]
+  # model_depths_tmp_tmp <- c(model_depths_tmp, lake_depth_start)
+  # model_depths_mid <- model_depths_tmp_tmp[1:(length(model_depths_tmp_tmp)-1)] + diff(model_depths_tmp_tmp)/2
 
   # Initial temperature
   the_temps_enkf_tmp <- x_start[1:ndepths_modeled]
@@ -79,6 +77,10 @@ run_model_ler <- function(model,
 
   # GLM ----
   if( model == "GLM") {
+
+    model_depths_start = restart_list$the_depths[i-1, , m]
+    lake_depth_start = restart_list$lake_depth[i-1, m]
+
 
     update_aed_nml_list <- list()
     update_phyto_nml_list <- list()
@@ -167,8 +169,6 @@ run_model_ler <- function(model,
                      restart_variables = restart_list$restart_variables[, i-1, m]
                      )
 
-    LakeEnsemblR::write_restart(folder = working_directory, model = model,
-                                restart_list = inp_list)
 
     yml[["model_parameters"]][[model]][["init_profiles/wq_names"]] <- "''"
     yml[["model_parameters"]][[model]][["init_profiles/wq_init_vals"]] <- 0
@@ -195,11 +195,29 @@ run_model_ler <- function(model,
       }
     }
 
-    if(restart) {
-      yml$model_parameters$GOTM$`restart/load` <- TRUE
-    } else {
-      yml$model_parameters$GOTM$`restart/load` <- FALSE
-    }
+    # if(restart) {
+    #   yml$model_parameters$GOTM$`restart/load` <- TRUE
+    # } else {
+    #   yml$model_parameters$GOTM$`restart/load` <- FALSE
+    # }
+
+    inp_list <- list(z_vars = list(z = restart_list$z_vars$z[i-1, , m],
+                                   temp = init_prof$Water_Temperature_celsius,
+                                   salt = restart_list$z_vars$salt[i-1, , m],
+                                   u = restart_list$z_vars$u[i-1, , m],
+                                   uo = restart_list$z_vars$uo[i-1, , m],
+                                   v = restart_list$z_vars$v[i-1, , m],
+                                   vo = restart_list$z_vars$vo[i-1, , m],
+                                   xP = restart_list$z_vars$xP[i-1, , m],
+                                   h = restart_list$z_vars$h[i-1, , m],
+                                   ho = restart_list$z_vars$ho[i-1, , m]),
+                     zi_vars = list(tke = restart_list$zi_vars$tke[i-1, , m],
+                                    zi = restart_list$zi_vars$zi[i-1, , m],
+                                    tkeo = restart_list$zi_vars$tkeo[i-1, , m],
+                                    eps = restart_list$zi_vars$eps[i-1, , m],
+                                    num = restart_list$zi_vars$num[i-1, , m],
+                                    nuh = restart_list$zi_vars$nuh[i-1, , m],
+                                    nus = restart_list$zi_vars$nus[i-1, , m]))
   }
 
   # Simstrat ----
@@ -221,6 +239,22 @@ run_model_ler <- function(model,
 
       }
     }
+
+    if(i > 2) {
+      sim_deps <- abs(restart_list$zi[i-1, , m])
+      sim_temp <- approx(modeled_depths, the_temps_enkf_tmp, sim_deps, rule = 2)$y
+
+      inp_list <- list(zi = restart_list$zi[i-1, , m],
+                       u = restart_list$u[i-1, , m],
+                       v = restart_list$v[i-1, , m],
+                       temp = sim_temp,
+                       S = restart_list$S[i-1, , m],
+                       k = restart_list$k[i-1, , m],
+                       eps = restart_list$eps[i-1, , m],
+                       num = restart_list$num[i-1, , m],
+                       nuh = restart_list$nuh[i-1, , m],
+                       seicheE = restart_list$seicheE[i-1, m])
+    }
   }
 
   #ALLOWS THE LOOPING THROUGH NOAA ENSEMBLES
@@ -237,22 +271,20 @@ run_model_ler <- function(model,
     LakeEnsemblR::export_config(config_file = config$model_settings$base_ler_yaml, model = model, dirs = FALSE,
                                 time = TRUE, location = TRUE, output_settings = TRUE,
                                 meteo = T, init_cond = TRUE, extinction = FALSE,
-                                inflow = T, # INFLOWS SWITCHED OFF!
+                                inflow = T,
                                 model_parameters = TRUE,
                                 folder = working_directory, print = FALSE)
   })
 
-  if(model == "Simstrat") {
-    # Input Simstrat restart values into initial condition file
-    simstrat_init <- read.delim(file.path(working_directory, model, "init_cond.dat"))
-    simstrat_init[, 2] <- signif(restart_list$U_restart[, i-1,m], 5)
-    simstrat_init[, 3] <- signif(restart_list$V_restart[, i-1,m], 5)
-    simstrat_init[, 5] <- signif(restart_list$k_restart[, i-1,m], 5)
-    simstrat_init[, 6] <- signif(restart_list$eps_restart[, i-1,m], 5)
-    colnames(simstrat_init) <- c("Depth [m]",	"U [m/s]",	"V [m/s]",	"T [deg C]",	"k [J/kg]",	"eps [W/kg]")
-    vroom::vroom_write(simstrat_init, file.path(working_directory, "Simstrat", "init_cond.dat"), delim = "\t",
-                       col_names = TRUE, quote = "none")
+  # Don't write restart on the first time step for GOTM & Simstrat
+  if((model == "GOTM" | model == "Simstrat") & i > 2) {
+    LakeEnsemblR::write_restart(folder = working_directory, model = model,
+                                restart_list = inp_list)
+  } else if(model == "GLM") {
+    LakeEnsemblR::write_restart(folder = working_directory, model = model,
+                                restart_list = inp_list)
   }
+
 
 
   if(model == "GLM" & include_wq){
@@ -314,18 +346,16 @@ run_model_ler <- function(model,
 
     if(length(fils) != 0) { #&
 
-      run_success <- TRUE
-       # !testit::has_error(nc <- ncdf4::nc_open(paste0(working_directory, "/output/output.nc")))){
+      run_success <- FLAREr:::check_model_output(folder = working_directory, model = model)
 
-      # if(length(ncvar_get(nc, "time")) >= 1){
-      if(TRUE){
+      if(run_success){
           # nc_close(nc)
 
         output_vars_multi_depth <- state_names
         output_vars_no_depth <- NA
 
         # LakeEnsemblR Output
-        ler_temp_out <-  get_ler_var_all(model = model,
+        ler_temp_out <- FLAREr:::get_ler_var_all(model = model,
                                                   working_dir = working_directory,
                                                   z_out = modeled_depths,
                                                   vars_depth = output_vars_multi_depth,
@@ -337,18 +367,24 @@ run_model_ler <- function(model,
 
         num_model_depths <- length(ler_temp_out$depths_enkf)
         temps <- (ler_temp_out$output[ ,1])
-        model_depths_end[1:num_model_depths] <- ler_temp_out$depths_enkf
+        x_star_end <- temps
+        salt_end <- ler_temp_out$salt
 
-        model_depths_tmp <- c(ler_temp_out$depths_enkf, ler_temp_out$lake_depth)
+        model_depths_end <- ler_temp_out$depths_enkf
 
-        model_depths_mid <- model_depths_tmp[1:(length(model_depths_tmp)-1)] + diff(model_depths_tmp)/2
+        #
+        # model_depths_tmp <- c(ler_temp_out$depths_enkf, ler_temp_out$lake_depth)
+        #
+        # model_depths_mid <- model_depths_tmp[1:(length(model_depths_tmp)-1)] + diff(model_depths_tmp)/2
 
 
-        x_star_end[1:ndepths_modeled] <- approx(model_depths_mid, temps,
-                                                modeled_depths, rule = 2)$y
 
-        salt_end <- approx(model_depths_mid, ler_temp_out$salt,
-                           modeled_depths, rule = 2)$y
+#
+#         x_star_end[1:ndepths_modeled] <- approx(model_depths_mid, temps,
+#                                                 modeled_depths, rule = 2)$y
+
+        # salt_end <- approx(model_depths_mid, ler_temp_out$salt,
+        #                    modeled_depths, rule = 2)$y
 
         if(include_wq){
           for(wq in 1:num_wq_vars){
@@ -360,7 +396,7 @@ run_model_ler <- function(model,
         if(length(diagnostics_names) > 0){
           for(wq in 1:length(diagnostics_names)){
             glm_wq <-  rev(ler_temp_out$diagnostics_output[ , wq])
-            diagnostics[wq , ] <- approx(model_depths_mid, glm_wq, modeled_depths, rule = 2)$y
+            diagnostics[wq , ] <- wq # approx(model_depths_mid, glm_wq, modeled_depths, rule = 2)$y
           }
         } else {
           diagnostics <- rep(NA, length(modeled_depths))
@@ -369,19 +405,23 @@ run_model_ler <- function(model,
         if(length(which(is.na(x_star_end))) == 0){
           pass = TRUE
         }else{
+          message("Re-running model setup in ", working_directory, " due to errors in model output.")
           num_reruns <- num_reruns + 1
         }
       }else{
+        message("Re-running model setup in ", working_directory, " due to errors in model output.")
         num_reruns <- num_reruns + 1
       }
     }else{
+      message("Re-running model setup in ", working_directory, " due to errors in model output.")
       num_reruns <- num_reruns + 1
     }
     if(num_reruns > 1000){
-      stop(paste0("Too many re-runs (> 1000) due to NaN values in output"))
+      stop("Too many re-runs (> 1000) due to NaN values in output")
     }
 
     return(list(x_star_end  = x_star_end,
+                # salt_end = salt_end,
                 lake_depth_end  = ler_temp_out$lake_depth,
                 restart_vars = ler_temp_out$restart_vars,
                 diagnostics_end  = diagnostics,

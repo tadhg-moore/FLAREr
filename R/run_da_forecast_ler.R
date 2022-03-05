@@ -195,7 +195,6 @@ run_da_forecast_ler <- function(states_init,
 
   file.copy(from = file.path(config$file_path$configuration_directory, config$model_settings$ler_bathymetry_file),
             to = file.path(working_directory, config$model_settings$ler_bathymetry_file), overwrite = TRUE)
-  yaml_file <- file.path(working_directory, config$model_settings$base_ler_yaml)
 
   config$model_settings$ncore <- min(c(config$model_settings$ncore, parallel::detectCores()))
   if(config$model_settings$ncore == 1) {
@@ -261,21 +260,77 @@ run_da_forecast_ler <- function(states_init,
                          blue_ice_thickness = blue_ice_thickness,
                          avg_surf_temp = avg_surf_temp,
                          restart_variables = restart_variables)
-  }
-  if(model == "Simstrat") {
-    U_restart <- array(NA, dim = c(ndepths_modeled, nsteps, nmembers))
-    V_restart <- array(NA, dim = c(ndepths_modeled, nsteps, nmembers))
-    k_restart <- array(NA, dim = c(ndepths_modeled, nsteps, nmembers))
-    eps_restart <- array(NA, dim = c(ndepths_modeled, nsteps, nmembers))
-    U_restart[,1 ,] <- aux_states_init$U
-    V_restart[,1 ,] <- aux_states_init$V
-    k_restart[,1 ,] <- aux_states_init$k
-    eps_restart[,1 ,] <- aux_states_init$eps
-    restart_list <- list(U_restart = U_restart,
-                         V_restart = V_restart,
-                         k_restart = k_restart,
-                         eps_restart = eps_restart)
+  } else if(model == "GOTM") {
+    yaml <- gotmtools::read_yaml(file.path(working_directory, "1", "LakeEnsemblR.yaml"))
+    nz <- round(yaml$location$depth / yaml$output$depths)
+    nzi <- nz + 1
 
+    # z vars
+    z <- array(NA, dim = c(nsteps, nz, nmembers))
+    temp <- array(NA, dim = c(nsteps, nz, nmembers))
+    salt <- array(NA, dim = c(nsteps, nz, nmembers))
+    u <- array(NA, dim = c(nsteps, nz, nmembers))
+    uo <- array(NA, dim = c(nsteps, nz, nmembers))
+    v <- array(NA, dim = c(nsteps, nz, nmembers))
+    vo <- array(NA, dim = c(nsteps, nz, nmembers))
+    xP <- array(NA, dim = c(nsteps, nz, nmembers))
+    h <- array(NA, dim = c(nsteps, nz, nmembers))
+    ho <- array(NA, dim = c(nsteps, nz, nmembers))
+
+    #zi vars
+    tke <- array(NA, dim = c(nsteps, nzi, nmembers))
+    zi <- array(NA, dim = c(nsteps, nzi, nmembers))
+    tkeo <- array(NA, dim = c(nsteps, nzi, nmembers))
+    eps <- array(NA, dim = c(nsteps, nzi, nmembers))
+    num <- array(NA, dim = c(nsteps, nzi, nmembers))
+    nuh <- array(NA, dim = c(nsteps, nzi, nmembers))
+    nus <- array(NA, dim = c(nsteps, nzi, nmembers))
+
+    restart_list <- list(z_vars = list(z = z,
+                                       temp = temp,
+                                       salt = salt,
+                                       u = u,
+                                       uo = uo,
+                                       v = v,
+                                       vo = vo,
+                                       xP = xP,
+                                       h = h,
+                                       ho = ho),
+                         zi_vars = list(tke = tke,
+                                        zi = zi,
+                                        tkeo = tkeo,
+                                        eps = eps,
+                                        num = num,
+                                        nuh = nuh,
+                                        nus = nus))
+  } else if(model == "Simstrat") {
+
+    ngrid <- LakeEnsemblR::get_json_value(file.path(working_directory, "1", model,
+                                                    "simstrat.par"), label = "Input", key = "Grid")
+    nzi <- (ngrid * 2) + 1
+
+    #zi vars
+    zi <- array(NA, dim = c(nsteps, nzi, nmembers))
+    u <- array(NA, dim = c(nsteps, nzi, nmembers))
+    v <- array(NA, dim = c(nsteps, nzi, nmembers))
+    temp <- array(NA, dim = c(nsteps, nzi, nmembers))
+    S <- array(NA, dim = c(nsteps, nzi, nmembers))
+    k <- array(NA, dim = c(nsteps, nzi, nmembers))
+    eps <- array(NA, dim = c(nsteps, nzi, nmembers))
+    num <- array(NA, dim = c(nsteps, nzi, nmembers))
+    nuh <- array(NA, dim = c(nsteps, nzi, nmembers))
+
+    seicheE <- array(NA, dim = c(nsteps, nmembers))
+    restart_list <- list(zi = zi,
+                         u = u,
+                         v = v,
+                         temp = temp,
+                         S = S,
+                         k = k,
+                         eps = eps,
+                         num = num,
+                         nuh = nuh,
+                         seicheE = seicheE)
   }
 
 
@@ -385,6 +440,12 @@ run_da_forecast_ler <- function(states_init,
           outflow_file_name <- NULL
         }
 
+        if(config$model_settings$ncore == 1) {
+          wdir <- file.path(working_directory, 1)
+        } else {
+          wdir <- file.path(working_directory, m)
+        }
+
         # model
         # i
         # m
@@ -392,11 +453,9 @@ run_da_forecast_ler <- function(states_init,
         # curr_stop
         # par_names
         # curr_pars
-        # working_directory = file.path(working_directory, m)
+        # working_directory = wdir
         # par_file
         # num_phytos
-        # model_depths_start = model_internal_depths[i-1, , m]
-        # lake_depth_start = lake_depth[i-1, m]
         # x_start = x[i-1, m, ]
         # full_time
         # wq_start = states_config$wq_start
@@ -412,19 +471,11 @@ run_da_forecast_ler <- function(states_init,
         # diagnostics_names = config$output_settings$diagnostics_names
         # npars
         # num_wq_vars
-        # snow_ice_thickness_start = snow_ice_thickness[, i-1,m ]
-        # salt_start = salt[i-1, ,m]
         # nstates
         # state_names = states_config$state_names
         # include_wq = config$include_wq
         # restart = restart
         # restart_list = restart_list
-
-        if(config$model_settings$ncore == 1) {
-          wdir <- file.path(working_directory, 1)
-        } else {
-          wdir <- file.path(working_directory, m)
-        }
 
         out <- FLAREr:::run_model_ler(model,
                              i,
@@ -436,8 +487,6 @@ run_da_forecast_ler <- function(states_init,
                              working_directory = wdir,
                              par_file,
                              num_phytos,
-                             model_depths_start = restart_list$the_depths[i-1, , m],
-                             lake_depth_start = restart_list$lake_depth[i-1, m],
                              x_start = x[i-1, m, ],
                              full_time,
                              wq_start = states_config$wq_start,
@@ -458,7 +507,8 @@ run_da_forecast_ler <- function(states_init,
                              include_wq = config$include_wq,
                              restart = restart,
                              restart_list = restart_list)
-	  })
+        }
+      )
 
 	  # Loop through output and assign to matrix
 	  for(m in 1:nmembers) {
@@ -466,7 +516,9 @@ run_da_forecast_ler <- function(states_init,
 	    x_star[m, ] <- out[[m]]$x_star_end
 	    # lake_depth[i ,m ] <- out[[m]]$lake_depth_end
 	    # snow_ice_thickness[,i ,m] <- out[[m]]$snow_ice_thickness_end
-	    diagnostics[, i, , m] <- out[[m]]$diagnostics_end
+	    if(length(config$diagnostics_names) > 0) {
+	      diagnostics[, i, , m] <- out[[m]]$diagnostics_end
+	    }
 	    # model_internal_depths[i, ,m] <- out[[m]]$model_internal_depths
 	    # salt[i, , m]  <- out[[m]]$salt_end
 	    if(model == "GLM") {
@@ -478,12 +530,39 @@ run_da_forecast_ler <- function(states_init,
 	      restart_list$blue_ice_thickness[i, m] <- out[[m]]$restart_vars$blue_ice_thickness
 	      restart_list$avg_surf_temp[i , m] <- out[[m]]$restart_vars$avg_surf_temp
 	      restart_list$restart_variables[, i, m] <- out[[m]]$restart_vars$restart_variables
+	    } else if(model == "GOTM") {
+	      # z vars
+	      restart_list$z_vars$z[i, , m] <- out[[m]]$restart_vars$z_vars$z
+	      restart_list$z_vars$temp[i, , m] <- out[[m]]$restart_vars$z_vars$temp
+	      restart_list$z_vars$salt[i, , m] <- out[[m]]$restart_vars$z_vars$salt
+	      restart_list$z_vars$u[i, , m] <- out[[m]]$restart_vars$z_vars$u
+	      restart_list$z_vars$uo[i, , m] <- out[[m]]$restart_vars$z_vars$uo
+	      restart_list$z_vars$v[i, , m] <- out[[m]]$restart_vars$z_vars$v
+	      restart_list$z_vars$vo[i, , m] <- out[[m]]$restart_vars$z_vars$vo
+	      restart_list$z_vars$xP[i, , m] <- out[[m]]$restart_vars$z_vars$xP
+	      restart_list$z_vars$h[i, , m] <- out[[m]]$restart_vars$z_vars$h
+	      restart_list$z_vars$ho[i, , m] <- out[[m]]$restart_vars$z_vars$ho
+
+	      # zi vars
+	      restart_list$zi_vars$tke[i, , m] <- out[[m]]$restart_vars$zi_vars$tke
+	      restart_list$zi_vars$zi[i, , m] <- out[[m]]$restart_vars$zi_vars$zi
+	      restart_list$zi_vars$tkeo[i, , m] <- out[[m]]$restart_vars$zi_vars$tkeo
+	      restart_list$zi_vars$eps[i, , m] <- out[[m]]$restart_vars$zi_vars$eps
+	      restart_list$zi_vars$num[i, , m] <- out[[m]]$restart_vars$zi_vars$num
+	      restart_list$zi_vars$nuh[i, , m] <- out[[m]]$restart_vars$zi_vars$nuh
+	      restart_list$zi_vars$nus[i, , m] <- out[[m]]$restart_vars$zi_vars$nus
 	    }
 	    if(model == "Simstrat") {
-	      restart_list$U_restart[, i, m] <- out[[m]]$restart_vars$U
-	      restart_list$V_restart[, i, m] <- out[[m]]$restart_vars$V
-	      restart_list$k_restart[, i, m] <- out[[m]]$restart_vars$k
-	      restart_list$eps_restart[, i, m] <- out[[m]]$restart_vars$eps
+	      restart_list$zi[i, , m] <- out[[m]]$restart_vars$zi
+	      restart_list$u[i, , m] <- out[[m]]$restart_vars$u
+	      restart_list$v[i, , m] <- out[[m]]$restart_vars$v
+	      restart_list$temp[i, , m] <- out[[m]]$restart_vars$temp
+	      restart_list$S[i, , m] <- out[[m]]$restart_vars$S
+	      restart_list$k[i, , m] <- out[[m]]$restart_vars$k
+	      restart_list$eps[i, , m] <- out[[m]]$restart_vars$eps
+	      restart_list$num[i, , m] <- out[[m]]$restart_vars$num
+	      restart_list$nuh[i, , m] <- out[[m]]$restart_vars$nuh
+	      restart_list$seicheE[i , m] <- out[[m]]$restart_vars$seicheE
 	    }
 
 	    #Add process noise

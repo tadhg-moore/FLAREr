@@ -41,7 +41,39 @@ write_forecast_netcdf <- function(da_forecast_output,
     restart_variables <- da_forecast_output$restart_list$restart_variables
     model_internal_depths <- da_forecast_output$restart_list$the_depths
     salt <- da_forecast_output$restart_list$the_sals
+
+  } else if(config$model_settings$model == "GOTM") {
+    z <- da_forecast_output$restart_list$z_vars$z
+    salt <- da_forecast_output$restart_list$z_vars$salt
+    u <- da_forecast_output$restart_list$z_vars$u
+    uo <- da_forecast_output$restart_list$z_vars$uo
+    v <- da_forecast_output$restart_list$z_vars$v
+    vo <- da_forecast_output$restart_list$z_vars$vo
+    xP <- da_forecast_output$restart_list$z_vars$xP
+    h <- da_forecast_output$restart_list$z_vars$h
+    ho <- da_forecast_output$restart_list$z_vars$ho
+
+    tke <- da_forecast_output$restart_list$zi_vars$tke
+    zi <- da_forecast_output$restart_list$zi_vars$zi
+    tkeo <- da_forecast_output$restart_list$zi_vars$tkeo
+    eps <- da_forecast_output$restart_list$zi_vars$eps
+    num <- da_forecast_output$restart_list$zi_vars$num
+    nuh <- da_forecast_output$restart_list$zi_vars$nuh
+    nus <- da_forecast_output$restart_list$zi_vars$nus
+
+  } else if(config$model_settings$model == "Simstrat") {
+    zi <- da_forecast_output$restart_list$zi
+    u <- da_forecast_output$restart_list$u
+    v <- da_forecast_output$restart_list$v
+    temp <- da_forecast_output$restart_list$temp
+    S <- da_forecast_output$restart_list$S
+    k <- da_forecast_output$restart_list$k
+    eps <- da_forecast_output$restart_list$eps
+    num <- da_forecast_output$restart_list$num
+    nuh <- da_forecast_output$restart_list$nuh
+    seicheE <- da_forecast_output$restart_list$seicheE
   }
+
   states_config <- da_forecast_output$states_config
   obs_config <- da_forecast_output$obs_config
   pars_config <- da_forecast_output$pars_config
@@ -87,8 +119,13 @@ write_forecast_netcdf <- function(da_forecast_output,
   if(config$model_settings$model ==  "GLM") {
     snow_ice_dim <- ncdf4::ncdim_def("snow_ice_dim",units = "meters", vals = c(1, 2, 3), longname = 'snow ice dims')
     restart_variables_dim <- ncdf4::ncdim_def("restart_variables_dim",units = '', vals = seq(1, dim(restart_variables)[1], 1), longname = 'number of mixing restart variables')
+    internal_model_depths_dim <- ncdf4::ncdim_def("internal_model_depths_dim",units = '', vals = seq(1, dim(model_internal_depths)[2]), longname = 'number of possible depths that are simulated in GLM')
+  } else if(config$model_settings$model ==  "GOTM") {
+    zdim <- ncdf4::ncdim_def("z",units = "meters", vals = as.double(z[2, , 1]), longname = 'Depth (GOTM internal)')
+    zidim <- ncdf4::ncdim_def("zi",units = "meters", vals = as.double(zi[2, , 1]), longname = 'interfaces (GOTM internal)')
+  } else if(config$model_settings$model ==  "Simstrat") {
+    zidim <- ncdf4::ncdim_def("zi",units = "meters", vals = zi[2, , 1], longname = 'depth interfaces (Simstrat internal)')
   }
-  internal_model_depths_dim <- ncdf4::ncdim_def("internal_model_depths_dim",units = '', vals = seq(1, dim(model_internal_depths)[2]), longname = 'number of possible depths that are simulated in GLM')
 
 
   #Define variables
@@ -109,15 +146,67 @@ write_forecast_netcdf <- function(da_forecast_output,
     index <- index + 1
     def_list[[index]] <- ncdf4::ncvar_def("lake_depth","meter",list(timedim,ensdim),missval = -99,longname = 'Depth of lake',prec="single")
     index <- index + 1
-
     def_list[[index]] <- ncdf4::ncvar_def("avg_surf_temp","degC",list(timedim, ensdim),missval = -99,longname ='Running Average of Surface Temperature',prec="single")
     index <- index + 1
     def_list[[index]] <- ncdf4::ncvar_def("restart_variables","dimensionless",list(restart_variables_dim, timedim, ensdim),fillvalue,longname = "variables required to restart mixing",prec="single")
     index <- index + 1
+    def_list[[index]] <- ncdf4::ncvar_def("model_internal_depths","meter",list(timedim, internal_model_depths_dim, ensdim),fillvalue,longname = "depths simulated by glm that are required to restart ",prec="single")
+    index <- index + 1
+    def_list[[index]] <- ncdf4::ncvar_def("salt","g_kg",list(timedim, depthdim, ensdim),fillvalue,longname = "salt",prec="single")
+  } else if(config$model_settings$model ==  "GOTM") {
+    # z vars
+    def_list[[index]] <- ncdf4::ncvar_def("salt","g/kg", list(timedim, zdim, ensdim), missval = -99,longname = 'salinity',prec="single")
+    index <- index + 1
+    def_list[[index]] <- ncdf4::ncvar_def("u","m/s", list(timedim, zdim, ensdim), missval = -99, longname = 'x-velocity',prec="single")
+    index <- index + 1
+    def_list[[index]] <- ncdf4::ncvar_def("uo","m/s", list(timedim, zdim, ensdim), missval = -99, longname = 'x-velocity - old time step', prec="single")
+    index <- index + 1
+    def_list[[index]] <- ncdf4::ncvar_def("v","m/s", list(timedim, zdim, ensdim), missval = -99,longname = 'y-velocity',prec="single")
+    index <- index + 1
+    def_list[[index]] <- ncdf4::ncvar_def("vo","m/s", list(timedim, zdim, ensdim), missval = -99, longname = 'y-velocity - old time step', prec="single")
+    index <- index + 1
+    def_list[[index]] <- ncdf4::ncvar_def("xP","m2/s3", list(timedim, zdim, ensdim), missval = -99,longname = 'extra turbulence production',prec="single")
+    index <- index + 1
+    def_list[[index]] <- ncdf4::ncvar_def("h","m", list(timedim, zdim, ensdim), missval = -99,longname = 'layer thickness',prec="single")
+    index <- index + 1
+    def_list[[index]] <- ncdf4::ncvar_def("h0","m", list(timedim, zdim, ensdim), missval = -99,longname = 'layer thickness - old time step', prec = "single")
+    index <- index + 1
+
+
+    # zi vars
+    def_list[[index]] <- ncdf4::ncvar_def("tke","m2/s2", list(timedim, zidim, ensdim), missval = -99, longname = "turbulent kinetic energy", prec = "single")
+    index <- index + 1
+    def_list[[index]] <- ncdf4::ncvar_def("tkeo","m2/s2", list(timedim, zidim, ensdim), missval = -99, longname = "turbulent kinetic energy - old time step", prec = "single")
+    index <- index + 1
+    def_list[[index]] <- ncdf4::ncvar_def("eps","m2/s3", list(timedim, zidim, ensdim), missval = -99, longname = "energy dissipation rate", prec = "single")
+    index <- index + 1
+    def_list[[index]] <- ncdf4::ncvar_def("num","m2/s", list(timedim, zidim, ensdim), missval = -99, longname = "turbulent diffusivity of momentum", prec = "single")
+    index <- index + 1
+    def_list[[index]] <- ncdf4::ncvar_def("nuh","m2/s", list(timedim, zidim, ensdim), missval = -99, longname = "turbulent diffusivity of heat", prec = "single")
+    index <- index + 1
+    def_list[[index]] <- ncdf4::ncvar_def("nus","m2/s", list(timedim, zidim, ensdim), missval = -99, longname = "turbulent diffusivity of salt", prec = "single")
+
+  } else if(config$model_settings$model ==  "Simstrat") {
+    def_list[[index]] <- ncdf4::ncvar_def("u", "m/s", list(timedim, zidim, ensdim), missval = -99, longname = "x-velocity", prec = "single")
+    index <- index + 1
+    def_list[[index]] <- ncdf4::ncvar_def("v", "m/s", list(timedim, zidim, ensdim), missval = -99, longname = "y-velocity", prec = "single")
+    index <- index + 1
+    def_list[[index]] <- ncdf4::ncvar_def("simstrat_temp", "degC", list(timedim, zidim, ensdim), missval = -99, longname = "temperature (Simstrat)", prec = "single")
+    index <- index + 1
+    def_list[[index]] <- ncdf4::ncvar_def("S", "g/kg", list(timedim, zidim, ensdim), missval = -99, longname = "salinity", prec = "single")
+    index <- index + 1
+    def_list[[index]] <- ncdf4::ncvar_def("k", "J/kg", list(timedim, zidim, ensdim), missval = -99, longname = "turbulent kinetic energy", prec = "single")
+    index <- index + 1
+    def_list[[index]] <- ncdf4::ncvar_def("eps", "W/kg", list(timedim, zidim, ensdim), missval = -99, longname = "energy dissipation rate", prec = "single")
+    index <- index + 1
+    def_list[[index]] <- ncdf4::ncvar_def("num", "m2/s", list(timedim, zidim, ensdim), missval = -99, longname = "turbulent diffusivity of momentum", prec = "single")
+    index <- index + 1
+    def_list[[index]] <- ncdf4::ncvar_def("nuh", "m2/s", list(timedim, zidim, ensdim), missval = -99, longname = "turbulent diffusivity of heat", prec = "single")
+    index <- index + 1
+
+    def_list[[index]] <- ncdf4::ncvar_def("seicheE","J", list(timedim, ensdim), missval = -99, longname = "seiche energy", prec = "single")
   }
-  def_list[[index]] <- ncdf4::ncvar_def("model_internal_depths","meter",list(timedim, internal_model_depths_dim, ensdim),fillvalue,longname = "depths simulated by glm that are required to restart ",prec="single")
-  index <- index + 1
-  def_list[[index]] <- ncdf4::ncvar_def("salt","g_kg",list(timedim, depthdim, ensdim),fillvalue,longname = "salt",prec="single")
+
 
   if(npars > 0){
     for(par in 1:npars){
@@ -156,27 +245,78 @@ write_forecast_netcdf <- function(da_forecast_output,
 
   # create netCDF file and put arrays
   index <- 1
-  ncdf4::ncvar_put(ncout,def_list[[index]] ,x_efi[,1:length(depths),])
+  ncdf4::ncvar_put(ncout, def_list[[index]] ,x_efi[,1:length(depths),])
   index <- index + 1
-  ncdf4::ncvar_put(ncout,def_list[[index]] ,as.array(data_assimilation_flag))
+  ncdf4::ncvar_put(ncout, def_list[[index]] ,as.array(data_assimilation_flag))
   index <- index + 1
-  ncdf4::ncvar_put(ncout,def_list[[index]] ,as.array(forecast_flag))
+  ncdf4::ncvar_put(ncout, def_list[[index]] ,as.array(forecast_flag))
   index <- index + 1
-  ncdf4::ncvar_put(ncout,def_list[[index]] ,as.array(da_qc_flag))
+  ncdf4::ncvar_put(ncout, def_list[[index]] ,as.array(da_qc_flag))
   index <- index + 1
   if(config$model_settings$model ==  "GLM") {
-    ncdf4::ncvar_put(ncout,def_list[[index]] , snow_ice_thickness)
+    ncdf4::ncvar_put(ncout, def_list[[index]], snow_ice_thickness)
     index <- index + 1
-    ncdf4::ncvar_put(ncout,def_list[[index]] ,lake_depth)
+    ncdf4::ncvar_put(ncout, def_list[[index]], lake_depth)
     index <- index + 1
-    ncdf4::ncvar_put(ncout,def_list[[index]] ,avg_surf_temp)
+    ncdf4::ncvar_put(ncout, def_list[[index]], avg_surf_temp)
     index <- index + 1
-    ncdf4::ncvar_put(ncout,def_list[[index]] ,restart_variables)
+    ncdf4::ncvar_put(ncout, def_list[[index]], restart_variables)
     index <- index + 1
+    ncdf4::ncvar_put(ncout, def_list[[index]], model_internal_depths)
+    index <- index + 1
+    ncdf4::ncvar_put(ncout, def_list[[index]], salt)
+  } else if(config$model_settings$model ==  "GOTM") {
+    # z vars
+    ncdf4::ncvar_put(ncout, def_list[[index]], salt)
+    index <- index + 1
+    ncdf4::ncvar_put(ncout, def_list[[index]], u)
+    index <- index + 1
+    ncdf4::ncvar_put(ncout, def_list[[index]], uo)
+    index <- index + 1
+    ncdf4::ncvar_put(ncout, def_list[[index]], v)
+    index <- index + 1
+    ncdf4::ncvar_put(ncout, def_list[[index]], vo)
+    index <- index + 1
+    ncdf4::ncvar_put(ncout, def_list[[index]], xP)
+    index <- index + 1
+    ncdf4::ncvar_put(ncout, def_list[[index]], h)
+    index <- index + 1
+    ncdf4::ncvar_put(ncout, def_list[[index]], ho)
+    index <- index + 1
+
+    #zi vars
+    ncdf4::ncvar_put(ncout, def_list[[index]], tke)
+    index <- index + 1
+    ncdf4::ncvar_put(ncout, def_list[[index]], tkeo)
+    index <- index + 1
+    ncdf4::ncvar_put(ncout, def_list[[index]], eps)
+    index <- index + 1
+    ncdf4::ncvar_put(ncout, def_list[[index]], num)
+    index <- index + 1
+    ncdf4::ncvar_put(ncout, def_list[[index]], nuh)
+    index <- index + 1
+    ncdf4::ncvar_put(ncout, def_list[[index]], nus)
+  } else if(config$model_settings$model ==  "Simstrat") {
+
+    ncdf4::ncvar_put(ncout, def_list[[index]], u)
+    index <- index + 1
+    ncdf4::ncvar_put(ncout, def_list[[index]], v)
+    index <- index + 1
+    ncdf4::ncvar_put(ncout, def_list[[index]], temp)
+    index <- index + 1
+    ncdf4::ncvar_put(ncout, def_list[[index]], S)
+    index <- index + 1
+    ncdf4::ncvar_put(ncout, def_list[[index]], k)
+    index <- index + 1
+    ncdf4::ncvar_put(ncout, def_list[[index]], eps)
+    index <- index + 1
+    ncdf4::ncvar_put(ncout, def_list[[index]], num)
+    index <- index + 1
+    ncdf4::ncvar_put(ncout, def_list[[index]], nuh)
+    index <- index + 1
+    ncdf4::ncvar_put(ncout, def_list[[index]], seicheE)
   }
-  ncdf4::ncvar_put(ncout,def_list[[index]] ,model_internal_depths)
-  index <- index + 1
-  ncdf4::ncvar_put(ncout,def_list[[index]] ,salt)
+
 
   if(npars > 0){
     for(par in 1:npars){
@@ -224,6 +364,7 @@ write_forecast_netcdf <- function(da_forecast_output,
   ncdf4::ncatt_put(ncout,0,"forecast_iteration_id" ,da_forecast_output$forecast_iteration_id, prec =  "text")
   ncdf4::ncatt_put(ncout,0,"forecast_project_id", config$metadata$forecast_project_id, prec =  "text")
   ncdf4::ncatt_put(ncout,0,"forecast_model_id", config$metadata$model_description$forecast_model_id, prec =  "text")
+  ncdf4::ncatt_put(ncout,0,"forecast_model", config$model_settings$model, prec =  "text")
   ncdf4::ncatt_put(ncout,0,"time_zone_of_simulation","UTC", prec =  "text")
 
   ncdf4::nc_close(ncout)

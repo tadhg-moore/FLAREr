@@ -15,10 +15,10 @@ get_ler_var_all <- function(model,
   ice <- LakeEnsemblR::get_output(yaml = ler_yaml, model = model, vars = "ice_height", run_success = run_success)$ice_height
   deps <- rLakeAnalyzer::get.offsets(temp)
   # Subset to z_out
-  idx <- which(z_out %in% deps) + 1
+  idx <- which(deps %in% z_out) + 1
   temp <- temp[, c(1, idx)]
   salt <- salt[, c(1, idx)]
-  deps <- deps[which(z_out %in% deps)]
+  deps <- deps[which(deps %in% z_out)]
 
   final_time_step <- nrow(temp)
 
@@ -73,15 +73,15 @@ get_ler_var_all <- function(model,
 
     output_no_depth <- NA
 
-    if(length(diagnostic_vars) > 0){
-      diagnostics_output <- array(NA,dim=c(tallest_layer, length(diagnostic_vars)))
-      for(v in 1:length(diagnostic_vars)){
-        var_modeled <- ncdf4::ncvar_get(nc, diagnostic_vars[v])[, final_time_step]
-        diagnostics_output[,v] <- var_modeled[1:tallest_layer]
-      }
-    }else{
+    # if(length(diagnostic_vars) > 0){
+    #   diagnostics_output <- array(NA,dim=c(tallest_layer, length(diagnostic_vars)))
+    #   for(v in 1:length(diagnostic_vars)){
+    #     var_modeled <- ncdf4::ncvar_get(nc, diagnostic_vars[v])[, final_time_step]
+    #     diagnostics_output[,v] <- var_modeled[1:tallest_layer]
+    #   }
+    # }else{
       diagnostics_output <- NULL
-    }
+    # }
   }
 
   # Simstrat ----
@@ -91,21 +91,21 @@ get_ler_var_all <- function(model,
     # ice_white <- read.delim(file.path(model, "output", "WhiteIceH_out.dat"), sep = ",")[final_time_step, 2]
 
     # Extract variables for restarting initial conditions
-    U <- read.delim(file.path(model, "output", "U_out.dat"), sep = ",")[final_time_step, -1]
-    deps2 <- colnames(U) %>%
-      regmatches(., gregexpr("[[:digit:]]+\\.*[[:digit:]]*", .)) %>%
-      unlist() %>%
-      as.numeric()
-    U <- approx(deps2, U, z_out, rule = 2)$y
-    V <- read.delim(file.path(model, "output", "V_out.dat"), sep = ",")[final_time_step, -1] %>%
-      approx(deps2, ., z_out, rule = 2) %>%
-      .[[2]]
-    k <- read.delim(file.path(model, "output", "k_out.dat"), sep = ",")[final_time_step, -1] %>%
-      approx(deps2, ., z_out, rule = 2) %>%
-      .[[2]]
-    eps <- read.delim(file.path(model, "output", "eps_out.dat"), sep = ",")[final_time_step, -1] %>%
-      approx(deps2, ., z_out, rule = 2) %>%
-      .[[2]]
+    # U <- read.delim(file.path(model, "output", "U_out.dat"), sep = ",")[final_time_step, -1]
+    # deps2 <- colnames(U) %>%
+    #   regmatches(., gregexpr("[[:digit:]]+\\.*[[:digit:]]*", .)) %>%
+    #   unlist() %>%
+    #   as.numeric()
+    # U <- approx(deps2, U, z_out, rule = 2)$y
+    # V <- read.delim(file.path(model, "output", "V_out.dat"), sep = ",")[final_time_step, -1] %>%
+    #   approx(deps2, ., z_out, rule = 2) %>%
+    #   .[[2]]
+    # k <- read.delim(file.path(model, "output", "k_out.dat"), sep = ",")[final_time_step, -1] %>%
+    #   approx(deps2, ., z_out, rule = 2) %>%
+    #   .[[2]]
+    # eps <- read.delim(file.path(model, "output", "eps_out.dat"), sep = ",")[final_time_step, -1] %>%
+    #   approx(deps2, ., z_out, rule = 2) %>%
+    #   .[[2]]
 
     output_no_depth <- NA
 
@@ -122,6 +122,7 @@ get_ler_var_all <- function(model,
 
 
   return(list(output = output,
+              salt = salt,
               output_no_depth = output_no_depth,
               lake_depth = heights_surf,
               depths_enkf = depths_enkf,
