@@ -343,10 +343,11 @@ run_model_ler <- function(model,
                           model_depths = modeled_depths)
 
     fils <- list.files(file.path(working_directory, model, "output"))
+    run_success <- FLAREr:::check_model_output(folder = working_directory, model = model)
 
-    if(length(fils) != 0) { #&
 
-      run_success <- FLAREr:::check_model_output(folder = working_directory, model = model)
+    if(length(fils) != 0 & run_success) { #&
+
 
       if(run_success){
           # nc_close(nc)
@@ -419,12 +420,12 @@ run_model_ler <- function(model,
     if(num_reruns > 1000){
       stop("Too many re-runs (> 1000) due to NaN values in output")
     }
+  }
 
-    return(list(x_star_end  = x_star_end,
+  return(list(x_star_end  = x_star_end,
                 # salt_end = salt_end,
                 lake_depth_end  = ler_temp_out$lake_depth,
                 restart_vars = ler_temp_out$restart_vars,
                 diagnostics_end  = diagnostics,
                 model_internal_depths = model_depths_end))
-  }
 }
