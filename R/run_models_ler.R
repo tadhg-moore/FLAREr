@@ -17,7 +17,7 @@ run_models_ler <- function(model, folder, verbose, restart, member, the_temps, m
 
   if(model == "GLM") {
 
-    GLM3r::run_glm(sim_folder = file.path(folder, "GLM"), verbose = TRUE)
+    GLM3r::run_glm(sim_folder = file.path(folder, "GLM"), verbose = verbose)
     # glmtools::plot_temp(file.path(folder, "GLM", "output.nc"))
 
     message("GLM run is complete! ", paste0("[", Sys.time(), "]"))
