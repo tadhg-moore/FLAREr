@@ -48,6 +48,7 @@ generate_initial_conditions <- function(states_config,
       init$blue_ice_thickness <- array(NA, dim = c(nmembers))
       init$avg_surf_temp <- array(NA, dim = c(nmembers))
       init$restart_variables <- array(NA, dim=c(17, nmembers))
+      init$model_internal_depths <- array(NA, dim = c(500, nmembers)) # Original FLARE
     } else if(config$model_settings$model == "Simstrat") {
       init$U <- array(0, dim = c(ndepths_modeled, nmembers))
       init$V <- array(0, dim = c(ndepths_modeled, nmembers))
@@ -122,6 +123,7 @@ generate_initial_conditions <- function(states_config,
       init$the_sals[, ] <- config$default_init$salinity
       for(m in 1:nmembers){
         init$the_depths[1:ndepths_modeled, m] <- config$model_settings$modeled_depths
+        init$model_internal_depths[1:ndepths_modeled, m] <- config$model_settings$modeled_depths
       }
     }
 
@@ -133,6 +135,7 @@ generate_initial_conditions <- function(states_config,
       aux_states_init$blue_ice_thickness <- init$blue_ice_thickness
       aux_states_init$the_sals <- config$default_init$salinity
       aux_states_init$the_depths <- init$the_depths
+      aux_states_init$model_internal_depths <- init$model_internal_depths
       aux_states_init$lake_depth <- init$lake_depth
       aux_states_init$avg_surf_temp <- init$avg_surf_temp
       aux_states_init$mixing_vars <- init$mixing_vars
