@@ -3,6 +3,8 @@ temp_dir <- tempdir()
 # dir.create("example")
 file.copy(from = template_folder, to = temp_dir, recursive = TRUE)
 
+test_directory <- file.path(temp_dir, "example")
+
 lake_directory <- test_directory
 configuration_directory <- file.path(lake_directory, "configuration", "default")
 execute_directory <- file.path(test_directory, "flare_tempdir")

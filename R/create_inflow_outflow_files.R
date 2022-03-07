@@ -1,30 +1,22 @@
-#' @title Generating inflow and output files in the GLM format
+#' @title Generating inflow and outflow files
 #' @details Processes historical inflow data from inflow_obs and from files in the inflow_file_dir into the GLM format
 #' @param inflow_file_dir string; full directory path that contains forecasted inflow and outflow files
 #' @param inflow_obs string; full path to cleaned inflow observation in the specified format
 #' @param working_directory string; full directory where FLARE executes
 #' @param state_names vector; vector of state names that will be included in the inflow files
 #' @return list with two vectors. One vector is the matrix of inflow_file_names and the other is the matrix of outflow_file_names
-#' @name create_glm_inflow_outflow_files-deprecated
-#' @seealso \code{\link{FLAREr-deprecated}}
-NULL
-
-#' @rdname create_glm_inflow_outflow_files-deprecated
-#' @section \code{create_glm_inflow_outflow_files}:
-#' For \code{create_glm_inflow_outflow_files}, use \code{\link{create_inflow_outflow_files}}.
-#'
 #' @export
-
-
-create_glm_inflow_outflow_files <- function(inflow_file_dir = NULL,
+#' @examples
+##' \dontrun{
+##' inflow_outflow_files <- create_inflow_outflow_files(inflow_file_dir = inflow_forecast_path, inflow_obs = cleaned_inflow_file, working_directory = config$file_path$execute_directory, config, state_names = NULL)
+##' }
+create_inflow_outflow_files <- function(inflow_file_dir = NULL,
                                             inflow_obs,
                                             working_directory,
                                             config,
                                             state_names)
 
 {
-
-  .Deprecated("create_inflow_outflow_files")
 
   VARS <- c("time", "FLOW", "TEMP", "SALT")
 
