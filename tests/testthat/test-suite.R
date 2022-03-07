@@ -143,6 +143,7 @@ test_that("EnKF can be run", {
   )
 
   #Load in pre-prepared output
+  # saveRDS(object = enkf_output, file = "inst/example/benchmark_data/enkf_output.RDS")
   samp_enkf_output <- readRDS(file.path(test_directory, "benchmark_data/enkf_output.RDS"))
 
   testthat::expect_true(is.list(enkf_output))
@@ -182,7 +183,7 @@ test_that("particle filter can be run", {
   # obs = obs
   # obs_sd = obs_config$obs_sd
   # model_sd = model_sd
-  # working_directory = config$file_path$execute_location
+  # working_directory = config$file_path$execute_directory
   # met_file_names = (met_file_names)
   # inflow_file_names = (inflow_file_names)
   # outflow_file_names = (outflow_file_names)
