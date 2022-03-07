@@ -415,6 +415,7 @@ run_da_forecast_ler <- function(states_init,
       # Start loop through ensemble members
 	  out <- parallel::parLapply(cl, 1:nmembers, function(m) {
       # out <- lapply(1:nmembers, function(m) { # Commented out for debugging
+	    # print(m)
 
         curr_met_file <- met_file_names[met_index[m]]
 
@@ -831,20 +832,61 @@ run_da_forecast_ler <- function(states_init,
 
         x[i, , ] <- cbind(x_corr, pars_star)[sample, ]
 
-        restart_list$snow_ice_thickness[ ,i, ] <- snow_ice_thickness[ ,i, sample]
-        lake_depth[i, ] <- lake_depth[i, sample]
-        salt[i, , ] <- salt[i, ,sample]
-        model_internal_depths[i, , ] <- model_internal_depths[i, , sample]
-        diagnostics[ ,i, , ] <- diagnostics[ ,i, ,sample]
+        if(model == "GLM") {
+          restart_list$lake_depth[i, ] <- restart_list$lake_depth[i, sample]
+          restart_list$the_depths[i, , ] <- restart_list$the_depths[i, , sample]
+          restart_list$the_sals[i, , ] <- restart_list$the_sals[i, , sample]
+          restart_list$snow_thickness[i, ] <- restart_list$snow_thickness[i, sample]
+          restart_list$white_ice_thickness[i, ] <- restart_list$white_ice_thickness[i, sample]
+          restart_list$blue_ice_thickness[i, ] <- restart_list$blue_ice_thickness[i, sample]
+          restart_list$avg_surf_temp[i , ] <- restart_list$avg_surf_temp[i , sample]
+          restart_list$restart_variables[, i, ] <- restart_list$restart_variables[, i, sample]
+        } else if(model == "GOTM") {
+          # z vars
+          restart_list$z_vars$z[i, , ] <- restart_list$z_vars$z[i, , sample]
+          restart_list$z_vars$temp[i, , ] <- restart_list$z_vars$temp[i, , sample]
+          restart_list$z_vars$salt[i, , ] <- restart_list$z_vars$salt[i, , sample]
+          restart_list$z_vars$u[i, , ] <- restart_list$z_vars$u[i, , sample]
+          restart_list$z_vars$uo[i, , ] <- restart_list$z_vars$uo[i, , sample]
+          restart_list$z_vars$v[i, , ] <- restart_list$z_vars$v[i, , sample]
+          restart_list$z_vars$vo[i, , ] <- restart_list$z_vars$vo[i, , sample]
+          restart_list$z_vars$xP[i, , ] <- restart_list$z_vars$xP[i, , sample]
+          restart_list$z_vars$h[i, , ] <- restart_list$z_vars$h[i, , sample]
+          restart_list$z_vars$ho[i, , ] <- restart_list$z_vars$ho[i, , sample]
 
-      }else{
+          # zi vars
+          restart_list$zi_vars$tke[i, , ] <- restart_list$zi_vars$tke[i, , sample]
+          restart_list$zi_vars$zi[i, , ] <- restart_list$zi_vars$zi[i, , sample]
+          restart_list$zi_vars$tkeo[i, , ] <- restart_list$zi_vars$tkeo[i, , sample]
+          restart_list$zi_vars$eps[i, , ] <- restart_list$zi_vars$eps[i, , sample]
+          restart_list$zi_vars$num[i, , ] <- restart_list$zi_vars$num[i, , sample]
+          restart_list$zi_vars$nuh[i, , ] <- restart_list$zi_vars$nuh[i, , sample]
+          restart_list$zi_vars$nus[i, , ] <- restart_list$zi_vars$nus[i, , sample]
+        }
+        if(model == "Simstrat") {
+          restart_list$zi[i, , ] <- restart_list$zi[i, , sample]
+          restart_list$u[i, , ] <- restart_list$u[i, , sample]
+          restart_list$v[i, , ] <- restart_list$v[i, , sample]
+          restart_list$temp[i, , ] <- restart_list$temp[i, , sample]
+          restart_list$S[i, , ] <- restart_list$S[i, , sample]
+          restart_list$k[i, , ] <- restart_list$k[i, , sample]
+          restart_list$eps[i, , ] <- restart_list$eps[i, , sample]
+          restart_list$num[i, , ] <- restart_list$num[i, , sample]
+          restart_list$nuh[i, , ] <- restart_list$nuh[i, , sample]
+          restart_list$seicheE[i , ] <- restart_list$seicheE[i , sample]
+        }
+        if(length(config$diagnostics_names) > 0){
+          diagnostics[ ,i, , ] <- diagnostics[ ,i, ,sample]
+        }
+
+      } else {
         message("da_method not supported; select enkf or pf")
       }
     }
 
     #IF NO INITIAL CONDITION UNCERTAINITY THEN SET EACH ENSEMBLE MEMBER TO THE MEAN
     #AT THE INITIATION OF ThE FUTURE FORECAST
-    if(i == (hist_days + 1)){
+    if(i == (hist_days + 1)) {
 
       if(config$uncertainty$initial_condition == FALSE){
         state_means <- colMeans(x[i, ,1:nstates])
