@@ -10,7 +10,6 @@
 #' @param par_file vector of namelist names associated with each parameter being calibrated
 #' @param num_phytos number of phytoplankton groups
 #' @param glm_depths_start depth from the last GLM run
-#' @param lake_depth_start depth of lake
 #' @param x_start state vector
 #' @param full_time vector of time step for entire simulation
 #' @param wq_start starting index of each state in the x_start
@@ -26,12 +25,10 @@
 #' @param diagnostics_names vector of output diagnmostic names
 #' @param npars number of parameters calibrated
 #' @param num_wq_vars number of water quality variables
-#' @param snow_ice_thickness_start vector of snow and ice states
-#' @param salt_start salt
 #' @param nstates number of nstates simulated
 #' @param state_names state names
 #' @param include_wq boolean; TRUE = use water quality model
-#' @param restart_list list; containing mixing_vars_start & avg_surf_temp_start
+#' @param restart_list list; containing restart_variables_start & avg_surf_temp_start
 #' @param debug boolen; TRUE = turn on more messages for debugging
 #'
 #' @return list of output variables
@@ -48,7 +45,7 @@ run_model <- function(i,
                       par_file,
                       num_phytos,
                       glm_depths_start,
-                      lake_depth_start,
+                      # lake_depth_start,
                       x_start,
                       full_time,
                       wq_start,
@@ -64,8 +61,8 @@ run_model <- function(i,
                       diagnostics_names,
                       npars,
                       num_wq_vars,
-                      snow_ice_thickness_start,
-                      salt_start,
+                      # snow_ice_thickness_start,
+                      # salt_start,
                       nstates,
                       state_names,
                       include_wq,
@@ -83,7 +80,7 @@ run_model <- function(i,
     simulate_sss <- management$simulate_sss
   }
 
-  mixing_vars_start = restart_list$mixing_vars[,i-1 , m]
+  restart_variables_start = restart_list$restart_variables[,i-1 , m]
   avg_surf_temp_start = restart_list$avg_surf_temp[i-1, m]
 
   update_glm_nml_list <- list()
@@ -96,7 +93,7 @@ run_model <- function(i,
   list_index_aed <- 1
   list_index_phyto <- 1
 
-  update_glm_nml_list[[list_index]] <- mixing_vars_start
+  update_glm_nml_list[[list_index]] <- restart_variables_start
   update_glm_nml_names[list_index] <- "restart_variables"
   list_index <- list_index + 1
 
@@ -139,7 +136,7 @@ run_model <- function(i,
   }
 
   glm_depths_tmp <- glm_depths_start[!is.na(glm_depths_start)]
-  glm_depths_tmp_tmp <- c(glm_depths_tmp, lake_depth_start)
+  glm_depths_tmp_tmp <- c(glm_depths_tmp, restart_list$lake_depth[i-1, m])
   glm_depths_mid <- glm_depths_tmp_tmp[1:(length(glm_depths_tmp_tmp)-1)] + diff(glm_depths_tmp_tmp)/2
 
   if(include_wq){
@@ -173,7 +170,7 @@ run_model <- function(i,
                                          modeled_depths = modeled_depths,
                                          forecast_sss_flow = management$forecast_sss_flow,
                                          forecast_sss_oxy = management$forecast_sss_oxy,
-                                         salt = salt_start)
+                                         salt = restart_list$the_sals[i-1, , m])
       }else{
         file.copy(file.path(working_directory, management$specified_sss_inflow_file), paste0(working_directory,"/sss_inflow.csv"))
         if(!is.na(management$specified_sss_outflow_file)){
@@ -191,7 +188,7 @@ run_model <- function(i,
   update_glm_nml_names[list_index] <- "the_temps"
   list_index <- list_index + 1
 
-  the_sals_glm <- approx(modeled_depths,salt_start, glm_depths_mid, rule = 2)$y
+  the_sals_glm <- approx(modeled_depths, restart_list$the_sals[i-1, , m], glm_depths_mid, rule = 2)$y
   update_glm_nml_list[[list_index]] <- round(the_sals_glm, 4)
   update_glm_nml_names[list_index] <- "the_sals"
   list_index <- list_index + 1
@@ -204,7 +201,7 @@ run_model <- function(i,
   update_glm_nml_names[list_index] <- "num_depths"
   list_index <- list_index + 1
 
-  update_glm_nml_list[[list_index]] <- round(lake_depth_start, 4)
+  update_glm_nml_list[[list_index]] <- round(restart_list$lake_depth[i-1, m], 4)
   update_glm_nml_names[list_index] <- "lake_depth"
   list_index <- list_index + 1
 
@@ -212,11 +209,11 @@ run_model <- function(i,
   update_glm_nml_names[list_index] <- "snow_thickness"
   list_index <- list_index + 1
 
-  update_glm_nml_list[[list_index]] <- round(snow_ice_thickness_start[2], 4)
+  update_glm_nml_list[[list_index]] <- round(restart_list$white_ice_thickness[i-1, m ], 4)
   update_glm_nml_names[list_index] <- "white_ice_thickness"
   list_index <- list_index + 1
 
-  update_glm_nml_list[[list_index]] <- round(snow_ice_thickness_start[3], 4)
+  update_glm_nml_list[[list_index]] <- round(restart_list$blue_ice_thickness[i-1, m], 4)
   update_glm_nml_names[list_index] <- "blue_ice_thickness"
   list_index <- list_index + 1
 

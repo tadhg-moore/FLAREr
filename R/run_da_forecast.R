@@ -223,20 +223,32 @@ run_da_forecast <- function(states_init,
 
   model_internal_depths <- array(NA, dim = c(nsteps, 500, nmembers))
   lake_depth <- array(NA, dim = c(nsteps, nmembers))
-  snow_ice_thickness <- array(NA, dim = c(3, nsteps, nmembers))
-  salt <- array(NA, dim = c(nsteps, ndepths_modeled, nmembers))
-  restart_list = NULL
-  mixing_vars <- array(NA, dim = c(17, nsteps, nmembers))
+  the_depths <- array(NA, dim = c(nsteps, ndepths_modeled, nmembers))
+  the_sals <- array(NA, dim = c(nsteps, ndepths_modeled, nmembers))
+  snow_thickness <- array(NA, dim = c(nsteps, nmembers))
+  white_ice_thickness <- array(NA, dim = c(nsteps, nmembers))
+  blue_ice_thickness <- array(NA, dim = c(nsteps, nmembers))
   avg_surf_temp <- array(NA, dim = c(nsteps, nmembers))
-  mixing_vars[,1 ,] <- aux_states_init$mixing_vars
-  avg_surf_temp[1, ] <- aux_states_init$avg_surf_temp
-  restart_list <- list(mixing_vars = mixing_vars,
-                       avg_surf_temp = avg_surf_temp)
+  restart_variables <- array(NA, dim = c(17, nsteps, nmembers))
 
   model_internal_depths[1, ,] <- aux_states_init$model_internal_depths
+  the_depths[1, ,] <- aux_states_init$the_depths
   lake_depth[1, ] <- aux_states_init$lake_depth
-  snow_ice_thickness[,1 , ] <- aux_states_init$snow_ice_thickness
-  salt[1, , ] <- aux_states_init$salt
+  snow_thickness[1, ] <- aux_states_init$snow_thickness
+  white_ice_thickness[1, ] <- aux_states_init$white_ice_thickness
+  blue_ice_thickness[1, ] <- aux_states_init$blue_ice_thickness
+  the_sals[1, , ] <- aux_states_init$the_sals
+  avg_surf_temp[1, ] <- aux_states_init$avg_surf_temp
+  restart_variables[, 1, ] <- 0
+
+  restart_list <- list(lake_depth = lake_depth,
+                       the_depths = the_depths,
+                       the_sals = the_sals,
+                       snow_thickness = snow_thickness,
+                       white_ice_thickness = white_ice_thickness,
+                       blue_ice_thickness = blue_ice_thickness,
+                       avg_surf_temp = avg_surf_temp,
+                       restart_variables = restart_variables)
 
   if(config$da_setup$assimilate_first_step){
     start_step <- 1
@@ -252,7 +264,7 @@ run_da_forecast <- function(states_init,
 
   ###START EnKF
 
-  for(i in start_step:nsteps){
+  for(i in start_step:nsteps) {
 
     curr_start <- strftime(full_time[i - 1],
                            format="%Y-%m-%d %H:%M",
@@ -315,13 +327,12 @@ run_da_forecast <- function(states_init,
                                                  "curr_stop", "par_names", "par_file",
                                                  "num_phytos", "full_time", "management",
                                                  "hist_days", "config", "states_config",
-                                                 "ndepths_modeled", "glm_output_vars", "num_wq_vars"),
+                                                 "ndepths_modeled", "glm_output_vars", "num_wq_vars", "debug"),
                               envir = environment())
     }
 
     # Variables that need to be exported at each timestep
-    parallel::clusterExport(cl, varlist = list("x", "i", "restart_list", "model_internal_depths", "lake_depth",
-                                               "snow_ice_thickness", "salt"),
+    parallel::clusterExport(cl, varlist = list("x", "i", "restart_list", "model_internal_depths"),
                             envir = environment())
 
 
@@ -331,9 +342,9 @@ run_da_forecast <- function(states_init,
     if(i > 1){
 
       out <- parallel::parLapply(cl, 1:nmembers, function(m) {
-        #out <- lapply(1:nmembers, function(m) { # Commented out for debugging
+        # out <- lapply(1:nmembers, function(m) { # Commented out for debugging
 
-        if(config$model_settings$ncore == 1){
+        if(config$model_settings$ncore == 1) {
           ens_dir_index <- 1
         }else{
           ens_dir_index <- m
@@ -370,6 +381,41 @@ run_da_forecast <- function(states_init,
           outflow_file_name <- NULL
         }
 
+
+        # i
+        # m
+        # curr_start
+        # curr_stop
+        # par_names
+        # curr_pars = curr_pars_ens
+        # working_directory = file.path(working_directory, ens_dir_index)
+        # par_file
+        # num_phytos
+        # glm_depths_start = model_internal_depths[i-1, ,m ]
+        # lake_depth_start = restart_list$lake_depth[i-1, m]
+        # x_start = x[i-1, m, ]
+        # full_time
+        # wq_start = states_config$wq_start
+        # wq_end = states_config$wq_end
+        # management = management
+        # hist_days
+        # modeled_depths = config$model_settings$modeled_depths
+        # ndepths_modeled
+        # curr_met_file
+        # inflow_file_name = inflow_file_name
+        # outflow_file_name = outflow_file_name
+        # glm_output_vars = glm_output_vars
+        # diagnostics_names = config$output_settings$diagnostics_names
+        # npars
+        # num_wq_vars
+        # snow_ice_thickness_start = matrix(c(restart_list$snow_thickness[i-1, m ], restart_list$white_ice_thickness[i-1, m ], restart_list$blue_ice_thickness[i-1, m]), nrow = 3)
+        # salt_start = restart_list$the_sals[i-1, , m]
+        # nstates
+        # state_names = states_config$state_names
+        # include_wq = config$include_wq
+        # restart_list = restart_list
+        # debug = debug
+
         out <- FLAREr:::run_model(i,
                                  m,
                                  curr_start,
@@ -380,7 +426,7 @@ run_da_forecast <- function(states_init,
                                  par_file,
                                  num_phytos,
                                  glm_depths_start = model_internal_depths[i-1, ,m ],
-                                 lake_depth_start = lake_depth[i-1, m],
+                                 # lake_depth_start = restart_list$lake_depth[i-1, m],
                                  x_start = x[i-1, m, ],
                                  full_time,
                                  wq_start = states_config$wq_start,
@@ -396,8 +442,8 @@ run_da_forecast <- function(states_init,
                                  diagnostics_names = config$output_settings$diagnostics_names,
                                  npars,
                                  num_wq_vars,
-                                 snow_ice_thickness_start = snow_ice_thickness[, i-1, m ],
-                                 salt_start = salt[i-1, , m],
+                                 # snow_ice_thickness_start = matrix(c(restart_list$snow_thickness[i-1, m ], restart_list$white_ice_thickness[i-1, m ], restart_list$blue_ice_thickness[i-1, m]), nrow = 3),
+                                 # salt_start = restart_list$the_sals[i-1, , m],
                                  nstates,
                                  state_names = states_config$state_names,
                                  include_wq = config$include_wq,
@@ -408,12 +454,18 @@ run_da_forecast <- function(states_init,
       # Loop through output and assign to matrix
       for(m in 1:nmembers) {
         x_star[m, ] <- out[[m]]$x_star_end
-        lake_depth[i ,m ] <- out[[m]]$lake_depth_end
-        snow_ice_thickness[,i ,m] <- out[[m]]$snow_ice_thickness_end
+
+        restart_list$lake_depth[i, m] <- out[[m]]$lake_depth_end
+        restart_list$the_sals[i, , m] <- approx(out[[m]]$restart_vars$the_depths, out[[m]]$restart_vars$the_sals, config$model_settings$modeled_depths, rule = 2)$y
+        restart_list$snow_thickness[i, m] <- out[[m]]$restart_vars$snow_thickness
+        restart_list$white_ice_thickness[i, m] <- out[[m]]$restart_vars$white_ice_thickness
+        restart_list$blue_ice_thickness[i, m] <- out[[m]]$restart_vars$blue_ice_thickness
         restart_list$avg_surf_temp[i , m] <- out[[m]]$restart_vars$avg_surf_temp
-        restart_list$mixing_vars[, i, m] <- out[[m]]$restart_vars$mixing_vars
+        restart_list$restart_variables[, i, m] <- out[[m]]$restart_vars$restart_variables
+
+
+        lake_depth[i ,m ] <- out[[m]]$lake_depth_end
         model_internal_depths[i, ,m] <- out[[m]]$model_internal_depths
-        salt[i, , m]  <- out[[m]]$salt_end
         curr_pars[m, ] <- out[[m]]$curr_pars
 
 
@@ -665,10 +717,10 @@ run_da_forecast <- function(states_init,
           x[i, , ] <- cbind(x_corr)[sample, ]
         }
 
-        snow_ice_thickness[ ,i, ] <- snow_ice_thickness[ ,i, sample]
-        avg_surf_temp[i, ] <- avg_surf_temp[i, sample]
-        lake_depth[i, ] <- lake_depth[i, sample]
-        salt[i, , ] <- salt[i, ,sample]
+        restart_list$snow_thickness[i, ] <- restart_list$snow_thickness[i, sample]
+        restart_list$avg_surf_temp[i, ] <- restart_list$avg_surf_temp[i, sample]
+        restart_list$lake_depth[i, ] <- restart_list$lake_depth[i, sample]
+        restart_list$the_sals[i, , ] <- restart_list$the_sals[i, ,sample]
         model_internal_depths[i, , ] <- model_internal_depths[i, , sample]
         diagnostics[ ,i, , ] <- diagnostics[ ,i, ,sample]
 
@@ -820,9 +872,9 @@ run_da_forecast <- function(states_init,
               forecast_project_id = config$run_config$sim_name,
               time_of_forecast = time_of_forecast,
               restart_list =  restart_list,
-              snow_ice_thickness = snow_ice_thickness,
-              lake_depth = lake_depth,
-              salt = salt,
+              # snow_ice_thickness = snow_ice_thickness,
+              # lake_depth = lake_depth,
+              # salt = salt,
               model_internal_depths = model_internal_depths,
               diagnostics = diagnostics,
               data_assimilation_flag = data_assimilation_flag,
