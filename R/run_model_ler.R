@@ -58,19 +58,29 @@ run_model_ler <- function(model,
 
   yml <- yaml::read_yaml(file.path(working_directory, config$model_settings$base_ler_yaml))
 
-  # model_depths_end <- rep(NA,length(model_depths_start))
-  #
-  # model_depths_tmp <- model_depths_start[!is.na(model_depths_start)]
-  # model_depths_tmp_tmp <- c(model_depths_tmp, lake_depth_start)
-  # model_depths_mid <- model_depths_tmp_tmp[1:(length(model_depths_tmp_tmp)-1)] + diff(model_depths_tmp_tmp)/2
+  # Restart with GLM depths
+  if(model == "GLM") {
+    model_depths_start <- restart_list$model_internal_depths[i-1, , m]
+    #
+    model_depths_tmp <- model_depths_start[!is.na(model_depths_start)]
 
-  # Initial temperature
-  the_temps_enkf_tmp <- x_start[1:ndepths_modeled]
+    # Initial temperature
+    the_temps_enkf_tmp <- x_start[1:ndepths_modeled]
 
-  the_temps <- approx(modeled_depths, the_temps_enkf_tmp, modeled_depths, rule = 2)$y
+    the_temps <- approx(modeled_depths, the_temps_enkf_tmp, model_depths_tmp, rule = 2)$y
 
-  init_prof <- data.frame(Depth_meter = round(modeled_depths, 4),
-                          Water_Temperature_celsius = round(the_temps, 4))
+    init_prof <- data.frame(Depth_meter = round(model_depths_tmp, 4),
+                            Water_Temperature_celsius = round(the_temps, 4))
+  } else {
+    # Initial temperature for GOTM & Simstrat
+    the_temps_enkf_tmp <- x_start[1:ndepths_modeled]
+
+    the_temps <- approx(modeled_depths, the_temps_enkf_tmp, modeled_depths, rule = 2)$y
+
+    init_prof <- data.frame(Depth_meter = round(modeled_depths, 4),
+                            Water_Temperature_celsius = round(the_temps, 4))
+  }
+
   write.csv(init_prof, file.path(working_directory, "initial_profile.csv"),
             row.names = FALSE, quote = FALSE)
 
@@ -159,7 +169,7 @@ run_model_ler <- function(model,
 
 
     inp_list <- list(lake_depth = round(restart_list$lake_depth[i-1, m], 4),
-                     the_depths = round(restart_list$the_depths[i-1, ,m ], 4),
+                     the_depths = init_prof$Depth_meter,
                      the_temps = init_prof$Water_Temperature_celsius,
                      the_sals = round(restart_list$the_sals[i-1, ,m ], 4),
                      snow_thickness = round(restart_list$snow_thickness[i-1, m]),
@@ -370,7 +380,8 @@ run_model_ler <- function(model,
         x_star_end <- temps
         salt_end <- ler_temp_out$salt
 
-        model_depths_end <- ler_temp_out$depths_enkf
+        model_depths_end <- rep(NA, 500)
+        model_depths_end[1:num_model_depths] <- ler_temp_out$depths_enkf
 
         #
         # model_depths_tmp <- c(ler_temp_out$depths_enkf, ler_temp_out$lake_depth)

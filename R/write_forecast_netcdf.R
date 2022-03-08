@@ -39,7 +39,7 @@ write_forecast_netcdf <- function(da_forecast_output,
 
     avg_surf_temp <- da_forecast_output$restart_list$avg_surf_temp
     restart_variables <- da_forecast_output$restart_list$restart_variables
-    model_internal_depths <- da_forecast_output$restart_list$the_depths
+    model_internal_depths <- da_forecast_output$restart_list$model_internal_depths
     salt <- da_forecast_output$restart_list$the_sals
 
   } else if(config$model_settings$model == "GOTM") {
@@ -118,7 +118,7 @@ write_forecast_netcdf <- function(da_forecast_output,
   timedim <- ncdf4::ncdim_def("time",units = "seconds since 1970-01-01 00:00.00 UTC", longname = "",vals = t)
   if(config$model_settings$model ==  "GLM") {
     # snow_ice_dim <- ncdf4::ncdim_def("snow_ice_dim",units = "meters", vals = c(1, 2, 3), longname = 'snow ice dims')
-    h_dim <- ncdf4::ncdim_def("h",units = "meters", vals = as.double(1), longname = 'height')
+    # h_dim <- ncdf4::ncdim_def("h",units = "meters", vals = as.double(1), longname = 'height')
     restart_variables_dim <- ncdf4::ncdim_def("restart_variables_dim",units = '', vals = seq(1, dim(restart_variables)[1], 1), longname = 'number of mixing restart variables')
     internal_model_depths_dim <- ncdf4::ncdim_def("internal_model_depths_dim",units = '', vals = seq(1, dim(model_internal_depths)[2]), longname = 'number of possible depths that are simulated in GLM')
   } else if(config$model_settings$model ==  "GOTM") {
@@ -146,11 +146,11 @@ write_forecast_netcdf <- function(da_forecast_output,
     # def_list[[index]] <- ncdf4::ncvar_def("snow_ice_thickness","meter", list(snow_ice_dim, timedim, ensdim),missval = -99,longname = 'Ice Thickness',prec="single")
     # index <- index + 1
 
-    def_list[[index]] <- ncdf4::ncvar_def("snow_thickness","meter", list(h_dim, timedim, ensdim),missval = -99,longname = 'Snow Thickness',prec="single")
+    def_list[[index]] <- ncdf4::ncvar_def("snow_thickness","meter", list(timedim, ensdim),missval = -99,longname = 'Snow Thickness',prec="single")
     index <- index + 1
-    def_list[[index]] <- ncdf4::ncvar_def("white_ice_thickness","meter", list(h_dim, timedim, ensdim),missval = -99,longname = 'White Ice Thickness',prec="single")
+    def_list[[index]] <- ncdf4::ncvar_def("white_ice_thickness","meter", list(timedim, ensdim),missval = -99,longname = 'White Ice Thickness',prec="single")
     index <- index + 1
-    def_list[[index]] <- ncdf4::ncvar_def("blue_ice_thickness","meter", list(h_dim, timedim, ensdim),missval = -99,longname = 'Blue Ice Thickness',prec="single")
+    def_list[[index]] <- ncdf4::ncvar_def("blue_ice_thickness","meter", list(timedim, ensdim),missval = -99,longname = 'Blue Ice Thickness',prec="single")
     index <- index + 1
     def_list[[index]] <- ncdf4::ncvar_def("lake_depth","meter",list(timedim,ensdim),missval = -99,longname = 'Depth of lake',prec="single")
     index <- index + 1
@@ -158,7 +158,7 @@ write_forecast_netcdf <- function(da_forecast_output,
     index <- index + 1
     def_list[[index]] <- ncdf4::ncvar_def("restart_variables","dimensionless",list(restart_variables_dim, timedim, ensdim),fillvalue,longname = "variables required to restart mixing",prec="single")
     index <- index + 1
-    def_list[[index]] <- ncdf4::ncvar_def("model_internal_depths","meter",list(timedim, internal_model_depths_dim, ensdim),fillvalue,longname = "depths simulated by glm that are required to restart ",prec="single")
+    def_list[[index]] <- ncdf4::ncvar_def("model_internal_depths","meter",list(timedim, internal_model_depths_dim, ensdim), fillvalue, longname = "depths simulated by glm that are required to restart ",prec="single")
     index <- index + 1
     def_list[[index]] <- ncdf4::ncvar_def("salt","g_kg",list(timedim, depthdim, ensdim),fillvalue,longname = "salt",prec="single")
   } else if(config$model_settings$model ==  "GOTM") {

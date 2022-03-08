@@ -52,6 +52,7 @@ get_ler_var_all <- function(model,
     heights_surf <- heights[tallest_layer, final_time_step]
     heights <- heights[1:tallest_layer, final_time_step]
 
+    depths_enkf = rev(heights_surf - heights)
 
     output_no_depth <- NA
 

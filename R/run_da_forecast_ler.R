@@ -236,6 +236,7 @@ run_da_forecast_ler <- function(states_init,
 
     lake_depth <- array(NA, dim = c(nsteps, nmembers))
     the_depths <- array(NA, dim = c(nsteps, ndepths_modeled, nmembers))
+    model_internal_depths <- array(NA, dim = c(nsteps, 500, nmembers))
     the_sals <- array(NA, dim = c(nsteps, ndepths_modeled, nmembers))
     snow_thickness <- array(NA, dim = c(nsteps, nmembers))
     white_ice_thickness <- array(NA, dim = c(nsteps, nmembers))
@@ -245,6 +246,7 @@ run_da_forecast_ler <- function(states_init,
 
     the_depths[1, ,] <- aux_states_init$the_depths
     lake_depth[1, ] <- aux_states_init$lake_depth
+    model_internal_depths[1, ,] <- aux_states_init$model_internal_depths
     snow_thickness[1, ] <- aux_states_init$snow_thickness
     white_ice_thickness[1, ] <- aux_states_init$white_ice_thickness
     blue_ice_thickness[1, ] <- aux_states_init$blue_ice_thickness
@@ -253,6 +255,7 @@ run_da_forecast_ler <- function(states_init,
     restart_variables[, 1, ] <- 0
 
     restart_list <- list(lake_depth = lake_depth,
+                         model_internal_depths = model_internal_depths,
                          the_depths = the_depths,
                          the_sals = the_sals,
                          snow_thickness = snow_thickness,
@@ -524,8 +527,9 @@ run_da_forecast_ler <- function(states_init,
 	    # salt[i, , m]  <- out[[m]]$salt_end
 	    if(model == "GLM") {
 	      restart_list$lake_depth[i, m] <- out[[m]]$lake_depth_end
-	      restart_list$the_depths[i, , m] <- out[[m]]$model_internal_depths
-	      restart_list$the_sals[i, , m] <- out[[m]]$restart_vars$the_sals
+	      restart_list$model_internal_depths[i, , m] <- out[[m]]$model_internal_depths
+	      # restart_list$the_depths[i, , m] <- out[[m]]$the_depths
+	      restart_list$the_sals[i, , m] <- approx(out[[m]]$restart_vars$the_depths, out[[m]]$restart_vars$the_sals, config$model_settings$modeled_depths, rule = 2)$y
 	      restart_list$snow_thickness[i, m] <- out[[m]]$restart_vars$snow_thickness
 	      restart_list$white_ice_thickness[i, m] <- out[[m]]$restart_vars$white_ice_thickness
 	      restart_list$blue_ice_thickness[i, m] <- out[[m]]$restart_vars$blue_ice_thickness
@@ -834,7 +838,8 @@ run_da_forecast_ler <- function(states_init,
 
         if(model == "GLM") {
           restart_list$lake_depth[i, ] <- restart_list$lake_depth[i, sample]
-          restart_list$the_depths[i, , ] <- restart_list$the_depths[i, , sample]
+          restart_list$model_internal_depths[i, , m] <- out[[m]]$model_internal_depths[i, , sample]
+          # restart_list$the_depths[i, , ] <- restart_list$the_depths[i, , sample]
           restart_list$the_sals[i, , ] <- restart_list$the_sals[i, , sample]
           restart_list$snow_thickness[i, ] <- restart_list$snow_thickness[i, sample]
           restart_list$white_ice_thickness[i, ] <- restart_list$white_ice_thickness[i, sample]
