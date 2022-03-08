@@ -97,6 +97,10 @@ generate_ler_met_files <- function(obs_met_file = NULL,
   if(!is.null(forecast_dir)){
     forecast_files <- list.files(forecast_dir, pattern = ".nc", full.names = TRUE)
 
+    if(config$run_config$forecast_horizon > 16) {
+      forecast_files <- forecast_files[!grepl("ens00", forecast_files)]
+    }
+
     forecast_files <- forecast_files[!stringr::str_detect(string = forecast_files, pattern = basename(obs_met_file))]
     nfiles <-   length(forecast_files)
   }else if(!is.null(met)){
