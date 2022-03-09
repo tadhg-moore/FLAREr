@@ -50,7 +50,7 @@ check_model_output <- function(folder, model) {
 
     if(file_check) {
       tmp <- vroom::vroom(outfile, delim = ",", show_col_types = FALSE)
-      nan_check <- any(is.nan(unlist(tmp)))
+      nan_check <- any(is.nan(unlist(tmp)) | any(unlist(tmp) == "NaN"))
       if(nan_check) {
         return(FALSE)
       } else {
