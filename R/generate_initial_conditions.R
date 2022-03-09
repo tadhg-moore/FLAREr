@@ -5,7 +5,6 @@
 #' @param pars_config list; list of parameter configurations  (Default = NULL)
 #' @param obs array; array of the observations. Required dimensions are `[nobs, time, depth]`
 #' @param config list; list of configurations
-#' @param restart_file string; netcdf file with full path from FLARE output that is used as initial conditions
 #' @param historical_met_error boolean; producted by generate_glm_met_files()
 #' @import ncdf4
 #' @return list; list contains the initial conditions objects required by run_da_forecast()
@@ -20,10 +19,11 @@ generate_initial_conditions <- function(states_config,
                                         pars_config = NULL,
                                         obs,
                                         config,
-                                        restart_file = NA,
                                         historical_met_error = FALSE){
 
-  if(is.na(restart_file)){
+  pars_config <- pars_config[pars_config$model == config$model_settings$model, ]
+
+  if(is.na(config$run_config$restart_file)){
 
     init <- list()
     if(!is.null(pars_config) & any(pars_config$model == config$model_settings$model)){
@@ -41,6 +41,7 @@ generate_initial_conditions <- function(states_config,
     init$pars <- array(NA, dim=c(npars, nmembers))
     if(config$model_settings$model == "GLM") {
       init$lake_depth = array(NA, dim=c(nmembers))
+      init$model_internal_depths <- array(NA, dim = c(500, nmembers)) # Original FLARE
       init$the_depths <- array(NA, dim = c(ndepths_modeled, nmembers))
       init$the_sals <- array(NA, dim = c(ndepths_modeled, nmembers))
       init$snow_thickness <- array(NA, dim = c(nmembers))
@@ -48,7 +49,6 @@ generate_initial_conditions <- function(states_config,
       init$blue_ice_thickness <- array(NA, dim = c(nmembers))
       init$avg_surf_temp <- array(NA, dim = c(nmembers))
       init$restart_variables <- array(NA, dim=c(17, nmembers))
-      init$model_internal_depths <- array(NA, dim = c(500, nmembers)) # Original FLARE
     } else if(config$model_settings$model == "Simstrat") {
       init$U <- array(0, dim = c(ndepths_modeled, nmembers))
       init$V <- array(0, dim = c(ndepths_modeled, nmembers))
@@ -168,19 +168,23 @@ generate_initial_conditions <- function(states_config,
       restart_file = config$run_config$restart_file,
       state_names = states_config$state_names,
       par_names = pars_config$par_names_save,
-      restart_index = restart_index)
+      restart_index = restart_index,
+      config = config)
 
     aux_states_init <- list()
-    aux_states_init$snow_ice_thickness <- out$snow_ice_thickness
-    aux_states_init$the_sals_init <- config$the_sals_init
-    aux_states_init$model_internal_depths <- out$model_internal_depths
-    aux_states_init$lake_depth <- out$lake_depth
-    aux_states_init$salt <- out$salt
     if(config$model_settings$model == "GLM") {
-      aux_states_init$avg_surf_temp <- out$avg_surf_temp
-      aux_states_init$mixing_vars <- out$mixing_vars
-    }
-    if(config$model_settings$model == "Simstrat") {
+      aux_states_init$snow_thickness <- out$restart_list$snow_thickness
+      aux_states_init$white_ice_thickness <- out$restart_list$white_ice_thickness
+      aux_states_init$blue_ice_thickness <- out$restart_list$blue_ice_thickness
+      aux_states_init$the_sals <- out$restart_list$the_sals
+      aux_states_init$the_depths <- out$restart_list$the_depths
+      aux_states_init$model_internal_depths <- out$restart_list$model_internal_depths
+      aux_states_init$lake_depth <- out$restart_list$lake_depth
+      aux_states_init$avg_surf_temp <- out$restart_list$avg_surf_temp
+      aux_states_init$restart_variables <- out$restart_list$restart_variables
+    } else if(config$model_settings$model == "GOTM") {
+
+    } else if(config$model_settings$model == "Simstrat") {
       aux_states_init$U <- array(0, dim = c(ndepths_modeled, nmembers))
       aux_states_init$V <- array(0, dim = c(ndepths_modeled, nmembers))
       aux_states_init$k <- array(3e-6, dim = c(ndepths_modeled, nmembers))
