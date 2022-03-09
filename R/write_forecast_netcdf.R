@@ -81,8 +81,14 @@ write_forecast_netcdf <- function(da_forecast_output,
 
   diagnostics <- da_forecast_output$diagnostics
 
-  hist_days <- as.numeric(forecast_start_datetime - full_time[1])
-  start_forecast_step <- 1 + hist_days
+  if(forecast_start_datetime %in% full_time) {
+    hist_days <- as.numeric(forecast_start_datetime - full_time[1])
+    start_forecast_step <- 1 + hist_days
+  } else {
+    hist_days <- length(full_time)
+    start_forecast_step <- NA
+  }
+
 
   if(!is.null(pars_config)){
     npars <- nrow(pars_config)
