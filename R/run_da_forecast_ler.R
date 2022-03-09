@@ -416,103 +416,278 @@ run_da_forecast_ler <- function(states_init,
     if(i > 1){
 
       # Start loop through ensemble members
-	  out <- parallel::parLapply(cl, 1:nmembers, function(m) {
-      # out <- lapply(1:nmembers, function(m) { # Commented out for debugging
-	    # print(m)
 
-        curr_met_file <- met_file_names[met_index[m]]
+      out <- tryCatch({
 
-        if(npars > 0){
-          if(par_fit_method == "inflate" & da_method == "enkf"){
-            curr_pars <- x[i - 1, m , (nstates+1):(nstates+ npars)]
-          }else if(par_fit_method == "perturb"){
-            if(i > (hist_days + 1)){
-              curr_pars <- x[i - 1, m , (nstates+1):(nstates+ npars)] + rnorm(npars, mean = rep(0, npars), sd = pars_config$perturb_par)
-            }else{
+        parallel::parLapply(cl, 1:nmembers, function(m) {
+          # out <- lapply(1:nmembers, function(m) { # Commented out for debugging
+          # print(m)
+
+          curr_met_file <- met_file_names[met_index[m]]
+
+          if(npars > 0){
+            if(par_fit_method == "inflate" & da_method == "enkf"){
               curr_pars <- x[i - 1, m , (nstates+1):(nstates+ npars)]
+            }else if(par_fit_method == "perturb"){
+              if(i > (hist_days + 1)){
+                curr_pars <- x[i - 1, m , (nstates+1):(nstates+ npars)] + rnorm(npars, mean = rep(0, npars), sd = pars_config$perturb_par)
+              }else{
+                curr_pars <- x[i - 1, m , (nstates+1):(nstates+ npars)]
+              }
+            }else{
+              message("parameter fitting method not supported.  inflate or perturb are supported. only inflate is supported for enkf")
             }
-          }else{
-            message("parameter fitting method not supported.  inflate or perturb are supported. only inflate is supported for enkf")
           }
-        }
 
-        if(length(inflow_file_names) > 0){
-          inflow_file_name <- inflow_file_names[inflow_outflow_index[m]]
-          outflow_file_name <- outflow_file_names[inflow_outflow_index[m]]
+          if(length(inflow_file_names) > 0){
+            inflow_file_name <- inflow_file_names[inflow_outflow_index[m]]
+            outflow_file_name <- outflow_file_names[inflow_outflow_index[m]]
+          }else{
+            inflow_file_name <- NULL
+            outflow_file_name <- NULL
+          }
+
+          if(config$model_settings$ncore == 1) {
+            wdir <- file.path(working_directory, 1)
+          } else {
+            wdir <- file.path(working_directory, m)
+          }
+
+          # model
+          # i
+          # m
+          # curr_start
+          # curr_stop
+          # par_names
+          # curr_pars
+          # working_directory = wdir
+          # par_file
+          # num_phytos
+          # x_start = x[i-1, m, ]
+          # full_time
+          # wq_start = states_config$wq_start
+          # wq_end = states_config$wq_end
+          # management = management
+          # hist_days
+          # modeled_depths = config$model_settings$modeled_depths
+          # ndepths_modeled
+          # curr_met_file
+          # inflow_file_name = inflow_file_name
+          # outflow_file_name = outflow_file_name
+          # output_vars = output_vars
+          # diagnostics_names = config$output_settings$diagnostics_names
+          # npars
+          # num_wq_vars
+          # nstates
+          # state_names = states_config$state_names
+          # include_wq = config$include_wq
+          # restart = restart
+          # restart_list = restart_list
+
+          out <- FLAREr:::run_model_ler(model,
+                                        i,
+                                        m,
+                                        curr_start,
+                                        curr_stop,
+                                        par_names,
+                                        curr_pars,
+                                        working_directory = wdir,
+                                        par_file,
+                                        num_phytos,
+                                        x_start = x[i-1, m, ],
+                                        full_time,
+                                        wq_start = states_config$wq_start,
+                                        wq_end = states_config$wq_end,
+                                        management = management,
+                                        hist_days,
+                                        modeled_depths = config$model_settings$modeled_depths,
+                                        ndepths_modeled,
+                                        curr_met_file,
+                                        inflow_file_name = inflow_file_name,
+                                        outflow_file_name = outflow_file_name,
+                                        output_vars = output_vars,
+                                        diagnostics_names = config$output_settings$diagnostics_names,
+                                        npars,
+                                        num_wq_vars,
+                                        nstates,
+                                        state_names = states_config$state_names,
+                                        include_wq = config$include_wq,
+                                        restart = restart,
+                                        restart_list = restart_list)
+          }
+        )
+
+      }, error = function(e) {
+
+        message("Forecast failed on time step ", i-1, "/", (nsteps - 1), " : ",
+                curr_start, " - ",
+                curr_stop)
+        if(i == start_step) {
+          stop("Failed on the first timestep.")
+        }
+        message("Returning output from ", curr_start)
+
+        full_time <- full_time[1:(i-1)]
+
+        if(lubridate::day(full_time[1]) < 10) {
+          file_name_H_day <- paste0("0",lubridate::day(full_time[1]))
         }else{
-          inflow_file_name <- NULL
-          outflow_file_name <- NULL
+          file_name_H_day <- lubridate::day(full_time[1])
         }
-
-        if(config$model_settings$ncore == 1) {
-          wdir <- file.path(working_directory, 1)
+        if(length(full_time) > hist_days) {
+          if(lubridate::day(full_time[hist_days+1]) < 10){
+            file_name_H_end_day <- paste0("0",lubridate::day(full_time[hist_days+1]))
+          }else{
+            file_name_H_end_day <- lubridate::day(full_time[hist_days+1])
+          }
+          if(lubridate::month(full_time[hist_days+1]) < 10){
+            file_name_H_end_month <- paste0("0",lubridate::month(full_time[hist_days+1]))
+          }else{
+            file_name_H_end_month <- lubridate::month(full_time[hist_days+1])
+          }
+          out_year <- (lubridate::year(full_time[hist_days+1]))
         } else {
-          wdir <- file.path(working_directory, m)
+          if(lubridate::day(full_time[length(full_time)]) < 10){
+            file_name_H_end_day <- paste0("0",lubridate::day(full_time[length(full_time)]))
+          }else{
+            file_name_H_end_day <- lubridate::day(full_time[length(full_time)])
+          }
+          if(lubridate::month(full_time[length(full_time)]) < 10){
+            file_name_H_end_month <- paste0("0",lubridate::month(full_time[length(full_time)]))
+          }else{
+            file_name_H_end_month <- lubridate::month(full_time[length(full_time)])
+          }
+          out_year <- (lubridate::year(full_time[length(full_time)]))
+        }
+        if(lubridate::month(full_time[1]) < 10){
+          file_name_H_month <- paste0("0",lubridate::month(full_time[1]))
+        }else{
+          file_name_H_month <- lubridate::month(full_time[1])
         }
 
-        # model
-        # i
-        # m
-        # curr_start
-        # curr_stop
-        # par_names
-        # curr_pars
-        # working_directory = wdir
-        # par_file
-        # num_phytos
-        # x_start = x[i-1, m, ]
-        # full_time
-        # wq_start = states_config$wq_start
-        # wq_end = states_config$wq_end
-        # management = management
-        # hist_days
-        # modeled_depths = config$model_settings$modeled_depths
-        # ndepths_modeled
-        # curr_met_file
-        # inflow_file_name = inflow_file_name
-        # outflow_file_name = outflow_file_name
-        # output_vars = output_vars
-        # diagnostics_names = config$output_settings$diagnostics_names
-        # npars
-        # num_wq_vars
-        # nstates
-        # state_names = states_config$state_names
-        # include_wq = config$include_wq
-        # restart = restart
-        # restart_list = restart_list
 
-        out <- FLAREr:::run_model_ler(model,
-                             i,
-                             m,
-                             curr_start,
-                             curr_stop,
-                             par_names,
-                             curr_pars,
-                             working_directory = wdir,
-                             par_file,
-                             num_phytos,
-                             x_start = x[i-1, m, ],
-                             full_time,
-                             wq_start = states_config$wq_start,
-                             wq_end = states_config$wq_end,
-                             management = management,
-                             hist_days,
-                             modeled_depths = config$model_settings$modeled_depths,
-                             ndepths_modeled,
-                             curr_met_file,
-                             inflow_file_name = inflow_file_name,
-                             outflow_file_name = outflow_file_name,
-                             output_vars = output_vars,
-                             diagnostics_names = config$output_settings$diagnostics_names,
-                             npars,
-                             num_wq_vars,
-                             nstates,
-                             state_names = states_config$state_names,
-                             include_wq = config$include_wq,
-                             restart = restart,
-                             restart_list = restart_list)
+        time_of_forecast <- Sys.time()
+        curr_day <- lubridate::day(time_of_forecast)
+        curr_month <- lubridate::month(time_of_forecast)
+        curr_year <- lubridate::year(time_of_forecast)
+        curr_hour <- lubridate::hour(time_of_forecast)
+        curr_minute <- lubridate::minute(time_of_forecast)
+        curr_second <- round(lubridate::second(time_of_forecast),0)
+        if(curr_day < 10){curr_day <- paste0("0",curr_day)}
+        if(curr_month < 10){curr_month <- paste0("0",curr_month)}
+        if(curr_hour < 10){curr_hour <- paste0("0",curr_hour)}
+        if(curr_minute < 10){curr_minute <- paste0("0",curr_minute)}
+        if(curr_second < 10){curr_second <- paste0("0",curr_second)}
+
+        forecast_iteration_id <- paste0(curr_year,
+                                        curr_month,
+                                        curr_day,
+                                        "T",
+                                        curr_hour,
+                                        curr_minute,
+                                        curr_second)
+
+
+        save_file_name <- paste0(config$run_config$sim_name, "_H_",
+                                 (lubridate::year(full_time[1])),"_",
+                                 file_name_H_month,"_",
+                                 file_name_H_day,"_",
+                                 out_year,"_",
+                                 file_name_H_end_month,"_",
+                                 file_name_H_end_day,"_F_",
+                                 forecast_days,"_",
+                                 forecast_iteration_id)
+
+        if(length(full_time) >= hist_days+1) {
+
+          if(lubridate::day(full_time[hist_days+1]) < 10){
+            file_name_F_day <- paste0("0",lubridate::day(full_time[hist_days+1]))
+          }else{
+            file_name_F_day <- lubridate::day(full_time[hist_days+1])
+          }
+          if(lubridate::month(full_time[hist_days+1]) < 10){
+            file_name_F_month <- paste0("0",lubridate::month(full_time[hist_days+1]))
+          }else{
+            file_name_F_month <- lubridate::month(full_time[hist_days+1])
+          }
+
+          save_file_name_short <- paste0(config$location$site_id, "-",
+                                         (lubridate::year(full_time[hist_days+1])),"-",
+                                         file_name_F_month,"-",
+                                         file_name_F_day,"-",
+                                         config$run_config$sim_name)
+        } else {
+          save_file_name_short <- NA
         }
-      )
+
+        if(model == "GLM") {
+          restart_list <- list(lake_depth = restart_list$lake_depth,
+                               model_internal_depths = restart_list$model_internal_depths[1:(i-1), , ],
+                               the_depths = restart_list$the_depths[1:(i-1), , ],
+                               the_sals = restart_list$the_sals[1:(i-1), , ],
+                               snow_thickness = restart_list$snow_thickness[1:(i-1), ],
+                               white_ice_thickness = restart_list$white_ice_thickness[1:(i-1), ],
+                               blue_ice_thickness = restart_list$blue_ice_thickness[1:(i-1), ],
+                               avg_surf_temp = restart_list$avg_surf_temp[1:(i-1), ],
+                               restart_variables = restart_list$restart_variables[, 1:(i-1), ])
+        } else if(model == "GOTM") {
+          restart_list <- list(z_vars = list(z = restart_list$z_vars$z[1:(i-1), , ],
+                                             temp = restart_list$z_vars$temp[1:(i-1), , ],
+                                             salt = restart_list$z_vars$salt[1:(i-1), , ],
+                                             u = restart_list$z_vars$u[1:(i-1), , ],
+                                             uo = restart_list$z_vars$uo[1:(i-1), , ],
+                                             v = restart_list$z_vars$v[1:(i-1), , ],
+                                             vo = restart_list$z_vars$vo[1:(i-1), , ],
+                                             xP = restart_list$z_vars$xP[1:(i-1), , ],
+                                             h = restart_list$z_vars$h[1:(i-1), , ],
+                                             ho = restart_list$z_vars$ho[1:(i-1), , ]),
+                               zi_vars = list(tke = restart_list$zi_vars$tke[1:(i-1), , ],
+                                              zi = restart_list$zi_vars$zi[1:(i-1), , ],
+                                              tkeo = restart_list$zi_vars$tkeo[1:(i-1), , ],
+                                              eps = restart_list$zi_vars$eps[1:(i-1), , ],
+                                              num = restart_list$zi_vars$num[1:(i-1), , ],
+                                              nuh = restart_list$zi_vars$nuh[1:(i-1), , ],
+                                              nus = restart_list$zi_vars$nus[1:(i-1), , ]))
+        } else if(model == "Simstrat") {
+          restart_list <- list(zi = restart_list$zi[1:(i-1), , ],
+                               u = restart_list$u[1:(i-1), , ],
+                               v = restart_list$v[1:(i-1), , ],
+                               temp = restart_list$temp[1:(i-1), , ],
+                               S = restart_list$S[1:(i-1), , ],
+                               k = restart_list$k[1:(i-1), , ],
+                               eps = restart_list$eps[1:(i-1), , ],
+                               num = restart_list$num[1:(i-1), , ],
+                               nuh = restart_list$nuh[1:(i-1), , ],
+                               seicheE = restart_list$seicheE[1:(i-1), ])
+        }
+
+
+        list(full_time = full_time,
+            forecast_start_datetime = forecast_start_datetime,
+            x = x[1:(i-1), , ],
+            obs = obs[, 1:(i-1), ],
+            save_file_name = save_file_name,
+            save_file_name_short = save_file_name_short,
+            forecast_iteration_id = forecast_iteration_id,
+            forecast_project_id = config$run_config$sim_name,
+            time_of_forecast = time_of_forecast,
+            restart_list =  restart_list,
+            diagnostics = diagnostics,
+            data_assimilation_flag = data_assimilation_flag[1:(i-1)],
+            forecast_flag = forecast_flag[1:(i-1)],
+            da_qc_flag = da_qc_flag[1:(i-1)],
+            config = config,
+            states_config = states_config,
+            pars_config = pars_config,
+            obs_config = obs_config,
+            met_file_names = met_file_names)
+      })
+
+      if("data_assimilation_flag" %in% names(out)) {
+        return(out)
+      }
+
+
 
 	  # Loop through output and assign to matrix
 	  for(m in 1:nmembers) {
