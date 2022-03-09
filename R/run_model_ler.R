@@ -427,8 +427,8 @@ run_model_ler <- function(model,
       message("Re-running model setup in ", working_directory, " due to errors in model output.")
       num_reruns <- num_reruns + 1
     }
-    if(num_reruns > 1000){
-      stop("Too many re-runs (> 1000) due to NaN values in output")
+    if(num_reruns > 100){
+      stop("Too many re-runs (> 100) due to NaN values in output")
     }
   }
 
