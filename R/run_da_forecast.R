@@ -242,6 +242,7 @@ run_da_forecast <- function(states_init,
   restart_variables[, 1, ] <- 0
 
   restart_list <- list(lake_depth = lake_depth,
+                       model_internal_depths = model_internal_depths,
                        the_depths = the_depths,
                        the_sals = the_sals,
                        snow_thickness = snow_thickness,
@@ -455,6 +456,7 @@ run_da_forecast <- function(states_init,
       for(m in 1:nmembers) {
         x_star[m, ] <- out[[m]]$x_star_end
 
+        restart_list$model_internal_depths[i, , m] <- out[[m]]$model_internal_depths
         restart_list$lake_depth[i, m] <- out[[m]]$lake_depth_end
         restart_list$the_sals[i, , m] <- approx(out[[m]]$restart_vars$the_depths, out[[m]]$restart_vars$the_sals, config$model_settings$modeled_depths, rule = 2)$y
         restart_list$snow_thickness[i, m] <- out[[m]]$restart_vars$snow_thickness
