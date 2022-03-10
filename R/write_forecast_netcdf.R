@@ -255,7 +255,11 @@ write_forecast_netcdf <- function(da_forecast_output,
     }
   }
 
-  ncout <- ncdf4::nc_create(ncfname,def_list,force_v4=T)
+  if(!file.exists(ncfname)) {
+    ncout <- ncdf4::nc_create(ncfname, def_list, force_v4 = TRUE)
+  } else {
+    ncout <- ncdf4::nc_open(ncfname, write = TRUE)
+  }
 
   # create netCDF file and put arrays
   index <- 1
