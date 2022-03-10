@@ -413,7 +413,7 @@ run_da_forecast_ler <- function(states_init,
     #If i == 1 then assimilate the first time step without running the process
     #model (i.e., use yesterday's forecast of today as initial conditions and
     #assimilate new observations)
-    if(i > 1){
+    if(i > 1) {
 
       # Start loop through ensemble members
 
@@ -529,96 +529,7 @@ run_da_forecast_ler <- function(states_init,
 
         full_time <- full_time[1:(i-1)]
 
-        if(lubridate::day(full_time[1]) < 10) {
-          file_name_H_day <- paste0("0",lubridate::day(full_time[1]))
-        }else{
-          file_name_H_day <- lubridate::day(full_time[1])
-        }
-        if(length(full_time) > hist_days) {
-          if(lubridate::day(full_time[hist_days+1]) < 10){
-            file_name_H_end_day <- paste0("0",lubridate::day(full_time[hist_days+1]))
-          }else{
-            file_name_H_end_day <- lubridate::day(full_time[hist_days+1])
-          }
-          if(lubridate::month(full_time[hist_days+1]) < 10){
-            file_name_H_end_month <- paste0("0",lubridate::month(full_time[hist_days+1]))
-          }else{
-            file_name_H_end_month <- lubridate::month(full_time[hist_days+1])
-          }
-          out_year <- (lubridate::year(full_time[hist_days+1]))
-        } else {
-          if(lubridate::day(full_time[length(full_time)]) < 10){
-            file_name_H_end_day <- paste0("0",lubridate::day(full_time[length(full_time)]))
-          }else{
-            file_name_H_end_day <- lubridate::day(full_time[length(full_time)])
-          }
-          if(lubridate::month(full_time[length(full_time)]) < 10){
-            file_name_H_end_month <- paste0("0",lubridate::month(full_time[length(full_time)]))
-          }else{
-            file_name_H_end_month <- lubridate::month(full_time[length(full_time)])
-          }
-          out_year <- (lubridate::year(full_time[length(full_time)]))
-        }
-        if(lubridate::month(full_time[1]) < 10){
-          file_name_H_month <- paste0("0",lubridate::month(full_time[1]))
-        }else{
-          file_name_H_month <- lubridate::month(full_time[1])
-        }
-
-
-        time_of_forecast <- Sys.time()
-        curr_day <- lubridate::day(time_of_forecast)
-        curr_month <- lubridate::month(time_of_forecast)
-        curr_year <- lubridate::year(time_of_forecast)
-        curr_hour <- lubridate::hour(time_of_forecast)
-        curr_minute <- lubridate::minute(time_of_forecast)
-        curr_second <- round(lubridate::second(time_of_forecast),0)
-        if(curr_day < 10){curr_day <- paste0("0",curr_day)}
-        if(curr_month < 10){curr_month <- paste0("0",curr_month)}
-        if(curr_hour < 10){curr_hour <- paste0("0",curr_hour)}
-        if(curr_minute < 10){curr_minute <- paste0("0",curr_minute)}
-        if(curr_second < 10){curr_second <- paste0("0",curr_second)}
-
-        forecast_iteration_id <- paste0(curr_year,
-                                        curr_month,
-                                        curr_day,
-                                        "T",
-                                        curr_hour,
-                                        curr_minute,
-                                        curr_second)
-
-
-        save_file_name <- paste0(config$run_config$sim_name, "_H_",
-                                 (lubridate::year(full_time[1])),"_",
-                                 file_name_H_month,"_",
-                                 file_name_H_day,"_",
-                                 out_year,"_",
-                                 file_name_H_end_month,"_",
-                                 file_name_H_end_day,"_F_",
-                                 forecast_days,"_",
-                                 forecast_iteration_id)
-
-        if(length(full_time) >= hist_days+1) {
-
-          if(lubridate::day(full_time[hist_days+1]) < 10){
-            file_name_F_day <- paste0("0",lubridate::day(full_time[hist_days+1]))
-          }else{
-            file_name_F_day <- lubridate::day(full_time[hist_days+1])
-          }
-          if(lubridate::month(full_time[hist_days+1]) < 10){
-            file_name_F_month <- paste0("0",lubridate::month(full_time[hist_days+1]))
-          }else{
-            file_name_F_month <- lubridate::month(full_time[hist_days+1])
-          }
-
-          save_file_name_short <- paste0(config$location$site_id, "-",
-                                         (lubridate::year(full_time[hist_days+1])),"-",
-                                         file_name_F_month,"-",
-                                         file_name_F_day,"-",
-                                         config$run_config$sim_name)
-        } else {
-          save_file_name_short <- NA
-        }
+        save_filenames <- FLAREr:::get_savefile_name(full_time, hist_days, forecast_days)
 
         if(model == "GLM") {
           restart_list <- list(lake_depth = restart_list$lake_depth,
@@ -666,11 +577,11 @@ run_da_forecast_ler <- function(states_init,
             forecast_start_datetime = forecast_start_datetime,
             x = x[1:(i-1), , ],
             obs = obs[, 1:(i-1), ],
-            save_file_name = save_file_name,
-            save_file_name_short = save_file_name_short,
-            forecast_iteration_id = forecast_iteration_id,
+            save_file_name = save_filenames$save_file_name,
+            save_file_name_short = save_filenames$save_file_name_short,
+            forecast_iteration_id = save_filenames$forecast_iteration_id,
             forecast_project_id = config$run_config$sim_name,
-            time_of_forecast = time_of_forecast,
+            time_of_forecast = save_filenames$time_of_forecast,
             restart_list =  restart_list,
             diagnostics = diagnostics,
             data_assimilation_flag = data_assimilation_flag[1:(i-1)],
@@ -852,7 +763,7 @@ run_da_forecast_ler <- function(states_init,
         }
 
       }
-    }else{
+    } else {
 
       data_assimilation_flag[i] <- 1
       forecast_flag[i] <- 0
@@ -1013,7 +924,7 @@ run_da_forecast_ler <- function(states_init,
 
         if(model == "GLM") {
           restart_list$lake_depth[i, ] <- restart_list$lake_depth[i, sample]
-          restart_list$model_internal_depths[i, , m] <- restart_list$model_internal_depths[i, , sample]
+          restart_list$model_internal_depths[i, , ] <- restart_list$model_internal_depths[i, , sample]
           # restart_list$the_depths[i, , ] <- restart_list$the_depths[i, , sample]
           restart_list$the_sals[i, , ] <- restart_list$the_sals[i, , sample]
           restart_list$snow_thickness[i, ] <- restart_list$snow_thickness[i, sample]
@@ -1108,6 +1019,38 @@ run_da_forecast_ler <- function(states_init,
 
     ###############
 
+    if(debug) {
+
+      save_filenames <- FLAREr:::get_savefile_name(full_time, hist_days, forecast_days)
+
+      da_forecast_output <- list(full_time = full_time,
+                                 forecast_start_datetime = forecast_start_datetime,
+                                 x = x,
+                                 obs = obs,
+                                 save_file_name = save_filenames$save_file_name,
+                                 save_file_name_short = save_filenames$save_file_name_short,
+                                 forecast_iteration_id = save_filenames$forecast_iteration_id,
+                                 forecast_project_id = config$run_config$sim_name,
+                                 time_of_forecast = save_filenames$time_of_forecast,
+                                 restart_list =  restart_list,
+                                 # snow_ice_thickness = snow_ice_thickness,
+                                 # lake_depth = lake_depth,
+                                 # salt = salt,
+                                 # model_internal_depths = model_internal_depths,
+                                 diagnostics = diagnostics,
+                                 data_assimilation_flag = data_assimilation_flag,
+                                 forecast_flag = forecast_flag,
+                                 da_qc_flag = da_qc_flag,
+                                 config = config,
+                                 states_config = states_config,
+                                 pars_config = pars_config,
+                                 obs_config = obs_config,
+                                 met_file_names = met_file_names)
+
+       FLAREr::write_forecast_netcdf(da_forecast_output = da_forecast_output,
+                                     forecast_output_directory = config$file_path$forecast_output_directory)
+    }
+
     #Print parameters to screen
     if(npars > 0){
       for(par in 1:npars){
@@ -1121,79 +1064,7 @@ run_da_forecast_ler <- function(states_init,
 
   }
 
-  if(lubridate::day(full_time[1]) < 10) {
-    file_name_H_day <- paste0("0",lubridate::day(full_time[1]))
-  }else{
-    file_name_H_day <- lubridate::day(full_time[1])
-  }
-  if(lubridate::day(full_time[hist_days+1]) < 10){
-    file_name_H_end_day <- paste0("0",lubridate::day(full_time[hist_days+1]))
-  }else{
-    file_name_H_end_day <- lubridate::day(full_time[hist_days+1])
-  }
-  if(lubridate::month(full_time[1]) < 10){
-    file_name_H_month <- paste0("0",lubridate::month(full_time[1]))
-  }else{
-    file_name_H_month <- lubridate::month(full_time[1])
-  }
-  if(lubridate::month(full_time[hist_days+1]) < 10){
-    file_name_H_end_month <- paste0("0",lubridate::month(full_time[hist_days+1]))
-  }else{
-    file_name_H_end_month <- lubridate::month(full_time[hist_days+1])
-  }
-
-  time_of_forecast <- Sys.time()
-  curr_day <- lubridate::day(time_of_forecast)
-  curr_month <- lubridate::month(time_of_forecast)
-  curr_year <- lubridate::year(time_of_forecast)
-  curr_hour <- lubridate::hour(time_of_forecast)
-  curr_minute <- lubridate::minute(time_of_forecast)
-  curr_second <- round(lubridate::second(time_of_forecast),0)
-  if(curr_day < 10){curr_day <- paste0("0",curr_day)}
-  if(curr_month < 10){curr_month <- paste0("0",curr_month)}
-  if(curr_hour < 10){curr_hour <- paste0("0",curr_hour)}
-  if(curr_minute < 10){curr_minute <- paste0("0",curr_minute)}
-  if(curr_second < 10){curr_second <- paste0("0",curr_second)}
-
-  forecast_iteration_id <- paste0(curr_year,
-                                  curr_month,
-                                  curr_day,
-                                  "T",
-                                  curr_hour,
-                                  curr_minute,
-                                  curr_second)
-
-  save_file_name <- paste0(config$run_config$sim_name, "_H_",
-                           (lubridate::year(full_time[1])),"_",
-                           file_name_H_month,"_",
-                           file_name_H_day,"_",
-                           (lubridate::year(full_time[hist_days+1])),"_",
-                           file_name_H_end_month,"_",
-                           file_name_H_end_day,"_F_",
-                           forecast_days,"_",
-                           forecast_iteration_id)
-
-  if(length(full_time) >= hist_days+1){
-
-    if(lubridate::day(full_time[hist_days+1]) < 10){
-      file_name_F_day <- paste0("0",lubridate::day(full_time[hist_days+1]))
-    }else{
-      file_name_F_day <- lubridate::day(full_time[hist_days+1])
-    }
-    if(lubridate::month(full_time[hist_days+1]) < 10){
-      file_name_F_month <- paste0("0",lubridate::month(full_time[hist_days+1]))
-    }else{
-      file_name_F_month <- lubridate::month(full_time[hist_days+1])
-    }
-
-    save_file_name_short <- paste0(config$location$site_id, "-",
-                                   (lubridate::year(full_time[hist_days+1])),"-",
-                                   file_name_F_month,"-",
-                                   file_name_F_day,"-",
-                                   config$run_config$sim_name)
-  }else{
-    save_file_name_short <- NA
-  }
+  save_filenames <- FLAREr:::get_savefile_name(full_time, hist_days, forecast_days)
 
   #for(m in 1:nmembers){
   #  unlink(file.path(working_directory, m), recursive = TRUE)
@@ -1204,11 +1075,11 @@ run_da_forecast_ler <- function(states_init,
               forecast_start_datetime = forecast_start_datetime,
               x = x,
               obs = obs,
-              save_file_name = save_file_name,
-              save_file_name_short = save_file_name_short,
-              forecast_iteration_id = forecast_iteration_id,
+              save_file_name = save_filenames$save_file_name,
+              save_file_name_short = save_filenames$save_file_name_short,
+              forecast_iteration_id = save_filenames$forecast_iteration_id,
               forecast_project_id = config$run_config$sim_name,
-              time_of_forecast = time_of_forecast,
+              time_of_forecast = save_filenames$time_of_forecast,
               restart_list =  restart_list,
               # snow_ice_thickness = snow_ice_thickness,
               # lake_depth = lake_depth,
