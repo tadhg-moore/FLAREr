@@ -1013,7 +1013,7 @@ run_da_forecast_ler <- function(states_init,
 
         if(model == "GLM") {
           restart_list$lake_depth[i, ] <- restart_list$lake_depth[i, sample]
-          restart_list$model_internal_depths[i, , m] <- out[[m]]$model_internal_depths[i, , sample]
+          restart_list$model_internal_depths[i, , m] <- restart_list$model_internal_depths[i, , sample]
           # restart_list$the_depths[i, , ] <- restart_list$the_depths[i, , sample]
           restart_list$the_sals[i, , ] <- restart_list$the_sals[i, , sample]
           restart_list$snow_thickness[i, ] <- restart_list$snow_thickness[i, sample]
