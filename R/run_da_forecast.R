@@ -718,9 +718,9 @@ run_da_forecast <- function(states_init,
         }else{
           x[i, , ] <- cbind(x_corr)[sample, ]
         }
-        
+
         restart_list$lake_depth[i, ] <- restart_list$lake_depth[i, sample]
-        restart_list$model_internal_depths[i, , m] <- restart_list$model_internal_depths[i, , sample]
+        restart_list$model_internal_depths[i, , ] <- restart_list$model_internal_depths[i, , sample]
         restart_list$the_sals[i, , ] <- restart_list$the_sals[i, , sample]
         restart_list$snow_thickness[i, ] <- restart_list$snow_thickness[i, sample]
         restart_list$white_ice_thickness[i, ] <- restart_list$white_ice_thickness[i, sample]
