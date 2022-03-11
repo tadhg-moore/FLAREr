@@ -140,6 +140,7 @@ run_da_forecast_ler <- function(states_init,
   start_forecast_step <- 1 + hist_days
   full_time <- seq(start_datetime, end_datetime, by = "1 day")
   forecast_days <- as.numeric(end_datetime - forecast_start_datetime)
+  save_filenames <- FLAREr:::get_savefile_name(full_time, hist_days, forecast_days)
 
   nstates <- dim(x_init)[2] -  npars
   nsteps <- length(full_time)
@@ -420,7 +421,7 @@ run_da_forecast_ler <- function(states_init,
       out <- tryCatch({
 
         parallel::parLapply(cl, 1:nmembers, function(m) {
-          # out <- lapply(1:nmembers, function(m) { # Commented out for debugging
+          # lapply(1:nmembers, function(m) { # Commented out for debugging
           # print(m)
 
           curr_met_file <- met_file_names[met_index[m]]
@@ -517,7 +518,8 @@ run_da_forecast_ler <- function(states_init,
           }
         )
 
-      }, error = function(e) {
+      },
+      error = function(e) {
 
         message("Forecast failed on time step ", i-1, "/", (nsteps - 1), " : ",
                 curr_start, " - ",
@@ -527,50 +529,50 @@ run_da_forecast_ler <- function(states_init,
         }
         message("Returning output from ", curr_start)
 
-        full_time <- full_time[1:(i-1)]
 
-        save_filenames <- FLAREr:::get_savefile_name(full_time, hist_days, forecast_days)
-
-        if(model == "GLM") {
-          restart_list <- list(lake_depth = restart_list$lake_depth,
-                               model_internal_depths = restart_list$model_internal_depths[1:(i-1), , ],
-                               the_depths = restart_list$the_depths[1:(i-1), , ],
-                               the_sals = restart_list$the_sals[1:(i-1), , ],
-                               snow_thickness = restart_list$snow_thickness[1:(i-1), ],
-                               white_ice_thickness = restart_list$white_ice_thickness[1:(i-1), ],
-                               blue_ice_thickness = restart_list$blue_ice_thickness[1:(i-1), ],
-                               avg_surf_temp = restart_list$avg_surf_temp[1:(i-1), ],
-                               restart_variables = restart_list$restart_variables[, 1:(i-1), ])
-        } else if(model == "GOTM") {
-          restart_list <- list(z_vars = list(z = restart_list$z_vars$z[1:(i-1), , ],
-                                             temp = restart_list$z_vars$temp[1:(i-1), , ],
-                                             salt = restart_list$z_vars$salt[1:(i-1), , ],
-                                             u = restart_list$z_vars$u[1:(i-1), , ],
-                                             uo = restart_list$z_vars$uo[1:(i-1), , ],
-                                             v = restart_list$z_vars$v[1:(i-1), , ],
-                                             vo = restart_list$z_vars$vo[1:(i-1), , ],
-                                             xP = restart_list$z_vars$xP[1:(i-1), , ],
-                                             h = restart_list$z_vars$h[1:(i-1), , ],
-                                             ho = restart_list$z_vars$ho[1:(i-1), , ]),
-                               zi_vars = list(tke = restart_list$zi_vars$tke[1:(i-1), , ],
-                                              zi = restart_list$zi_vars$zi[1:(i-1), , ],
-                                              tkeo = restart_list$zi_vars$tkeo[1:(i-1), , ],
-                                              eps = restart_list$zi_vars$eps[1:(i-1), , ],
-                                              num = restart_list$zi_vars$num[1:(i-1), , ],
-                                              nuh = restart_list$zi_vars$nuh[1:(i-1), , ],
-                                              nus = restart_list$zi_vars$nus[1:(i-1), , ]))
-        } else if(model == "Simstrat") {
-          restart_list <- list(zi = restart_list$zi[1:(i-1), , ],
-                               u = restart_list$u[1:(i-1), , ],
-                               v = restart_list$v[1:(i-1), , ],
-                               temp = restart_list$temp[1:(i-1), , ],
-                               S = restart_list$S[1:(i-1), , ],
-                               k = restart_list$k[1:(i-1), , ],
-                               eps = restart_list$eps[1:(i-1), , ],
-                               num = restart_list$num[1:(i-1), , ],
-                               nuh = restart_list$nuh[1:(i-1), , ],
-                               seicheE = restart_list$seicheE[1:(i-1), ])
-        }
+        # Subsetting of times
+        # full_time <- full_time[1:(i-1)]
+        #
+        # if(model == "GLM") {
+        #   restart_list <- list(lake_depth = restart_list$lake_depth,
+        #                        model_internal_depths = restart_list$model_internal_depths[1:(i-1), , ],
+        #                        the_depths = restart_list$the_depths[1:(i-1), , ],
+        #                        the_sals = restart_list$the_sals[1:(i-1), , ],
+        #                        snow_thickness = restart_list$snow_thickness[1:(i-1), ],
+        #                        white_ice_thickness = restart_list$white_ice_thickness[1:(i-1), ],
+        #                        blue_ice_thickness = restart_list$blue_ice_thickness[1:(i-1), ],
+        #                        avg_surf_temp = restart_list$avg_surf_temp[1:(i-1), ],
+        #                        restart_variables = restart_list$restart_variables[, 1:(i-1), ])
+        # } else if(model == "GOTM") {
+        #   restart_list <- list(z_vars = list(z = restart_list$z_vars$z[1:(i-1), , ],
+        #                                      temp = restart_list$z_vars$temp[1:(i-1), , ],
+        #                                      salt = restart_list$z_vars$salt[1:(i-1), , ],
+        #                                      u = restart_list$z_vars$u[1:(i-1), , ],
+        #                                      uo = restart_list$z_vars$uo[1:(i-1), , ],
+        #                                      v = restart_list$z_vars$v[1:(i-1), , ],
+        #                                      vo = restart_list$z_vars$vo[1:(i-1), , ],
+        #                                      xP = restart_list$z_vars$xP[1:(i-1), , ],
+        #                                      h = restart_list$z_vars$h[1:(i-1), , ],
+        #                                      ho = restart_list$z_vars$ho[1:(i-1), , ]),
+        #                        zi_vars = list(tke = restart_list$zi_vars$tke[1:(i-1), , ],
+        #                                       zi = restart_list$zi_vars$zi[1:(i-1), , ],
+        #                                       tkeo = restart_list$zi_vars$tkeo[1:(i-1), , ],
+        #                                       eps = restart_list$zi_vars$eps[1:(i-1), , ],
+        #                                       num = restart_list$zi_vars$num[1:(i-1), , ],
+        #                                       nuh = restart_list$zi_vars$nuh[1:(i-1), , ],
+        #                                       nus = restart_list$zi_vars$nus[1:(i-1), , ]))
+        # } else if(model == "Simstrat") {
+        #   restart_list <- list(zi = restart_list$zi[1:(i-1), , ],
+        #                        u = restart_list$u[1:(i-1), , ],
+        #                        v = restart_list$v[1:(i-1), , ],
+        #                        temp = restart_list$temp[1:(i-1), , ],
+        #                        S = restart_list$S[1:(i-1), , ],
+        #                        k = restart_list$k[1:(i-1), , ],
+        #                        eps = restart_list$eps[1:(i-1), , ],
+        #                        num = restart_list$num[1:(i-1), , ],
+        #                        nuh = restart_list$nuh[1:(i-1), , ],
+        #                        seicheE = restart_list$seicheE[1:(i-1), ])
+        # }
 
 
         list(full_time = full_time,
@@ -642,8 +644,7 @@ run_da_forecast_ler <- function(states_init,
 	      restart_list$zi_vars$num[i, , m] <- out[[m]]$restart_vars$zi_vars$num
 	      restart_list$zi_vars$nuh[i, , m] <- out[[m]]$restart_vars$zi_vars$nuh
 	      restart_list$zi_vars$nus[i, , m] <- out[[m]]$restart_vars$zi_vars$nus
-	    }
-	    if(model == "Simstrat") {
+	    } else if(model == "Simstrat") {
 	      restart_list$zi[i, , m] <- out[[m]]$restart_vars$zi
 	      restart_list$u[i, , m] <- out[[m]]$restart_vars$u
 	      restart_list$v[i, , m] <- out[[m]]$restart_vars$v
@@ -1021,8 +1022,6 @@ run_da_forecast_ler <- function(states_init,
 
     if(debug) {
 
-      save_filenames <- FLAREr:::get_savefile_name(full_time, hist_days, forecast_days)
-
       da_forecast_output <- list(full_time = full_time,
                                  forecast_start_datetime = forecast_start_datetime,
                                  x = x,
@@ -1033,10 +1032,6 @@ run_da_forecast_ler <- function(states_init,
                                  forecast_project_id = config$run_config$sim_name,
                                  time_of_forecast = save_filenames$time_of_forecast,
                                  restart_list =  restart_list,
-                                 # snow_ice_thickness = snow_ice_thickness,
-                                 # lake_depth = lake_depth,
-                                 # salt = salt,
-                                 # model_internal_depths = model_internal_depths,
                                  diagnostics = diagnostics,
                                  data_assimilation_flag = data_assimilation_flag,
                                  forecast_flag = forecast_flag,
@@ -1046,9 +1041,29 @@ run_da_forecast_ler <- function(states_init,
                                  pars_config = pars_config,
                                  obs_config = obs_config,
                                  met_file_names = met_file_names)
+      if(i > 2) {
+        add <- TRUE
+      } else {
+        add <- FALSE
+      }
 
        FLAREr::write_forecast_netcdf(da_forecast_output = da_forecast_output,
-                                     forecast_output_directory = config$file_path$forecast_output_directory)
+                                     forecast_output_directory = config$file_path$forecast_output_directory,
+                                     add = add)
+
+       # Fix weird restart_list fill values -  ncdf4 seems to re-write them to missvals
+       if(config$model_settings$model ==  "GLM") {
+         restart_list$lake_depth[restart_list$lake_depth == -99] <- NA
+         restart_list$snow_thickness[restart_list$snow_thickness == -99] <- NA
+         restart_list$white_ice_thickness[restart_list$white_ice_thickness == -99] <- NA
+         restart_list$blue_ice_thickness[restart_list$blue_ice_thickness == -99] <- NA
+         restart_list$avg_surf_temp[restart_list$avg_surf_temp == -99] <- NA
+         restart_list$model_internal_depths[restart_list$model_internal_depths > 1e31] <- NA
+         restart_list$the_sals[restart_list$the_sals > 1e31] <- NA
+         restart_list$restart_variables[restart_list$restart_variables > 1e31] <- NA
+       }
+
+
     }
 
     #Print parameters to screen
@@ -1059,12 +1074,11 @@ run_da_forecast_ler <- function(states_init,
                        signif(sd(pars_corr[,par]),4)))
       }
     }
+
     message(paste0("surface_temp: mean ", signif(mean(x[i, , 1])), " sd ", signif(sd(x[i, , 1]))))
     message(paste0("bottom_temp: mean ", signif(mean(x[i, , ndepths_modeled]), 4), " sd ", signif(sd(x[i, , ndepths_modeled], 4))))
 
   }
-
-  save_filenames <- FLAREr:::get_savefile_name(full_time, hist_days, forecast_days)
 
   #for(m in 1:nmembers){
   #  unlink(file.path(working_directory, m), recursive = TRUE)
