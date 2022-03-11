@@ -7,7 +7,8 @@
 write_forecast_netcdf(
   da_forecast_output,
   forecast_output_directory,
-  use_short_filename = TRUE
+  use_short_filename = TRUE,
+  add = FALSE
 )
 }
 \arguments{
@@ -16,6 +17,8 @@ write_forecast_netcdf(
 \item{forecast_output_directory}{string; full path of directory where the netcdf file will be written}
 
 \item{use_short_filename}{use shortened file name; this results in less informatoin in the file name and potentially overwriting existing files}
+
+\item{add}{logical; Add output to netCDF file}
 }
 \value{
 None

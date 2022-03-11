@@ -3,6 +3,7 @@
 ##' @param da_forecast_output list; object that is returned by run_da_forecast()
 ##' @param forecast_output_directory string; full path of directory where the netcdf file will be written
 ##' @param use_short_filename use shortened file name; this results in less informatoin in the file name and potentially overwriting existing files
+##' @param add logical; Add output to netCDF file
 ##' @return None
 ##' @export
 ##' @import ncdf4
@@ -17,7 +18,8 @@
 
 write_forecast_netcdf <- function(da_forecast_output,
                                   forecast_output_directory,
-                                  use_short_filename = TRUE){
+                                  use_short_filename = TRUE,
+                                  add = FALSE){
 
   dir.create(forecast_output_directory, recursive = TRUE, showWarnings = FALSE)
 
@@ -255,11 +257,15 @@ write_forecast_netcdf <- function(da_forecast_output,
     }
   }
 
-  if(!file.exists(ncfname)) {
-    ncout <- ncdf4::nc_create(ncfname, def_list, force_v4 = TRUE)
-  } else {
+  if(add) {
     ncout <- ncdf4::nc_open(ncfname, write = TRUE)
+  } else {
+    unlink(ncfname)
+    ncout <- ncdf4::nc_create(ncfname, def_list, force_v4 = TRUE)
   }
+  on.exit({
+    ncdf4::nc_close(ncout)
+  })
 
   # create netCDF file and put arrays
   index <- 1
@@ -390,8 +396,6 @@ write_forecast_netcdf <- function(da_forecast_output,
   ncdf4::ncatt_put(ncout,0,"forecast_model_id", config$metadata$model_description$forecast_model_id, prec =  "text")
   ncdf4::ncatt_put(ncout,0,"forecast_model", config$model_settings$model, prec =  "text")
   ncdf4::ncatt_put(ncout,0,"time_zone_of_simulation","UTC", prec =  "text")
-
-  ncdf4::nc_close(ncout)
 
   invisible(ncfname)
 
