@@ -87,12 +87,12 @@ generate_ler_met_files <- function(obs_met_file = NULL,
     }else{
       historical_met_error <- FALSE
     }
+    names(met)[1] <- "datetime" # match LER naming
 
   }else{
     met <- NULL
     historical_met_error <- FALSE
   }
-  names(met)[1] <- "datetime" # match LER naming
 
   if(!is.null(forecast_dir)){
     forecast_files <- list.files(forecast_dir, pattern = ".nc", full.names = TRUE)
