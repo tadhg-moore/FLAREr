@@ -185,7 +185,7 @@ write_forecast_netcdf <- function(da_forecast_output,
     index <- index + 1
     def_list[[index]] <- ncdf4::ncvar_def("h","m", list(timedim, zdim, ensdim), missval = -99,longname = 'layer thickness',prec="single")
     index <- index + 1
-    def_list[[index]] <- ncdf4::ncvar_def("h0","m", list(timedim, zdim, ensdim), missval = -99,longname = 'layer thickness - old time step', prec = "single")
+    def_list[[index]] <- ncdf4::ncvar_def("ho","m", list(timedim, zdim, ensdim), missval = -99,longname = 'layer thickness - old time step', prec = "single")
     index <- index + 1
 
 
