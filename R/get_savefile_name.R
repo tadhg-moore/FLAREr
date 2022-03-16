@@ -1,6 +1,6 @@
 #' @noRd
 
-get_savefile_name <- function(full_time, hist_days, forecast_days) {
+get_savefile_name <- function(full_time, hist_days, forecast_days, config) {
 
   if(lubridate::day(full_time[1]) < 10) {
     file_name_H_day <- paste0("0",lubridate::day(full_time[1]))

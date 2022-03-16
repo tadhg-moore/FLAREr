@@ -140,7 +140,7 @@ run_da_forecast_ler <- function(states_init,
   start_forecast_step <- 1 + hist_days
   full_time <- seq(start_datetime, end_datetime, by = "1 day")
   forecast_days <- as.numeric(end_datetime - forecast_start_datetime)
-  save_filenames <- FLAREr:::get_savefile_name(full_time, hist_days, forecast_days)
+  save_filenames <- FLAREr:::get_savefile_name(full_time, hist_days, forecast_days, config)
 
   nstates <- dim(x_init)[2] -  npars
   nsteps <- length(full_time)
