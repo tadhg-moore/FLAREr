@@ -68,6 +68,7 @@ run_model_ler <- function(model,
     the_temps_enkf_tmp <- x_start[1:ndepths_modeled]
 
     the_temps <- approx(modeled_depths, the_temps_enkf_tmp, model_depths_tmp, rule = 2)$y
+    the_sals <- approx(modeled_depths, round(restart_list$the_sals[i-1, ,m ], 4), model_depths_tmp, rule = 2)$y
 
     init_prof <- data.frame(Depth_meter = round(model_depths_tmp, 4),
                             Water_Temperature_celsius = round(the_temps, 4))
@@ -171,7 +172,7 @@ run_model_ler <- function(model,
     inp_list <- list(lake_depth = round(restart_list$lake_depth[i-1, m], 4),
                      the_depths = init_prof$Depth_meter,
                      the_temps = init_prof$Water_Temperature_celsius,
-                     the_sals = round(restart_list$the_sals[i-1, ,m ], 4),
+                     the_sals = the_sals,
                      snow_thickness = round(restart_list$snow_thickness[i-1, m]),
                      white_ice_thickness = round(restart_list$white_ice_thickness[i-1, m], 4),
                      blue_ice_thickness = round(restart_list$blue_ice_thickness[i-1, m], 4),
