@@ -290,6 +290,29 @@ run_da_forecast_ler <- function(states_init,
     nuh <- array(NA, dim = c(nsteps, nzi, nmembers))
     nus <- array(NA, dim = c(nsteps, nzi, nmembers))
 
+    if(length(aux_states_init) > 0) {
+      # z vars
+      z[1, , ] <- aux_states_init$z_vars$z
+      # temp[1, , ] <- aux_states_init$z_vars$temp
+      salt[1, , ] <- aux_states_init$z_vars$salt
+      u[1, , ] <- aux_states_init$z_vars$u
+      uo[1, , ] <- aux_states_init$z_vars$uo
+      v[1, , ] <- aux_states_init$z_vars$v
+      vo[1, , ] <- aux_states_init$z_vars$uo
+      xP[1, , ] <- aux_states_init$z_vars$xP
+      h[1, , ] <- aux_states_init$z_vars$h
+      ho[1, , ] <- aux_states_init$z_vars$ho
+
+      #zi vars
+      tke[1, , ] <- aux_states_init$zi_vars$tke
+      zi[1, , ] <- aux_states_init$zi_vars$zi
+      tkeo[1, , ] <- aux_states_init$zi_vars$tkeo
+      eps[1, , ] <- aux_states_init$zi_vars$eps
+      num[1, , ] <- aux_states_init$zi_vars$num
+      nuh[1, , ] <- aux_states_init$zi_vars$nuh
+      nus[1, , ] <- aux_states_init$zi_vars$nus
+    }
+
     restart_list <- list(z_vars = list(z = z,
                                        temp = temp,
                                        salt = salt,
@@ -325,6 +348,23 @@ run_da_forecast_ler <- function(states_init,
     nuh <- array(NA, dim = c(nsteps, nzi, nmembers))
 
     seicheE <- array(NA, dim = c(nsteps, nmembers))
+
+    if(length(aux_states_init) > 0) {
+
+      zi[1, , ] <- aux_states_init$zi
+      u[1, , ] <- aux_states_init$u
+      v[1, , ] <- aux_states_init$v
+      # temp[1, , ] <- aux_states_init$temp
+      S[1, , ] <- aux_states_init$S
+      k[1, , ] <- aux_states_init$k
+      eps[1, , ] <- aux_states_init$eps
+      num[1, , ] <- aux_states_init$num
+      nuh[1, , ] <- aux_states_init$nuh
+
+      seicheE[1, ] <- aux_states_init$seicheE
+
+    }
+
     restart_list <- list(zi = zi,
                          u = u,
                          v = v,
@@ -577,8 +617,8 @@ run_da_forecast_ler <- function(states_init,
 
         list(full_time = full_time,
             forecast_start_datetime = forecast_start_datetime,
-            x = x[1:(i-1), , ],
-            obs = obs[, 1:(i-1), ],
+            x = x,
+            obs = obs,
             save_file_name = save_filenames$save_file_name,
             save_file_name_short = save_filenames$save_file_name_short,
             forecast_iteration_id = save_filenames$forecast_iteration_id,
@@ -586,9 +626,9 @@ run_da_forecast_ler <- function(states_init,
             time_of_forecast = save_filenames$time_of_forecast,
             restart_list =  restart_list,
             diagnostics = diagnostics,
-            data_assimilation_flag = data_assimilation_flag[1:(i-1)],
-            forecast_flag = forecast_flag[1:(i-1)],
-            da_qc_flag = da_qc_flag[1:(i-1)],
+            data_assimilation_flag = data_assimilation_flag,
+            forecast_flag = forecast_flag,
+            da_qc_flag = da_qc_flag,
             config = config,
             states_config = states_config,
             pars_config = pars_config,

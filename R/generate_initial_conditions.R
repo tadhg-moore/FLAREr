@@ -140,19 +140,13 @@ generate_initial_conditions <- function(states_config,
       aux_states_init$avg_surf_temp <- init$avg_surf_temp
       aux_states_init$mixing_vars <- init$mixing_vars
     }
-    if(config$model_settings$model == "Simstrat") {
-      aux_states_init$U <- array(0, dim = c(ndepths_modeled, nmembers))
-      aux_states_init$V <- array(0, dim = c(ndepths_modeled, nmembers))
-      aux_states_init$k <- array(3e-6, dim = c(ndepths_modeled, nmembers))
-      aux_states_init$eps <- array(5e-10, dim = c(ndepths_modeled, nmembers))
-    }
 
     init <- list(states = init$states,
                  pars = init$pars,
                  aux_states_init = aux_states_init)
 
   } else {
-    nc <- ncdf4::nc_open(config$run_config$restart_file)
+    nc <- ncdf4::nc_open(file.path(config$file_path$forecast_output_directory, config$run_config$restart_file))
     forecast <- ncdf4::ncvar_get(nc, "forecast")
     ncdf4::nc_close(nc)
     if(historical_met_error){
@@ -184,11 +178,38 @@ generate_initial_conditions <- function(states_config,
       aux_states_init$restart_variables <- out$restart_list$restart_variables
     } else if(config$model_settings$model == "GOTM") {
 
+      # z vars
+      aux_states_init$z_vars$z <- out$restart_list$z_vars$z
+      aux_states_init$z_vars$temp <- out$restart_list$z_vars$temp
+      aux_states_init$z_vars$salt <- out$restart_list$z_vars$salt
+      aux_states_init$z_vars$u <- out$restart_list$z_vars$u
+      aux_states_init$z_vars$uo <- out$restart_list$z_vars$uo
+      aux_states_init$z_vars$v <- out$restart_list$z_vars$v
+      aux_states_init$z_vars$vo <- out$restart_list$z_vars$vo
+      aux_states_init$z_vars$xP <- out$restart_list$z_vars$xP
+      aux_states_init$z_vars$h <- out$restart_list$z_vars$h
+      aux_states_init$z_vars$ho <- out$restart_list$z_vars$ho
+
+      # zi vars
+      aux_states_init$zi_vars$tke <- out$restart_list$zi_vars$tke
+      aux_states_init$zi_vars$zi <- out$restart_list$zi_vars$zi
+      aux_states_init$zi_vars$tkeo <- out$restart_list$zi_vars$tkeo
+      aux_states_init$zi_vars$eps <- out$restart_list$zi_vars$eps
+      aux_states_init$zi_vars$num <- out$restart_list$zi_vars$num
+      aux_states_init$zi_vars$nuh <- out$restart_list$zi_vars$nuh
+      aux_states_init$zi_vars$nus <- out$restart_list$zi_vars$nus
+
     } else if(config$model_settings$model == "Simstrat") {
-      aux_states_init$U <- array(0, dim = c(ndepths_modeled, nmembers))
-      aux_states_init$V <- array(0, dim = c(ndepths_modeled, nmembers))
-      aux_states_init$k <- array(3e-6, dim = c(ndepths_modeled, nmembers))
-      aux_states_init$eps <- array(5e-10, dim = c(ndepths_modeled, nmembers))
+      aux_states_init$zi <- out$restart_list$zi
+      aux_states_init$u <- out$restart_list$u
+      aux_states_init$v <- out$restart_list$v
+      aux_states_init$temp <- out$restart_list$temp
+      aux_states_init$S <- out$restart_list$S
+      aux_states_init$k <- out$restart_list$k
+      aux_states_init$eps <- out$restart_list$eps
+      aux_states_init$num <- out$restart_list$num
+      aux_states_init$nuh <- out$restart_list$nuh
+      aux_states_init$seicheE <- out$restart_list$seicheE
     }
 
 

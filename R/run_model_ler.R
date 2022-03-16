@@ -211,8 +211,14 @@ run_model_ler <- function(model,
     #   yml$model_parameters$GOTM$`restart/load` <- FALSE
     # }
 
+    got_deps <- abs(restart_list$z_vars$z[i-1, , m])
+    # got_deps <- got_deps[order(got_deps)]
+
+    got_temps <- approx(modeled_depths, the_temps_enkf_tmp, got_deps, rule = 2)$y
+
+
     inp_list <- list(z_vars = list(z = restart_list$z_vars$z[i-1, , m],
-                                   temp = init_prof$Water_Temperature_celsius,
+                                   temp = got_temps,
                                    salt = restart_list$z_vars$salt[i-1, , m],
                                    u = restart_list$z_vars$u[i-1, , m],
                                    uo = restart_list$z_vars$uo[i-1, , m],
@@ -231,7 +237,7 @@ run_model_ler <- function(model,
   }
 
   # Simstrat ----
-  if( model == "Simstrat") {
+  if(model == "Simstrat") {
 
     diagnostics <- array(NA, dim = c(length(diagnostics_names), ndepths_modeled))
 
@@ -250,21 +256,20 @@ run_model_ler <- function(model,
       }
     }
 
-    if(i > 2) {
-      sim_deps <- abs(restart_list$zi[i-1, , m])
-      sim_temp <- approx(modeled_depths, the_temps_enkf_tmp, sim_deps, rule = 2)$y
+    sim_deps <- abs(restart_list$zi[i-1, , m])
+    sim_temp <- approx(modeled_depths, the_temps_enkf_tmp, sim_deps, rule = 2)$y
 
-      inp_list <- list(zi = restart_list$zi[i-1, , m],
-                       u = restart_list$u[i-1, , m],
-                       v = restart_list$v[i-1, , m],
-                       temp = sim_temp,
-                       S = restart_list$S[i-1, , m],
-                       k = restart_list$k[i-1, , m],
-                       eps = restart_list$eps[i-1, , m],
-                       num = restart_list$num[i-1, , m],
-                       nuh = restart_list$nuh[i-1, , m],
-                       seicheE = restart_list$seicheE[i-1, m])
-    }
+    inp_list <- list(zi = restart_list$zi[i-1, , m],
+                     u = restart_list$u[i-1, , m],
+                     v = restart_list$v[i-1, , m],
+                     temp = sim_temp,
+                     S = restart_list$S[i-1, , m],
+                     k = restart_list$k[i-1, , m],
+                     eps = restart_list$eps[i-1, , m],
+                     num = restart_list$num[i-1, , m],
+                     nuh = restart_list$nuh[i-1, , m],
+                     seicheE = restart_list$seicheE[i-1, m])
+
   }
 
   #ALLOWS THE LOOPING THROUGH NOAA ENSEMBLES
@@ -286,7 +291,8 @@ run_model_ler <- function(model,
   })
 
   # Don't write restart on the first time step for GOTM & Simstrat
-  if((model == "GOTM" | model == "Simstrat") & i > 2) {
+  if((model == "GOTM" & !all(is.na(inp_list$z_vars$u))) |
+     (model == "Simstrat" & !all(is.na(inp_list$temp)))) {
     LakeEnsemblR::write_restart(folder = working_directory, model = model,
                                 restart_list = inp_list)
   } else if(model == "GLM") {
