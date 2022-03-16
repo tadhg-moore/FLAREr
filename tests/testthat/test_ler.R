@@ -190,7 +190,7 @@ test_that("LER-GOTM-EnKF can be run", {
                                               obs,
                                               config)
 
-  setwd(config$file_path$execute_directory)
+  # setwd(config$file_path$execute_directory)
 
 
   # states_init = init$states
@@ -439,11 +439,8 @@ test_that("LER-Simstrat can be restarted", {
 
   template_folder <- system.file("example", package = "FLAREr")
 
-  model <- "Simstrat"
   source(file.path(template_folder, "R", "test_enkf_prep_ler_restart.R"))
   config$output_settings$diagnostics_names <- NULL
-
-
 
 
   # states_init = init$states

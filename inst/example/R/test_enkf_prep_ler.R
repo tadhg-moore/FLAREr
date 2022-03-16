@@ -9,7 +9,7 @@ test_directory <- file.path(temp_dir, "example")
 lake_directory <- test_directory
 
 configure_run_file <- "configure_run.yml"
-config_set_name <- "default"
+config_set_name <- "ler"
 
 config <- FLAREr::set_configuration(configure_run_file,
                                     lake_directory,

@@ -5,10 +5,10 @@ test_that("met files are generated", {
 
   source(file.path(template_folder, "R/test_met_prep.R"))
 
-  met_out <- FLAREr::generate_glm_met_files(obs_met_file = obs_met_file,
-                                            out_dir = config$file_path$execute_directory,
-                                            forecast_dir = config$file_path$noaa_directory,
-                                            config)
+  met_out <- FLAREr::generate_met_files(obs_met_file = observed_met_file,
+                                        out_dir = config$file_path$execute_directory,
+                                        forecast_dir = forecast_dir,
+                                        config)
   met_file_names <- met_out$filenames
   testthat::expect_equal(file.exists(met_file_names), expected = rep(TRUE, 21))
 })
@@ -21,9 +21,7 @@ test_that("inflow & outflow files are generated", {
 
   source(file.path(template_folder, "R/test_inflow_prep.R"))
 
-  inflow_forecast_path <- config$file_path$inflow_directory
-
-  inflow_outflow_files <- FLAREr::create_inflow_outflow_files(inflow_file_dir = inflow_forecast_path,
+  inflow_outflow_files <- FLAREr::create_inflow_outflow_files(inflow_file_dir = inflow_file_dir,
                                                               inflow_obs = cleaned_inflow_file,
                                                               working_directory = config$file_path$execute_directory,
                                                               config,
@@ -105,6 +103,18 @@ test_that("EnKF can be run", {
 
   source(file.path(template_folder, "R/test_enkf_prep.R"))
 
+  config$model_settings$model <- "GLM"
+
+  obs <- FLAREr::create_obs_matrix(cleaned_observations_file_long,
+                                   obs_config,
+                                   config)
+
+  init <- FLAREr::generate_initial_conditions(states_config,
+                                              obs_config,
+                                              pars_config,
+                                              obs,
+                                              config)
+
   # states_init = init$states
   # pars_init = init$pars
   # aux_states_init = init$aux_states_init
@@ -176,6 +186,18 @@ test_that("particle filter can be run", {
   template_folder <- system.file("example", package = "FLAREr")
 
   source(file.path(template_folder, "R/test_enkf_prep.R"))
+
+  config$model_settings$model <- "GLM"
+
+  obs <- FLAREr::create_obs_matrix(cleaned_observations_file_long,
+                                   obs_config,
+                                   config)
+
+  init <- FLAREr::generate_initial_conditions(states_config,
+                                              obs_config,
+                                              pars_config,
+                                              obs,
+                                              config)
 
   # states_init = init$states
   # pars_init = init$pars
