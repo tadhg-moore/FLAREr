@@ -91,7 +91,8 @@ run_model_ler <- function(model,
 
     model_depths_start = restart_list$the_depths[i-1, , m]
     lake_depth_start = restart_list$lake_depth[i-1, m]
-
+    yml$location$depth <- lake_depth_start
+    yml$location$init_depth <- lake_depth_start
 
     update_aed_nml_list <- list()
     update_phyto_nml_list <- list()
@@ -286,7 +287,7 @@ run_model_ler <- function(model,
   suppressMessages({
     LakeEnsemblR::export_config(config_file = config$model_settings$base_ler_yaml, model = model, dirs = FALSE,
                                 time = TRUE, location = TRUE, output_settings = TRUE,
-                                meteo = TRUE, init_cond = TRUE, extinction = FALSE,
+                                meteo = TRUE, init_cond = FALSE, extinction = FALSE,
                                 inflow = TRUE, model_parameters = TRUE,
                                 folder = working_directory, print = FALSE)
   })
