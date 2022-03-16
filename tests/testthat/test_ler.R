@@ -601,6 +601,7 @@ test_that("LER-GOTM-EnKF can fail and write output", {
   source(file.path(template_folder, "R", "test_enkf_prep_ler.R"))
   config$model_settings$model <- "GOTM"
   config$output_settings$diagnostics_names <- NULL
+  config$run_config$restart_file <- NA
 
   obs <- FLAREr::create_obs_matrix(cleaned_observations_file_long,
                                    obs_config,
@@ -657,7 +658,7 @@ test_that("LER-GOTM-EnKF can fail and write output", {
   )
 
   # saveRDS(object = enkf_output, file = "inst/example/benchmark_data/sampenkf_output_Simstrat.RDS")
-  samp_enkf_output <- readRDS(file.path(template_folder, "benchmark_data", "sampenkf_output_Simstrat.RDS"))
+  samp_enkf_output <- readRDS(file.path(template_folder, "benchmark_data", "sampenkf_output_GOTM.RDS"))
 
   testthat::expect_true(is.list(enkf_output))
   chk <- lapply(1:length(enkf_output), function(x) {

@@ -269,6 +269,18 @@ test_that("EnKF can be run with NO inflows/outflows", {
 
   source(file.path(template_folder, "R/test_enkf_prep.R"))
 
+  config$model_settings$model <- "GLM"
+
+  obs <- FLAREr::create_obs_matrix(cleaned_observations_file_long,
+                                   obs_config,
+                                   config)
+
+  init <- FLAREr::generate_initial_conditions(states_config,
+                                              obs_config,
+                                              pars_config,
+                                              obs,
+                                              config)
+
   #Run EnKF
   enkf_output <- FLAREr::run_da_forecast(states_init = init$states,
                                          pars_init = init$pars,
