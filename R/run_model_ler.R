@@ -287,7 +287,7 @@ run_model_ler <- function(model,
   suppressMessages({
     LakeEnsemblR::export_config(config_file = config$model_settings$base_ler_yaml, model = model, dirs = FALSE,
                                 time = TRUE, location = TRUE, output_settings = TRUE,
-                                meteo = TRUE, init_cond = FALSE, extinction = FALSE,
+                                meteo = TRUE, init_cond = TRUE, extinction = FALSE,
                                 inflow = TRUE, model_parameters = TRUE,
                                 folder = working_directory, print = FALSE)
   })
