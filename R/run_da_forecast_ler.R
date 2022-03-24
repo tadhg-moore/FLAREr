@@ -348,6 +348,9 @@ run_da_forecast_ler <- function(states_init,
     nuh <- array(NA, dim = c(nsteps, nzi, nmembers))
 
     seicheE <- array(NA, dim = c(nsteps, nmembers))
+    b_ice <- array(NA, dim = c(nsteps, nmembers))
+    w_ice <- array(NA, dim = c(nsteps, nmembers))
+    snow <- array(NA, dim = c(nsteps, nmembers))
 
     if(length(aux_states_init) > 0) {
 
@@ -362,7 +365,9 @@ run_da_forecast_ler <- function(states_init,
       nuh[1, , ] <- aux_states_init$nuh
 
       seicheE[1, ] <- aux_states_init$seicheE
-
+      b_ice[1, ] <- aux_states_init$b_ice
+      w_ice[1, ] <- aux_states_init$w_ice
+      snow[1, ] <- aux_states_init$snow
     }
 
     restart_list <- list(zi = zi,
@@ -374,7 +379,10 @@ run_da_forecast_ler <- function(states_init,
                          eps = eps,
                          num = num,
                          nuh = nuh,
-                         seicheE = seicheE)
+                         seicheE = seicheE,
+                         b_ice = b_ice,
+                         w_ice = w_ice,
+                         snow = snow)
   }
 
 
@@ -695,6 +703,9 @@ run_da_forecast_ler <- function(states_init,
 	      restart_list$num[i, , m] <- out[[m]]$restart_vars$num
 	      restart_list$nuh[i, , m] <- out[[m]]$restart_vars$nuh
 	      restart_list$seicheE[i , m] <- out[[m]]$restart_vars$seicheE
+	      restart_list$b_ice[i , m] <- out[[m]]$restart_vars$b_ice
+	      restart_list$w_ice[i , m] <- out[[m]]$restart_vars$w_ice
+	      restart_list$snow[i , m] <- out[[m]]$restart_vars$snow
 	    }
 
 	    #Add process noise
@@ -1006,6 +1017,9 @@ run_da_forecast_ler <- function(states_init,
           restart_list$num[i, , ] <- restart_list$num[i, , sample]
           restart_list$nuh[i, , ] <- restart_list$nuh[i, , sample]
           restart_list$seicheE[i , ] <- restart_list$seicheE[i , sample]
+          restart_list$b_ice[i , ] <- restart_list$b_ice[i , sample]
+          restart_list$w_ice[i , ] <- restart_list$w_ice[i , sample]
+          restart_list$snow[i , ] <- restart_list$snow[i , sample]
         }
         if(length(config$diagnostics_names) > 0){
           diagnostics[ ,i, , ] <- diagnostics[ ,i, ,sample]

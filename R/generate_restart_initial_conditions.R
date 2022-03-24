@@ -106,7 +106,9 @@ generate_restart_initial_conditions <- function(restart_file,
     num <- ncdf4::ncvar_get(nc, "num")[restart_index, , ]
     nuh <- ncdf4::ncvar_get(nc, "nuh")[restart_index, , ]
     seicheE <- ncdf4::ncvar_get(nc, "seicheE")[restart_index, ]
-
+    b_ice <- ncdf4::ncvar_get(nc, "b_ice")[restart_index, ]
+    w_ice <- ncdf4::ncvar_get(nc, "w_ice")[restart_index, ]
+    snow <- ncdf4::ncvar_get(nc, "snow")[restart_index, ]
 
     restart_list <- list(zi = zi,
                          u = u,
@@ -117,7 +119,10 @@ generate_restart_initial_conditions <- function(restart_file,
                          eps = eps,
                          num = num,
                          nuh = nuh,
-                         seicheE = seicheE)
+                         seicheE = seicheE,
+                         b_ice = b_ice,
+                         w_ice = w_ice,
+                         snow = snow)
   }
 
 

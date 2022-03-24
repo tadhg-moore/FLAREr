@@ -74,6 +74,9 @@ write_forecast_netcdf <- function(da_forecast_output,
     num <- da_forecast_output$restart_list$num
     nuh <- da_forecast_output$restart_list$nuh
     seicheE <- da_forecast_output$restart_list$seicheE
+    b_ice <- da_forecast_output$restart_list$b_ice
+    w_ice <- da_forecast_output$restart_list$w_ice
+    snow <- da_forecast_output$restart_list$snow
   }
 
   states_config <- da_forecast_output$states_config
@@ -219,8 +222,13 @@ write_forecast_netcdf <- function(da_forecast_output,
     index <- index + 1
     def_list[[index]] <- ncdf4::ncvar_def("nuh", "m2/s", list(timedim, zidim, ensdim), missval = -99, longname = "turbulent diffusivity of heat", prec = "single")
     index <- index + 1
-
     def_list[[index]] <- ncdf4::ncvar_def("seicheE","J", list(timedim, ensdim), missval = -99, longname = "seiche energy", prec = "single")
+    index <- index + 1
+    def_list[[index]] <- ncdf4::ncvar_def("b_ice","m", list(timedim, ensdim), missval = -99, longname = "black ice", prec = "single")
+    index <- index + 1
+    def_list[[index]] <- ncdf4::ncvar_def("w_ice","m", list(timedim, ensdim), missval = -99, longname = "white ice", prec = "single")
+    index <- index + 1
+    def_list[[index]] <- ncdf4::ncvar_def("snow","m", list(timedim, ensdim), missval = -99, longname = "snow", prec = "single")
   }
 
 
@@ -345,6 +353,12 @@ write_forecast_netcdf <- function(da_forecast_output,
     ncdf4::ncvar_put(ncout, def_list[[index]], nuh)
     index <- index + 1
     ncdf4::ncvar_put(ncout, def_list[[index]], seicheE)
+    index <- index + 1
+    ncdf4::ncvar_put(ncout, def_list[[index]], b_ice)
+    index <- index + 1
+    ncdf4::ncvar_put(ncout, def_list[[index]], w_ice)
+    index <- index + 1
+    ncdf4::ncvar_put(ncout, def_list[[index]], snow)
   }
 
 

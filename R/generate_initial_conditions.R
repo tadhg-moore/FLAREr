@@ -210,6 +210,9 @@ generate_initial_conditions <- function(states_config,
       aux_states_init$num <- out$restart_list$num
       aux_states_init$nuh <- out$restart_list$nuh
       aux_states_init$seicheE <- out$restart_list$seicheE
+      aux_states_init$b_ice <- out$restart_list$b_ice
+      aux_states_init$w_ice <- out$restart_list$w_ice
+      aux_states_init$snow <- out$restart_list$snow
     }
 
 

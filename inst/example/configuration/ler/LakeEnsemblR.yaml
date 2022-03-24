@@ -120,6 +120,7 @@ model_parameters:
       turbulence/turb_param/k_min: 5.0E-8                             # minimum turbulent kinetic energy [m^2/s^2; min=0.0]
    Simstrat:                                    # Simstrat specific parameters
       ModelParameters/a_seiche: 0.0018
+      Simulation/Save text restart: true
    MyLake:                                      # MyLake specific parameters
       Phys.par/C_shelter: 0.15                  # wind sheltering coefficient [min=0; max=1; if not specified, C_shelter=1.0-exp(-0.3*surface_area)]
 calibration:                                    # calibration section

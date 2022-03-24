@@ -573,7 +573,7 @@ test_that("LER-GLM can be restarted", {
   testthat::expect_true(length(file_chk) > 1)
 })
 
-# LER-Simstrat can be restarted ----
+# LER-GOTM can be restarted ----
 test_that("LER-GOTM can be restarted", {
 
   template_folder <- system.file("example", package = "FLAREr")
@@ -752,7 +752,6 @@ test_that("LER-Simstrat can be restarted", {
 
 
   # Begin restart ----
-
   config <- FLAREr::update_run_config(config = config, lake_directory =  lake_directory, configure_run_file =  configure_run_file, saved_file = saved_file, new_horizon = 2)
 
   config$run_config

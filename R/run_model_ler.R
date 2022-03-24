@@ -270,7 +270,10 @@ run_model_ler <- function(model,
                      eps = restart_list$eps[i-1, , m],
                      num = restart_list$num[i-1, , m],
                      nuh = restart_list$nuh[i-1, , m],
-                     seicheE = restart_list$seicheE[i-1, m])
+                     seicheE = restart_list$seicheE[i-1, m],
+                     b_ice = restart_list$b_ice[i-1, m],
+                     w_ice = restart_list$w_ice[i-1, m],
+                     snow = restart_list$snow[i-1, m])
 
   }
 
