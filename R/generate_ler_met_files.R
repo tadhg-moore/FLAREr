@@ -34,7 +34,7 @@ generate_ler_met_files <- function(obs_met_file = NULL,
   full_time <- seq(start_datetime, end_datetime, by = "1 hour")
   if(config$met$use_forecasted_met){
     if(forecast_start_datetime > start_datetime){
-      full_time_hist <- seq(start_datetime, forecast_start_datetime - lubridate::hours(1), by = "1 hour")
+      full_time_hist <- seq(start_datetime, forecast_start_datetime + lubridate::hours(1), by = "1 hour")
     }else{
       full_time_hist <- NULL
     }
@@ -89,7 +89,7 @@ generate_ler_met_files <- function(obs_met_file = NULL,
     }
     names(met)[1] <- "datetime" # match LER naming
 
-  }else{
+  } else {
     met <- NULL
     historical_met_error <- FALSE
   }
