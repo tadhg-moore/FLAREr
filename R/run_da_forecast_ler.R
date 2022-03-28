@@ -198,21 +198,21 @@ run_da_forecast_ler <- function(states_init,
             to = file.path(working_directory, config$model_settings$ler_bathymetry_file), overwrite = TRUE)
 
   config$model_settings$ncore <- min(c(config$model_settings$ncore, parallel::detectCores()))
-  if(config$model_settings$ncore == 1) {
-    if(!dir.exists(file.path(working_directory, "1"))) {
-      dir.create(file.path(working_directory, "1"), showWarnings = FALSE)
-    } else {
-      unlink(file.path(working_directory, "1"), recursive = TRUE)
-      dir.create(file.path(working_directory, "1"), showWarnings = FALSE)
-    }
-    FLAREr:::set_up_model_ler(model,
-                             config,
-                             working_directory = working_directory,
-                             state_names = states_config$state_names,
-                             inflow_file_names = inflow_file_names,
-                             outflow_file_names = outflow_file_names,
-                             member = "1")
-  } else {
+  # if(config$model_settings$ncore == 1) {
+  #   if(!dir.exists(file.path(working_directory, "1"))) {
+  #     dir.create(file.path(working_directory, "1"), showWarnings = FALSE)
+  #   } else {
+  #     unlink(file.path(working_directory, "1"), recursive = TRUE)
+  #     dir.create(file.path(working_directory, "1"), showWarnings = FALSE)
+  #   }
+  #   FLAREr:::set_up_model_ler(model,
+  #                            config,
+  #                            working_directory = working_directory,
+  #                            state_names = states_config$state_names,
+  #                            inflow_file_names = inflow_file_names,
+  #                            outflow_file_names = outflow_file_names,
+  #                            member = "1")
+  # } else {
     lapply(1:nmembers, function(m) {
       if(!dir.exists(file.path(working_directory, m))) {
         dir.create(file.path(working_directory, m), showWarnings = FALSE)
@@ -224,11 +224,14 @@ run_da_forecast_ler <- function(states_init,
                                config,
                                working_directory = working_directory,
                                state_names = states_config$state_names,
+                               met_file_names = met_file_names,
                                inflow_file_names = inflow_file_names,
                                outflow_file_names = outflow_file_names,
-                               member = m)
+                               member = m,
+                               start_datetime,
+                               end_datetime)
     })
-  }
+  # }
 
   # model_internal_depths
   # lake_depth <- array(NA, dim = c(nsteps, nmembers))

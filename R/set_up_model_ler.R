@@ -4,9 +4,12 @@ set_up_model_ler <- function(model,
                              config,
                              working_directory,
                              state_names,
-                             inflow_file_names,
-                             outflow_file_names,
-                             member = "1"){
+                             met_file_names,
+                             inflow_file_names = NULL,
+                             outflow_file_names = NULL,
+                             member = "1",
+                             start_datetime,
+                             end_datetime){
 
   oldwd <- getwd()
   ens_working_directory <- file.path(working_directory, member)
@@ -20,6 +23,16 @@ set_up_model_ler <- function(model,
   yaml_file <- config$model_settings$base_ler_yaml
 
   ler_yaml <- yaml::read_yaml(yaml_file)
+
+
+  idx <- sample(1:length(met_file_names), 1)
+  ler_yaml$input$meteo$file <- paste0("../", basename(met_file_names[idx]))
+  if(!is.null(inflow_file_names)) {
+    ler_yaml$inflows$file <- paste0("../", basename(inflow_file_names[idx]))
+  }
+  ler_yaml$time$start <- format(start_datetime, format = "%Y-%m-%d %H:%M:%S")
+  ler_yaml$time$stop <- format(end_datetime, format = "%Y-%m-%d %H:%M:%S")
+
   # yml <- yaml::read_yaml(file.path(ens_working_directory, ler_yaml))
   ler_directory <- ens_working_directory
 
@@ -46,9 +59,6 @@ set_up_model_ler <- function(model,
     ler_yaml <- gotmtools::set_yaml(ler_yaml, value = inflow_var_names, key1 = "model_parameters", key2 = "GLM", key3 = "inflow/inflow_vars")
     ler_yaml <- gotmtools::set_yaml(ler_yaml, value = "'output'", key1 = "model_parameters", key2 = "GLM", key3 = "output/out_dir")
 
-    gotmtools::write_yaml(ler_yaml, yaml_file)
-
-
     if(config$include_wq){
 
       file.copy(from =  file.path(config$run_config$forecast_location,config$base_AED_nml),
@@ -67,15 +77,12 @@ set_up_model_ler <- function(model,
     #           to = paste0(ens_working_directory, "/", "glm3_initial.nml"), overwrite = TRUE) #GLM SPECIFIC
   }
 
-
-
-  # yaml::write_yaml(yml, file.path(ens_working_directory, "test.yaml")) # file.path(ens_working_directory, ler_yaml)
-
+  gotmtools::write_yaml(ler_yaml, yaml_file)
 
   LakeEnsemblR::export_config(config_file = basename(yaml_file), model = model, dirs = TRUE,
                               time = FALSE, location = TRUE, output_settings = TRUE,
-                              meteo = FALSE, init_cond = FALSE, extinction = TRUE,
-                              inflow = FALSE, model_parameters = TRUE,
+                              meteo = TRUE, init_cond = FALSE, extinction = TRUE,
+                              inflow = TRUE, model_parameters = TRUE,
                               folder = ens_working_directory)
 
 

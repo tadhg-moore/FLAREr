@@ -279,8 +279,8 @@ run_model_ler <- function(model,
 
   #ALLOWS THE LOOPING THROUGH NOAA ENSEMBLES
   yml$input$init_temp_profile$file <- "initial_profile.csv"
-  yml$input$meteo$file <- paste0("../", basename(curr_met_file))
-  yml$inflows$file <- paste0("../", basename(unlist(inflow_file_name)))
+  # yml$input$meteo$file <- paste0("../", basename(curr_met_file))
+  # yml$inflows$file <- paste0("../", basename(unlist(inflow_file_name)))
 
   yml$time$start <- curr_start
   yml$time$stop <- curr_stop
@@ -290,8 +290,8 @@ run_model_ler <- function(model,
   suppressMessages({
     LakeEnsemblR::export_config(config_file = config$model_settings$base_ler_yaml, model = model, dirs = FALSE,
                                 time = TRUE, location = TRUE, output_settings = TRUE,
-                                meteo = TRUE, init_cond = TRUE, extinction = FALSE,
-                                inflow = TRUE, model_parameters = TRUE,
+                                meteo = FALSE, init_cond = TRUE, extinction = FALSE,
+                                inflow = FALSE, model_parameters = TRUE,
                                 folder = working_directory, print = FALSE)
   })
 
