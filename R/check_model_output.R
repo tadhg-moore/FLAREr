@@ -49,7 +49,11 @@ check_model_output <- function(folder, model) {
     file_check <- file.exists(outfile)
 
     if(file_check) {
-      tmp <- read.csv(outfile)
+
+      tmp <- tryCatch({
+        read.csv(outfile)
+      },
+      error = function(e) return(NaN))
       nan_check <- any(is.nan(unlist(tmp)) | any(unlist(tmp) == "NaN"))
       if(nan_check) {
         return(FALSE)
