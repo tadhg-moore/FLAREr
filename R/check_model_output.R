@@ -49,7 +49,7 @@ check_model_output <- function(folder, model) {
     file_check <- file.exists(outfile)
 
     if(file_check) {
-      tmp <- vroom::vroom(outfile, delim = ",", show_col_types = FALSE)
+      tmp <- read.csv(outfile)
       nan_check <- any(is.nan(unlist(tmp)) | any(unlist(tmp) == "NaN"))
       if(nan_check) {
         return(FALSE)
