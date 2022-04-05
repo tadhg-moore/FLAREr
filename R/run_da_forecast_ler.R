@@ -337,6 +337,10 @@ run_da_forecast_ler <- function(states_init,
 
     ngrid <- LakeEnsemblR::get_json_value(file.path(working_directory, "1", model,
                                                     "simstrat.par"), label = "Input", key = "Grid")
+    if(is.character(ngrid)) {
+      nlev <- read.delim(file.path(working_directory, "1", model, ngrid))
+      ngrid <- nlev[[1]]
+    }
     nzi <- (ngrid * 2) + 1
 
     #zi vars
@@ -471,9 +475,9 @@ run_da_forecast_ler <- function(states_init,
 
       out <- tryCatch({
 
-        parallel::parLapply(cl, 1:nmembers, function(m) {
-          # lapply(1:nmembers, function(m) { # Commented out for debugging
-          # print(m)
+        # parallel::parLapply(cl, 1:nmembers, function(m) {
+          lapply(1:nmembers, function(m) { # Commented out for debugging
+          print(m)
 
           curr_met_file <- met_file_names[met_index[m]]
 
