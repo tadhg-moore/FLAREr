@@ -475,9 +475,9 @@ run_da_forecast_ler <- function(states_init,
 
       out <- tryCatch({
 
-        # parallel::parLapply(cl, 1:nmembers, function(m) {
-          lapply(1:nmembers, function(m) { # Commented out for debugging
-          print(m)
+        parallel::parLapply(cl, 1:nmembers, function(m) {
+          # lapply(1:nmembers, function(m) { # Commented out for debugging
+          # print(m)
 
           curr_met_file <- met_file_names[met_index[m]]
 
