@@ -26,16 +26,16 @@ run_models_ler <- function(model, folder, verbose, restart, member, the_temps, m
   # GOTM ----
   if(model == "GOTM") {
 
-    if(restart) {
-      file.copy(from = file.path(folder, "GOTM", paste0("restart_", member, ".nc")),
-                to = file.path(folder, "GOTM", "restart.nc"),
-                overwrite = TRUE)
-      nc <- ncdf4::nc_open(file.path(folder, "GOTM", "restart.nc"), write = TRUE)
-      gotm_depths <- ncdf4::ncvar_get(nc, "z")
-      input_temps <- approx(model_depths, the_temps, xout = abs(gotm_depths), rule = 2)$y
-      ncdf4::ncvar_put(nc, "temp", input_temps)
-      ncdf4::nc_close(nc)
-    }
+    # if(restart) {
+    #   file.copy(from = file.path(folder, "GOTM", paste0("restart_", member, ".nc")),
+    #             to = file.path(folder, "GOTM", "restart.nc"),
+    #             overwrite = TRUE)
+    #   nc <- ncdf4::nc_open(file.path(folder, "GOTM", "restart.nc"), write = TRUE)
+    #   gotm_depths <- ncdf4::ncvar_get(nc, "z")
+    #   input_temps <- approx(model_depths, the_temps, xout = abs(gotm_depths), rule = 2)$y
+    #   ncdf4::ncvar_put(nc, "temp", input_temps)
+    #   ncdf4::nc_close(nc)
+    # }
 
     GOTMr::run_gotm(sim_folder = file.path(folder, "GOTM"), verbose = verbose)
 
