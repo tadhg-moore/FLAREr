@@ -58,6 +58,10 @@ run_model_ler <- function(model,
 
   yml <- yaml::read_yaml(file.path(working_directory, config$model_settings$base_ler_yaml))
 
+  # Remove all parameters - updated ones will be added
+  yml$model_parameters[[model]] <- NULL
+
+
   # Restart with GLM depths
   if(model == "GLM") {
     model_depths_start <- restart_list$model_internal_depths[i-1, , m]
@@ -287,10 +291,16 @@ run_model_ler <- function(model,
 
   gotmtools::write_yaml(yml, file.path(working_directory, config$model_settings$base_ler_yaml))
 
+  if(model == "Simstrat") {
+    l_ext <- TRUE
+  } else {
+    l_ext <- FALSE
+  }
+
   suppressMessages({
     LakeEnsemblR::export_config(config_file = config$model_settings$base_ler_yaml, model = model, dirs = FALSE,
                                 time = TRUE, location = TRUE, output_settings = TRUE,
-                                meteo = FALSE, init_cond = TRUE, extinction = FALSE,
+                                meteo = FALSE, init_cond = TRUE, extinction = l_ext,
                                 inflow = FALSE, model_parameters = TRUE,
                                 folder = working_directory, print = FALSE)
   })
