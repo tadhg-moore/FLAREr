@@ -85,16 +85,16 @@ model_parameters:
          - 10.5293
          - 14.6565
       sediment/sed_heat_Ksoil:
-         - 1.8
-         - 1.8
+         - 1.2
+         - 1.2
       sediment/sed_temp_depth:
-         - 0.2
-         - 0.2
+         - 0.5
+         - 0.5
       sediment/sed_temp_amplitude:
-         - 3.14
-         - 7.13
+         - 0.0
+         - 0.0
       sediment/zone_heights:
-         - 5
+         - 5.0
          - 9.5
       sediment/n_zones: 2
       sediment/sed_heat_model: 1
