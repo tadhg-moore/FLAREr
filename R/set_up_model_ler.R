@@ -23,6 +23,9 @@ set_up_model_ler <- function(model,
   yaml_file <- config$model_settings$base_ler_yaml
 
   ler_yaml <- yaml::read_yaml(yaml_file)
+  if(is.null(inflow_file_names)) {
+    ler_yaml$inflows$use <- FALSE
+  }
 
 
   idx <- sample(1:length(met_file_names), 1)
