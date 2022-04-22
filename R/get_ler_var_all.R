@@ -27,7 +27,7 @@ get_ler_var_all <- function(model,
   heights <- deps
   # heights_out <- rep()
 
-  temps <- unlist(temp[final_time_step, -1])
+  temps <- apply(temp[, -1], 2, mean)
   salt <- unlist(salt[final_time_step, -1])
 
   output <- array(NA, dim=c(length(temps), length(vars_depth)))
